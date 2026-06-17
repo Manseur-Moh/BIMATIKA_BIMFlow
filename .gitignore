@@ -1,14 +1,17 @@
-# Fichiers Revit volumineux
+# Fichiers Revit volumineux (à exclure absolument)
 *.rvt
 *.rws
 *.zip
 *.log
+
+# Dossiers contenant des gros fichiers
 REVIT/
 1-1-ARC_*
 BIMFlow_Export/
 _canva/
+bimatika-site/
 
-# Dossiers de compilation
+# Dossiers de compilation (inutiles)
 bin/
 obj/
 Debug/
