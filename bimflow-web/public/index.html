@@ -280,7 +280,7 @@
     main.layout{display:flex;flex-direction:column;flex:1;overflow:hidden}
     .midrow{display:flex;flex:1;min-height:0;overflow:hidden}
     .dz{display:flex;overflow:hidden}
-    .zLeft,.zRight{flex-direction:column;resize:horizontal;overflow:hidden;min-width:120px}
+    .zLeft,.zRight{flex-direction:column;overflow:hidden;min-width:120px}
     .zTop,.zBottom{flex-direction:row;flex-shrink:0;resize:vertical;overflow:hidden;min-height:90px}
     .dzc{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
     .dz:empty{display:none}
@@ -343,12 +343,10 @@
   <div id="cmpManage" style="margin-top:4px;font-size:11px;max-height:150px;overflow:auto"></div>
 </div>
 
-<!-- Layout / docking templates -->
+<!-- Layout reset popup -->
 <div id="layoutPop">
-  <div style="font-weight:700;color:#cbd5e1;margin-bottom:4px">Disposition des panneaux</div>
-  <div class="lp-hint">Glissez l'icône ⠿ dans l'en-tête d'un panneau vers un bord de l'écran pour le déplacer. Enregistrez ensuite comme gabarit.</div>
-  <div class="row"><select id="tplSel" style="flex:1"><option value="">— Gabarits —</option></select><button id="tplDel" title="Supprimer">🗑</button></div>
-  <div class="row"><button id="tplSave" style="flex:1">💾 Enregistrer gabarit</button><button id="tplReset" title="Réinitialiser">⟲</button></div>
+  <div style="font-weight:700;color:#cbd5e1;margin-bottom:8px">Disposition des panneaux</div>
+  <div class="row"><button id="tplReset" style="flex:1;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:6px;cursor:pointer">⟲ Réinitialiser la disposition</button></div>
 </div>
 
 <main>
@@ -1238,7 +1236,14 @@ function refitPlan(){ const s=$('mainSvg'); if(s&&plan) setTimeout(()=>resetView
 $('toggleRooms').addEventListener('click',function(){
   const a=document.querySelector('.rooms-aside');
   const collapsed=a.classList.toggle('collapsed');
-  this.classList.toggle('on',collapsed); refitPlan();
+  this.classList.toggle('on',collapsed);
+  const zr=document.getElementById('zRight');
+  if(zr){
+    zr.style.display=collapsed?'none':'';
+    const sp=zr.previousElementSibling;
+    if(sp&&sp.classList.contains('split-v')) sp.style.display=collapsed?'none':'';
+  }
+  refitPlan();
 });
 $('togglePlan').addEventListener('click',function(){
   const v=$('viewerSplit'); const hidden=v.style.display==='none';
@@ -1358,7 +1363,7 @@ window.addEventListener('resize',()=>{ const s=$('mainSvg'); if(s&&plan){ const 
 /* ═══ DOCK LAYOUT — levels fixed left, rooms/params draggable ═══ */
 const PSEL={rooms:'.rooms-aside',params:'.bottom-panel'};
 const DOCKW={rooms:'220px',params:'340px'};
-const DEFLAYOUT={rooms:'left',params:'bottom'};
+const DEFLAYOUT={rooms:'right',params:'bottom'};
 let DZ={};
 
 function makeSplitter(dir){
@@ -1415,54 +1420,6 @@ function dockPanel(key,zone){
   el.style.width  = horiz ? 'auto' : DOCKW[key];
   el.style.height = horiz ? '' : '';
   if(horiz && !DZ[zone].style.height) DZ[zone].style.height='260px';
-  addDockHandle(key);
-}
-/* ── drop-zone overlay elements (created once) ── */
-const DROP_ZONES={};
-(()=>{
-  [['left','◀',{top:'20%',left:'8px',width:'60px',height:'60%'}],
-   ['right','▶',{top:'20%',right:'8px',width:'60px',height:'60%'}],
-   ['top','▲',{left:'20%',top:'8px',height:'60px',width:'60%'}],
-   ['bottom','▼',{left:'20%',bottom:'8px',height:'60px',width:'60%'}]
-  ].forEach(([z,ic,style])=>{
-    const d=document.createElement('div');
-    d.className='drop-zone'; d.dataset.z=z; d.textContent=ic;
-    Object.assign(d.style,style); document.body.appendChild(d);
-    DROP_ZONES[z]=d;
-  });
-  // Wire drop zone events ONCE here
-  Object.entries(DROP_ZONES).forEach(([z,d])=>{
-    d.addEventListener('mouseover',()=>{ if(_dragKey) d.classList.add('over'); });
-    d.addEventListener('mouseout',()=>d.classList.remove('over'));
-    d.addEventListener('mouseup',()=>{
-      if(!_dragKey)return;
-      dockPanel(_dragKey,z); saveLayout(); refitPlan(); setTimeout(()=>resize3D(),50);
-      showDropZones(false); _dragKey=null;
-    });
-  });
-})();
-
-let _dragKey=null;
-function showDropZones(show){
-  Object.values(DROP_ZONES).forEach(d=>{
-    d.classList.toggle('active',show);
-    d.classList.remove('over');
-  });
-}
-function addDockHandle(key){
-  const el=document.querySelector(PSEL[key]); if(!el)return;
-  const hd=el.querySelector('.sidebar-hd,.bp-bar'); if(!hd)return;
-  // Remove any existing handle to avoid duplicates after re-dock
-  hd.querySelectorAll('.dock-handle').forEach(h=>h.remove());
-  const handle=document.createElement('span');
-  handle.className='dock-handle'; handle.title='Glisser pour déplacer le panneau';
-  handle.innerHTML='⠿';
-  handle.addEventListener('mousedown',ev=>{
-    ev.preventDefault(); _dragKey=key; showDropZones(true);
-    const onUp=()=>{ showDropZones(false); _dragKey=null; document.removeEventListener('mouseup',onUp); };
-    document.addEventListener('mouseup',onUp);
-  });
-  hd.insertBefore(handle, hd.firstChild);
 }
 function curLayout(){ const o={}; Object.keys(PSEL).forEach(k=>{ const el=document.querySelector(PSEL[k]); o[k]=el?(el.dataset.dock||DEFLAYOUT[k]):DEFLAYOUT[k]; }); return o; }
 function applyLayout(L){ Object.keys(PSEL).forEach(k=>dockPanel(k,(L&&L[k])||DEFLAYOUT[k])); refitPlan(); setTimeout(()=>resize3D(),60); }
@@ -1470,26 +1427,13 @@ function saveLayout(){ try{ localStorage.setItem('bimflow_layout',JSON.stringify
 
 buildDockScaffold();
 // applyLayout must run BEFORE removing right-col, so it can move .bottom-panel out first
-(function(){
-  let L=null;
-  try{ L=JSON.parse(localStorage.getItem('bimflow_layout')); }catch(e){}
-  if(L){ delete L.levels; }
-  applyLayout(L||DEFLAYOUT);
-})();
+applyLayout(DEFLAYOUT);
 document.querySelector('.right-col')?.remove();
 $('roomsSplit')?.remove();
 
-/* layout templates (gabarits) */
-function loadTpls(){ try{ return JSON.parse(localStorage.getItem('bimflow_layouts'))||{}; }catch(e){ return {}; } }
-function saveTpls(o){ try{ localStorage.setItem('bimflow_layouts',JSON.stringify(o)); }catch(e){} }
-function refreshTplSel(){ const sel=$('tplSel'); if(!sel)return; const t=loadTpls(); sel.innerHTML='<option value="">— Gabarits —</option>'+Object.keys(t).map(n=>`<option>${esc(n)}</option>`).join(''); }
 $('btnLayout').addEventListener('click',e=>{ e.stopPropagation(); const p=$('layoutPop'); p.style.display=(p.style.display==='block')?'none':'block'; });
 document.addEventListener('click',e=>{ const p=$('layoutPop'); if(p&&p.style.display==='block'&&!p.contains(e.target)&&!$('btnLayout').contains(e.target)) p.style.display='none'; });
-$('tplSave').addEventListener('click',()=>{ const n=prompt('Nom du gabarit de disposition :'); if(!n)return; const t=loadTpls(); t[n]=curLayout(); saveTpls(t); refreshTplSel(); $('tplSel').value=n; });
-$('tplSel').addEventListener('change',()=>{ const n=$('tplSel').value; if(!n)return; const L=loadTpls()[n]; if(L){ applyLayout(L); saveLayout(); } });
-$('tplDel').addEventListener('click',()=>{ const n=$('tplSel').value; if(!n){ alert('Choisissez un gabarit à supprimer.'); return; } const t=loadTpls(); delete t[n]; saveTpls(t); refreshTplSel(); });
-$('tplReset').addEventListener('click',()=>{ applyLayout(DEFLAYOUT); saveLayout(); });
-refreshTplSel();
+$('tplReset').addEventListener('click',()=>{ applyLayout(DEFLAYOUT); saveLayout(); $('layoutPop').style.display='none'; });
 
 /* ═══ THEME + LANGUAGE ═══ */
 const langBtn=$('langBtn'), themeBtn=$('themeBtn');
