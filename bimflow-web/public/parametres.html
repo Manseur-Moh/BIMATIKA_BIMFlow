@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BIMFlow — Créer des paramètres</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+    .topbar{display:flex;align-items:center;background:#111827;border-bottom:1px solid #1f2937;flex-shrink:0;height:48px}
+    .logo{padding:0 16px;font-size:16px;font-weight:800;color:#38bdf8;letter-spacing:-.5px;white-space:nowrap;border-right:1px solid #1f2937;height:100%;display:flex;align-items:center}
+    .logo span{color:#7dd3fc}
+    .nav{display:flex;height:100%}
+    .nav a{display:flex;align-items:center;padding:0 16px;font-size:13px;font-weight:600;color:#64748b;text-decoration:none;border-right:1px solid #1f2937}
+    .nav a:hover{background:#1f2937;color:#e2e8f0}
+    .nav a.active{color:#38bdf8;background:#0c1a2e;box-shadow:inset 0 -2px 0 #38bdf8}
+    .topbar-right{display:flex;align-items:center;gap:8px;padding:0 16px;margin-left:auto}
+    .tbtn{background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:6px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer}
+    .tbtn:hover{background:#374151;color:#fff}
+    .tbtn.send{background:#1d4ed8;color:#e0f2fe;border-color:#1d4ed8}
+    .tbtn.send:hover:not(:disabled){background:#2563eb}
+    .tbtn.send:disabled{background:#1e293b;color:#334155;cursor:default;border-color:#1e293b}
+    .tbtn.ok{background:#15803d;color:#fff;border-color:#16a34a}
+    .status-dot{width:7px;height:7px;border-radius:50%;background:#334155;flex-shrink:0}
+    .status-dot.ok{background:#22c55e}.status-dot.err{background:#ef4444}.status-dot.loading{background:#f59e0b;animation:pulse 1s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .status-txt{font-size:12px;color:#64748b}
+
+    main{flex:1;display:flex;flex-direction:column;overflow:hidden;padding:0}
+
+    /* GUID BANNER */
+    .guid-banner{display:flex;align-items:center;gap:10px;padding:8px 16px;background:#0d1526;border-bottom:1px solid #1f2937;flex-shrink:0;flex-wrap:wrap}
+    .guid-banner-title{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+    .guid-box{display:flex;align-items:center;gap:6px;background:#0f172a;border:1px solid #1f2937;border-radius:6px;padding:6px 10px;min-width:340px;flex:1;max-width:500px}
+    .guid-val{flex:1;font-family:monospace;font-size:12px;color:#38bdf8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:.04em}
+    .guid-val.empty{color:#374151;font-style:italic}
+    .gb-btn{padding:4px 9px;font-size:11px;font-weight:600;border-radius:4px;cursor:pointer;border:none;flex-shrink:0}
+    .gb-gen{background:#0e4429;color:#3fb950;border:1px solid #238636}
+    .gb-gen:hover{background:#238636;color:#fff}
+    .gb-cpy{background:#1f2937;color:#cbd5e1;border:1px solid #374151}
+    .gb-cpy:hover{background:#374151;color:#fff}
+    .guid-hint{font-size:10px;color:#475569;white-space:nowrap}
+
+    /* TOOLBAR */
+    .toolbar{display:flex;align-items:center;gap:8px;padding:8px 16px;border-bottom:1px solid #1f2937;flex-shrink:0;background:#111827;flex-wrap:wrap}
+    .toolbar-title{font-size:13px;font-weight:700;color:#f1f5f9;flex-shrink:0}
+    .toolbar-sep{flex:1}
+    .btn-add{background:#0e4429;color:#3fb950;border:1px solid #238636;border-radius:5px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer}
+    .btn-add:hover{background:#238636;color:#fff}
+    .tbtn-sm{background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:5px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer}
+    .tbtn-sm:hover{background:#374151;color:#fff}
+    .tbtn-sm.guid{background:#0e4429;color:#3fb950;border-color:#238636}
+    .tbtn-sm.guid:hover{background:#238636;color:#fff}
+    .filebtn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #374151;background:#1f2937;color:#cbd5e1}
+    .filebtn:hover{background:#374151;color:#fff}
+
+    /* TABLE */
+    .table-wrap{flex:1;overflow:auto;padding:0}
+    table.pt{width:100%;border-collapse:collapse;font-size:12px}
+    table.pt th{position:sticky;top:0;background:#111c33;color:#64748b;font-weight:600;text-align:left;padding:6px 10px;border-bottom:1px solid #1e2b45;white-space:nowrap;font-size:11px;text-transform:uppercase;letter-spacing:.04em;z-index:1}
+    table.pt td{padding:4px 8px;border-bottom:1px solid #16233f;vertical-align:middle}
+    .pv-input,.pv-select{width:100%;background:#0f172a;color:#e2e8f0;border:1px solid #2a3a55;border-radius:4px;padding:3px 7px;font-size:12px;outline:none}
+    .pv-input:focus,.pv-select:focus{border-color:#3b82f6}
+    .guid-cell{display:flex;align-items:center;gap:4px;min-width:180px}
+    .guid-cell input{flex:1;font-family:monospace;font-size:10px;letter-spacing:.02em}
+    .gc-btn{padding:2px 6px;font-size:10px;border-radius:3px;cursor:pointer;flex-shrink:0}
+    .gc-gen{background:#0e4429;color:#3fb950;border:1px solid #238636}
+    .gc-gen:hover{background:#238636;color:#fff}
+    .gc-cpy{background:#1f2937;color:#94a3b8;border:1px solid #374151}
+    .gc-cpy:hover{background:#374151;color:#fff}
+    .rm-btn{background:none;border:none;color:#475569;cursor:pointer;font-size:16px;line-height:1;padding:0 4px}
+    .rm-btn:hover{color:#ef4444}
+    .empty-state{padding:48px;text-align:center;color:#374151;font-size:13px}
+    .empty-state p{margin-top:8px;font-size:12px;color:#1f2937}
+
+    /* BOTTOM BAR */
+    .bottom-bar{display:flex;align-items:center;gap:8px;padding:8px 16px;background:#0d1526;border-top:1px solid #1f2937;flex-shrink:0}
+    .row-count{font-size:11px;color:#475569}
+
+    /* LIGHT THEME */
+    [data-theme=light] body{background:#eef1f6;color:#1e2733}
+    [data-theme=light] .topbar,[data-theme=light] .toolbar,[data-theme=light] .bottom-bar{background:#fff;border-color:#dde2ec}
+    [data-theme=light] .nav a{color:#64748b;border-right-color:#dde2ec}
+    [data-theme=light] .nav a.active{background:#e7f3fc;color:#0284c7}
+    [data-theme=light] .tbtn,[data-theme=light] .tbtn-sm,[data-theme=light] .filebtn{background:#eef2f8;border-color:#d4dae6;color:#334155}
+    [data-theme=light] .tbtn:hover,[data-theme=light] .tbtn-sm:hover,[data-theme=light] .filebtn:hover{background:#e2e8f2;color:#0f172a}
+    [data-theme=light] .guid-banner{background:#f6f8fb;border-color:#dde2ec}
+    [data-theme=light] .guid-box{background:#fff;border-color:#dde2ec}
+    [data-theme=light] .pv-input,[data-theme=light] .pv-select{background:#fff;color:#1e2733;border-color:#d4dae6}
+    [data-theme=light] table.pt th{background:#eef2f8;color:#475569}
+    [data-theme=light] table.pt td{border-color:#e6e9f0}
+    [data-theme=light] .gc-cpy{background:#eef2f8;border-color:#d4dae6;color:#475569}
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">BIM<span>Flow</span></div>
+  <div class="nav">
+    <a href="/">🗺 Plans</a>
+    <a href="/analyse.html">📊 Analyse</a>
+    <a href="/parametres.html" class="active">🔧 Paramètres</a>
+  </div>
+  <div class="topbar-right">
+    <button class="tbtn" id="themeBtn" title="Thème">☾</button>
+    <div class="status-dot" id="statusDot"></div>
+    <div class="status-txt" id="statusTxt">Prêt</div>
+  </div>
+</div>
+
+<!-- GUID RAPIDE -->
+<div class="guid-banner">
+  <span class="guid-banner-title">🔑 GUID rapide</span>
+  <div class="guid-box">
+    <span class="guid-val empty" id="quickGuidVal">— cliquez Générer —</span>
+    <button class="gb-btn gb-gen" id="btnQuickGen">🔑 Générer</button>
+    <button class="gb-btn gb-cpy" id="btnQuickCpy">📋 Copier</button>
+  </div>
+  <span class="guid-hint">Générez et copiez des GUIDs pour les paramètres partagés Revit</span>
+</div>
+
+<main>
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <span class="toolbar-title">Paramètres à créer dans Revit</span>
+    <button class="btn-add" id="btnAdd">+ Ajouter ligne</button>
+    <button class="tbtn-sm guid" id="btnGenAll">🔑 GUIDs manquants</button>
+    <button class="tbtn-sm" id="btnCopyAll" title="Copier tous les GUIDs dans le presse-papiers">📋 Copier tous GUIDs</button>
+    <div class="toolbar-sep"></div>
+    <button class="tbtn-sm" id="btnExport">⬇ Excel</button>
+    <label class="filebtn">⬆ Importer<input type="file" id="fileImport" accept=".xlsx,.xls,.csv" hidden/></label>
+    <button class="tbtn-sm" id="btnClear" title="Vider la liste">🗑 Vider</button>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-wrap">
+    <table class="pt" id="paramTable">
+      <thead>
+        <tr>
+          <th style="width:200px">Nom</th>
+          <th style="width:130px">Type</th>
+          <th style="width:150px">Groupe</th>
+          <th style="width:110px">Genre</th>
+          <th style="width:110px">Liaison</th>
+          <th style="width:120px">Défaut</th>
+          <th>GUID</th>
+          <th style="width:32px"></th>
+        </tr>
+      </thead>
+      <tbody id="paramBody"></tbody>
+    </table>
+    <div class="empty-state" id="emptyState">
+      Aucun paramètre<p>Cliquez « + Ajouter ligne » ou importez un fichier Excel / CSV</p>
+    </div>
+  </div>
+
+  <!-- BOTTOM BAR -->
+  <div class="bottom-bar">
+    <span class="row-count" id="rowCount">0 paramètre(s)</span>
+    <div style="flex:1"></div>
+    <button class="tbtn send" id="btnSend" disabled>↑ Envoyer vers Revit</button>
+  </div>
+</main>
+
+<script>
+const TYPE_OPTS=[['text','Texte'],['multitext','Texte multiligne'],['integer','Entier'],['number','Nombre'],['length','Longueur'],['area','Surface'],['volume','Volume'],['angle','Angle'],['yesno','Oui/Non'],['url','URL'],['material','Matériau'],['currency','Devise'],['mass','Masse']];
+const GROUP_OPTS=[['data','Données'],['identity','Identité'],['dimensions','Dimensions'],['constraints','Contraintes'],['text','Texte'],['graphics','Graphismes'],['materials','Matériaux et finitions'],['phasing','Phases'],['general','Général']];
+const KIND_OPTS=[['shared','Partagé'],['project','De projet']];
+const BIND_OPTS=[['instance','Occurrence'],['type','Type']];
+
+let rows=[];
+
+function genGUID(){
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{
+    const r=Math.random()*16|0,v=c==='x'?r:(r&0x3|0x8); return v.toString(16);
+  });
+}
+function copyText(t){
+  try{ navigator.clipboard.writeText(t); }catch(e){
+    const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+  }
+}
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttr(s){ return String(s).replace(/"/g,'&quot;'); }
+function optsHtml(opts,sel){ return opts.map(([v,l])=>`<option value="${v}"${v===sel?' selected':''}>${l}</option>`).join(''); }
+
+function render(){
+  const body=document.getElementById('paramBody');
+  const empty=document.getElementById('emptyState');
+  const rc=document.getElementById('rowCount');
+  empty.style.display=rows.length?'none':'';
+  rc.textContent=rows.length+' paramètre(s)';
+  body.innerHTML='';
+  rows.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=
+      `<td><input class="pv-input rfield" data-i="${i}" data-f="Name" value="${escAttr(r.Name||'')}" placeholder="nom du paramètre"/></td>`+
+      `<td><select class="pv-select rfield" data-i="${i}" data-f="Type">${optsHtml(TYPE_OPTS,r.Type||'text')}</select></td>`+
+      `<td><select class="pv-select rfield" data-i="${i}" data-f="Group">${optsHtml(GROUP_OPTS,r.Group||'data')}</select></td>`+
+      `<td><select class="pv-select rfield" data-i="${i}" data-f="Kind">${optsHtml(KIND_OPTS,r.Kind||'shared')}</select></td>`+
+      `<td><select class="pv-select rfield" data-i="${i}" data-f="Bind">${optsHtml(BIND_OPTS,r.Instance===false?'type':'instance')}</select></td>`+
+      `<td><input class="pv-input rfield" data-i="${i}" data-f="DefaultValue" value="${escAttr(r.DefaultValue||'')}" placeholder="—"/></td>`+
+      `<td><div class="guid-cell">`+
+        `<input class="pv-input rfield guid-inp" data-i="${i}" data-f="GUID" value="${escAttr(r.GUID||'')}" placeholder="—" style="font-family:monospace;font-size:10px"/>`+
+        `<button class="gc-btn gc-gen" data-i="${i}" title="Générer GUID">🔑</button>`+
+        `<button class="gc-btn gc-cpy" data-i="${i}" title="Copier GUID">📋</button>`+
+      `</div></td>`+
+      `<td><button class="rm-btn" data-i="${i}">×</button></td>`;
+    body.appendChild(tr);
+  });
+
+  body.querySelectorAll('.rfield').forEach(el=>{
+    const h=()=>{
+      const i=+el.getAttribute('data-i'), f=el.getAttribute('data-f');
+      if(f==='Bind') rows[i].Instance=el.value==='instance'; else rows[i][f]=el.value;
+      updateSendBtn();
+    };
+    el.addEventListener('input',h); el.addEventListener('change',h);
+  });
+  body.querySelectorAll('.gc-gen').forEach(b=>b.addEventListener('click',()=>{
+    const i=+b.getAttribute('data-i'); const g=genGUID(); rows[i].GUID=g;
+    const inp=body.querySelector(`.guid-inp[data-i="${i}"]`); if(inp) inp.value=g;
+  }));
+  body.querySelectorAll('.gc-cpy').forEach(b=>b.addEventListener('click',()=>{
+    const i=+b.getAttribute('data-i'); const g=rows[i].GUID||'';
+    if(!g){ alert('Aucun GUID — cliquez 🔑 pour en générer un.'); return; }
+    copyText(g); const orig=b.textContent; b.textContent='✓'; setTimeout(()=>b.textContent=orig,1200);
+  }));
+  body.querySelectorAll('.rm-btn').forEach(b=>b.addEventListener('click',()=>{
+    rows.splice(+b.getAttribute('data-i'),1); render();
+  }));
+  updateSendBtn();
+}
+
+function addRow(){
+  rows.push({Name:'',Type:'text',Group:'data',Kind:'shared',Instance:true,DefaultValue:'',GUID:''});
+  render();
+  const inputs=document.querySelectorAll('.rfield[data-f="Name"]');
+  if(inputs.length) inputs[inputs.length-1].focus();
+}
+function updateSendBtn(){ document.getElementById('btnSend').disabled=!rows.some(r=>r.Name&&r.Name.trim()); }
+
+/* GUID RAPIDE */
+let quickGuid='';
+document.getElementById('btnQuickGen').addEventListener('click',()=>{
+  quickGuid=genGUID();
+  const el=document.getElementById('quickGuidVal');
+  el.textContent=quickGuid; el.classList.remove('empty');
+});
+document.getElementById('btnQuickCpy').addEventListener('click',()=>{
+  if(!quickGuid){ alert('Cliquez d\'abord sur Générer.'); return; }
+  copyText(quickGuid);
+  const b=document.getElementById('btnQuickCpy'); const orig=b.textContent; b.textContent='✓ Copié !'; setTimeout(()=>b.textContent=orig,1500);
+});
+
+/* TOOLBAR */
+document.getElementById('btnAdd').addEventListener('click',addRow);
+document.getElementById('btnGenAll').addEventListener('click',()=>{
+  rows.forEach(r=>{ if(!r.GUID) r.GUID=genGUID(); }); render();
+});
+document.getElementById('btnCopyAll').addEventListener('click',()=>{
+  const guids=rows.map(r=>r.GUID).filter(Boolean);
+  if(!guids.length){ alert('Aucun GUID généré. Cliquez « 🔑 GUIDs manquants » d\'abord.'); return; }
+  copyText(guids.join('\n'));
+  const b=document.getElementById('btnCopyAll'); const orig=b.textContent; b.textContent='✓ Copié !'; setTimeout(()=>b.textContent=orig,1500);
+});
+document.getElementById('btnClear').addEventListener('click',()=>{
+  if(rows.length&&!confirm('Vider toute la liste ?')) return; rows=[]; render();
+});
+
+/* SEND TO REVIT */
+document.getElementById('btnSend').addEventListener('click',async()=>{
+  const news=rows.filter(r=>r.Name&&r.Name.trim());
+  if(!news.length) return;
+  try{
+    const r=await fetch('/api/updates',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({PlanKey:'',Updates:[],NewParameters:news})});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const b=document.getElementById('btnSend'); b.textContent='✓ Envoyé !'; b.classList.add('ok');
+    setTimeout(()=>{ b.textContent='↑ Envoyer vers Revit'; b.classList.remove('ok'); },3000);
+    alert('Envoyé !\nDans Revit : cliquez "Recevoir depuis BIMFlow".');
+  }catch(e){ alert('Erreur: '+e.message); }
+});
+
+/* EXCEL */
+let _exjsPromise=null;
+function loadExcelJS(){
+  if(window.ExcelJS) return Promise.resolve(window.ExcelJS);
+  if(_exjsPromise) return _exjsPromise;
+  _exjsPromise=new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+    s.onload=()=>res(window.ExcelJS); s.onerror=()=>rej(new Error('Échec chargement ExcelJS'));
+    document.head.appendChild(s);
+  });
+  return _exjsPromise;
+}
+function dlBuf(buf,name){
+  const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+function cellText(v){ if(v==null)return''; if(typeof v==='object'){if(v.text!=null)return String(v.text); if(v.result!=null)return String(v.result); if(Array.isArray(v.richText))return v.richText.map(t=>t.text).join(''); return'';} return String(v); }
+
+document.getElementById('btnExport').addEventListener('click',async()=>{
+  try{
+    const ExcelJS=await loadExcelJS();
+    const wb=new ExcelJS.Workbook(); const ws=wb.addWorksheet('Paramètres');
+    ws.columns=[{header:'Name',width:28},{header:'Type',width:14},{header:'Group',width:18},{header:'Kind',width:12},{header:'Binding',width:12},{header:'Default',width:16},{header:'GUID',width:38}];
+    let data=rows.filter(r=>r.Name&&r.Name.trim()).map(r=>[r.Name,r.Type||'text',r.Group||'data',r.Kind||'shared',r.Instance===false?'type':'instance',r.DefaultValue||'',r.GUID||'']);
+    if(!data.length) data=[['ExempleParam','text','data','shared','instance','','']];
+    data.forEach(row=>ws.addRow(row));
+    const hr=ws.getRow(1); hr.font={bold:true,color:{argb:'FFFFFFFF'}}; hr.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1D4ED8'}};
+    const lists={B:'"text,multitext,integer,number,length,area,volume,angle,yesno,url,material,currency,mass"',
+      C:'"data,identity,dimensions,constraints,text,graphics,materials,phasing,general"',D:'"shared,project"',E:'"instance,type"'};
+    for(let r=2;r<=300;r++) for(const col in lists) ws.getCell(col+r).dataValidation={type:'list',allowBlank:true,formulae:[lists[col]]};
+    ws.autoFilter={from:{row:1,column:1},to:{row:1,column:7}};
+    dlBuf(await wb.xlsx.writeBuffer(),'BIMFlow_parametres.xlsx');
+  }catch(e){ alert('Erreur Excel: '+e.message); }
+});
+
+document.getElementById('fileImport').addEventListener('change',async function(){
+  if(!this.files[0]) return;
+  try{
+    const ExcelJS=await loadExcelJS(); const wb=new ExcelJS.Workbook(); await wb.xlsx.load(await this.files[0].arrayBuffer());
+    const ws=wb.worksheets[0]; const allRows=[]; ws.eachRow({includeEmpty:false},row=>allRows.push((row.values||[]).slice(1).map(cellText)));
+    if(!allRows.length){ alert('Fichier vide.'); return; }
+    let start=0; const h=(allRows[0]||[]).map(x=>String(x).toLowerCase());
+    if(h.includes('name')||h.includes('nom')) start=1;
+    let added=0;
+    for(let i=start;i<allRows.length;i++){
+      const c=(allRows[i]||[]).map(x=>x==null?'':String(x).trim()); const name=c[0]; if(!name) continue;
+      rows.push({Name:name,Type:(c[1]||'text').toLowerCase(),Group:(c[2]||'data').toLowerCase(),
+        Kind:(c[3]||'shared').toLowerCase(),Instance:(c[4]||'instance').toLowerCase()!=='type',DefaultValue:c[5]||'',GUID:c[6]||''});
+      added++;
+    }
+    render(); alert(added+' paramètre(s) importé(s).');
+  }catch(e){ alert('Erreur import: '+e.message); }
+  this.value='';
+});
+
+/* THEME */
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('themeBtn').textContent=(t==='dark')?'☀':'☾';
+  try{ localStorage.setItem('bimflow_theme',t); }catch(e){}
+}
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');
+});
+(function(){ let t='dark'; try{ t=localStorage.getItem('bimflow_theme')||'dark'; }catch(e){} applyTheme(t); })();
+
+render();
+</script>
+</body>
+</html>

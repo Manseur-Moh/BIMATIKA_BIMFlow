@@ -78,7 +78,7 @@
     .level-sub{font-size:9px;color:#475569;margin-top:1px}
 
     /* ROOMS SIDEBAR */
-    aside.rooms-aside{width:212px;flex-shrink:0;background:#111827;border-right:1px solid #1f2937;display:flex;flex-direction:column;overflow:hidden}
+    aside.rooms-aside{width:212px;flex-shrink:0;background:#111827;border-left:1px solid #1f2937;display:flex;flex-direction:column;overflow:hidden}
     .sidebar-hd{padding:8px 12px;font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center}
     .sel-count{font-size:10px;color:#f87171;font-weight:700}
     .ctrl-wrap{padding:6px 8px;border-bottom:1px solid #1f2937;display:flex;flex-direction:column;gap:4px}
@@ -276,33 +276,21 @@
     [data-theme=light] #colSearch,[data-theme=light] #colPreset{background:#fff;color:#1e2733;border-color:#d4dae6}
     [data-theme=light] .empty-hint,[data-theme=light] .empty-state,[data-theme=light] .empty-state h2{color:#94a3b8}
 
-    /* ===== dock layout (drag-to-edge) ===== */
-    main.layout{display:flex;flex-direction:column;flex:1;overflow:hidden}
-    .midrow{display:flex;flex:1;min-height:0;overflow:hidden}
-    .dz{display:flex;overflow:hidden}
-    .zLeft,.zRight{flex-direction:column;overflow:hidden;min-width:120px}
-    .zTop,.zBottom{flex-direction:row;flex-shrink:0;resize:vertical;overflow:hidden;min-height:90px}
-    .dzc{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
-    .dz:empty{display:none}
-    /* resize splitter bars */
-    .split-v{width:4px;cursor:col-resize;background:#1a2540;flex-shrink:0;transition:background .15s}
+    /* ===== LAYOUT FIXE ===== */
+    #appMain{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
+    #centerCol{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+    #viewerRow{flex:1;display:flex;flex-direction:row;overflow:hidden;min-height:0;min-width:0}
+    .split-v{width:5px;cursor:col-resize;background:#0d1526;flex-shrink:0;transition:background .15s;position:relative}
     .split-v:hover,.split-v.dragging{background:#3b82f6}
-    .split-h{height:4px;cursor:row-resize;background:#1a2540;flex-shrink:0;transition:background .15s}
+    .split-h{height:5px;cursor:row-resize;background:#0d1526;flex-shrink:0;transition:background .15s;position:relative}
     .split-h:hover,.split-h.dragging{background:#3b82f6}
-    /* drag handle in panel headers */
-    .dock-handle{display:inline-flex;align-items:center;cursor:grab;padding:0 6px;color:#475569;font-size:14px;user-select:none;flex-shrink:0;order:-1}
-    .dock-handle:active{cursor:grabbing}
-    .dock-handle:hover{color:#94a3b8}
-    /* drop zones that appear during drag */
-    .drop-zone{position:fixed;z-index:2000;display:none;align-items:center;justify-content:center;background:rgba(29,78,216,.35);border:2px dashed #3b82f6;border-radius:6px;pointer-events:all;font-size:20px;color:#93c5fd;transition:background .1s}
-    .drop-zone.active{display:flex}
-    .drop-zone.over{background:rgba(29,78,216,.65)}
-    #layoutPop{position:fixed;top:52px;right:12px;z-index:1200;background:#1f2937;border:1px solid #374151;border-radius:8px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.7);width:250px;font-size:12px;display:none}
+    .split-v::after{content:"";position:absolute;left:1.5px;top:50%;transform:translateY(-50%);width:2px;height:34px;background:#374151;border-radius:2px}
+    .split-h::after{content:"";position:absolute;top:1.5px;left:50%;transform:translateX(-50%);height:2px;width:40px;background:#374151;border-radius:2px}
+    #layoutPop{position:fixed;top:52px;right:12px;z-index:1200;background:#1f2937;border:1px solid #374151;border-radius:8px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.7);width:220px;font-size:12px;display:none}
     #layoutPop .row{display:flex;gap:6px;margin-top:8px}
-    #layoutPop select,#layoutPop button{background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:5px;font-size:12px;cursor:pointer}
-    #layoutPop .lp-hint{font-size:10px;color:#64748b;margin-top:8px;line-height:1.5}
+    #layoutPop button{background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:6px;font-size:12px;cursor:pointer;width:100%}
     [data-theme=light] #layoutPop{background:#fff;border-color:#dde2ec;box-shadow:0 8px 24px rgba(0,0,0,.18)}
-    [data-theme=light] #layoutPop select,[data-theme=light] #layoutPop button{background:#fff;color:#1e2733;border-color:#d4dae6}
+    [data-theme=light] #layoutPop button{background:#fff;color:#1e2733;border-color:#d4dae6}
   </style>
 </head>
 <body>
@@ -349,70 +337,80 @@
   <div class="row"><button id="tplReset" style="flex:1;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:6px;cursor:pointer">⟲ Réinitialiser la disposition</button></div>
 </div>
 
-<main>
+<main id="appMain">
+
+  <!-- NIVEAUX — colonne gauche, pleine hauteur -->
   <aside class="levels-aside">
     <div class="sidebar-hd" style="display:flex;align-items:center;gap:4px"><span data-en="Levels">Niveaux</span><button id="btnAllLevels" title="Afficher toutes les pièces de tous les niveaux" style="margin-left:auto;background:transparent;border:1px solid #374151;color:#94a3b8;border-radius:4px;font-size:9px;font-weight:700;padding:2px 5px;cursor:pointer;flex-shrink:0;line-height:1.4">Tous</button></div>
     <div class="levels-list" id="levelsList"><div class="empty-hint">Aucun plan</div></div>
   </aside>
+  <div class="split-v" id="splitLevels"></div>
 
-  <aside class="rooms-aside">
-    <div class="sidebar-hd"><span data-en="Rooms">Pièces</span><span class="sel-count" id="selCount"></span></div>
-    <div class="ctrl-wrap">
-      <label data-en="🎨 Color / filter by">🎨 Colorer / filtrer par</label>
-      <select id="colorBy"><option value="">Aucun (par défaut)</option></select>
-      <select id="filtVal"><option value="">— toutes les valeurs —</option></select>
-      <div class="ctrl-row">
-        <button class="mini-btn" id="btnSelectMatch" data-en="Select">Sélectionner</button>
-        <button class="mini-btn" id="btnClearSel" data-en="Deselect all">Tout désélect.</button>
+  <!-- COLONNE CENTRALE -->
+  <div id="centerCol">
+
+    <!-- LIGNE HAUTE : viewer 2D/3D + pièces à droite -->
+    <div id="viewerRow">
+      <div class="viewer-split mboth" id="viewerSplit">
+        <div class="view-modes" id="viewModes">
+          <button data-m="m2d">🗺 2D</button><button data-m="mboth" class="active">⊞ 2D + 3D</button><button data-m="m3d">🧊 3D</button>
+        </div>
+        <div class="viewer-wrap" id="viewerWrap">
+          <div id="emptyState" class="empty-state">
+            <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+            </svg>
+            <h2>BIMFlow Viewer</h2>
+            <p>Choisissez un niveau à gauche, ou envoyez depuis Revit via <strong>"Envoyer vers BIMFlow"</strong></p>
+          </div>
+          <div id="legend" class="legend"></div>
+          <div id="minimap"><div id="minimap-lbl">Vue d'ensemble</div><svg id="minimapSvg"></svg></div>
+          <div class="zoom-wrap">
+            <button class="zbtn" id="zIn">+</button>
+            <button class="zbtn" id="zOut">−</button>
+            <button class="zbtn" id="zReset" title="Ajuster">⌖</button>
+          </div>
+          <div style="position:absolute;left:12px;bottom:12px;font-size:11px;color:#475569;background:rgba(13,21,38,.7);padding:4px 8px;border-radius:5px;pointer-events:none">Clic molette / clic droit + glisser · Molette pour zoomer</div>
+        </div>
+        <div class="pane3d" id="pane3d">
+          <canvas id="canvas3d"></canvas>
+          <div class="mode3d" id="mode3d"><button data-v="level" class="active" data-en="Level">Niveau</button><button data-v="project" data-en="Project">Projet</button></div>
+          <div class="pane3d-hint" id="pane3dHint">Volumes 3D des pièces — glissez pour pivoter, molette pour zoomer</div>
+          <div class="zoom-wrap"><button class="zbtn" id="fit3d" title="Recadrer la vue 3D">⌖</button></div>
+        </div>
       </div>
-    </div>
-    <div class="ctrl-wrap" style="border-bottom:1px solid #1f2937">
-      <label data-en="🔍 Search / select by">🔍 Rechercher / sélectionner par</label>
-      <select id="searchKey"><option value="">Nom / Numéro</option></select>
-      <input id="roomSearch" type="text" placeholder="Rechercher…" data-en-ph="Search…"/>
-    </div>
-    <div class="rooms-list" id="roomsList"><div class="empty-hint">Aucun plan chargé</div></div>
-  </aside>
+      <div class="split-v" id="splitRooms"></div>
 
-  <div class="vsplit" id="roomsSplit" title="Glisser pour redimensionner"></div>
+      <!-- PIÈCES — panneau droit -->
+      <aside class="rooms-aside">
+        <div class="sidebar-hd"><span data-en="Rooms">Pièces</span><span class="sel-count" id="selCount"></span></div>
+        <div class="ctrl-wrap">
+          <label data-en="🎨 Color / filter by">🎨 Colorer / filtrer par</label>
+          <select id="colorBy"><option value="">Aucun (par défaut)</option></select>
+          <select id="filtVal"><option value="">— toutes les valeurs —</option></select>
+          <div class="ctrl-row">
+            <button class="mini-btn" id="btnSelectMatch" data-en="Select">Sélectionner</button>
+            <button class="mini-btn" id="btnClearSel" data-en="Deselect all">Tout désélect.</button>
+          </div>
+        </div>
+        <div class="ctrl-wrap" style="border-bottom:1px solid #1f2937">
+          <label data-en="🔍 Search / select by">🔍 Rechercher / sélectionner par</label>
+          <select id="searchKey"><option value="">Nom / Numéro</option></select>
+          <input id="roomSearch" type="text" placeholder="Rechercher…" data-en-ph="Search…"/>
+        </div>
+        <div class="rooms-list" id="roomsList"><div class="empty-hint">Aucun plan chargé</div></div>
+      </aside>
+    </div>
 
-  <div class="right-col">
-   <div class="viewer-split mboth" id="viewerSplit">
-    <div class="view-modes" id="viewModes">
-      <button data-m="m2d">🗺 2D</button><button data-m="mboth" class="active">⊞ 2D + 3D</button><button data-m="m3d">🧊 3D</button>
-    </div>
-    <div class="viewer-wrap" id="viewerWrap">
-      <div id="emptyState" class="empty-state">
-        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-          <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
-        </svg>
-        <h2>BIMFlow Viewer</h2>
-        <p>Choisissez un niveau à gauche, ou envoyez depuis Revit via <strong>"Envoyer vers BIMFlow"</strong></p>
-      </div>
-      <div id="legend" class="legend"></div>
-      <div id="minimap"><div id="minimap-lbl">Vue d'ensemble</div><svg id="minimapSvg"></svg></div>
-      <div class="zoom-wrap">
-        <button class="zbtn" id="zIn">+</button>
-        <button class="zbtn" id="zOut">−</button>
-        <button class="zbtn" id="zReset" title="Ajuster">⌖</button>
-      </div>
-      <div style="position:absolute;left:12px;bottom:12px;font-size:11px;color:#475569;background:rgba(13,21,38,.7);padding:4px 8px;border-radius:5px;pointer-events:none">Clic molette / clic droit + glisser pour naviguer · Molette pour zoomer</div>
-    </div>
-    <div class="pane3d" id="pane3d">
-      <canvas id="canvas3d"></canvas>
-      <div class="mode3d" id="mode3d"><button data-v="level" class="active" data-en="Level">Niveau</button><button data-v="project" data-en="Project">Projet</button></div>
-      <div class="pane3d-hint" id="pane3dHint">Volumes 3D des pièces — glissez pour pivoter, molette pour zoomer</div>
-      <div class="zoom-wrap"><button class="zbtn" id="fit3d" title="Recadrer la vue 3D">⌖</button></div>
-    </div>
-   </div>
+    <!-- SÉPARATEUR PARAMÈTRES (redimensionnable) -->
+    <div class="split-h" id="splitBottom"></div>
 
-    <!-- BOTTOM PARAMETER PANEL — single panel, 2 tabs -->
-    <div class="hsplit" id="bpSplit" title="Glisser pour redimensionner"></div>
-    <div class="bottom-panel">
+    <!-- PARAMÈTRES EN BAS -->
+    <div class="bottom-panel" id="bottomPanel">
       <div class="bp-bar">
         <div class="bp-tabs">
           <button class="bp-tab active" id="tabParams" data-en="Parameters">Paramètres</button>
-          <button class="bp-tab" id="tabCreate" data-en="Create parameters">Créer des paramètres</button>
+          <button class="bp-tab" id="tabCreate" data-en="Create parameters">Créer paramètres</button>
         </div>
         <span class="bp-sub" id="bpSub"></span>
         <div class="bp-spacer"></div>
@@ -421,13 +419,13 @@
       </div>
 
       <div class="bp-content">
-        <!-- VIEW 1: parameters matrix (rooms × parameters) -->
+        <!-- VUE 1 : tableau pièces × paramètres -->
         <div class="bp-view" id="viewParams">
           <div class="ptable-hd">
             <span id="paramScope">Toutes les pièces</span>
             <div class="htools">
               <div class="colsel" id="colSel">
-                <button id="colSelBtn" title="Choisir les colonnes (paramètres) à afficher">▦ Colonnes ▾</button>
+                <button id="colSelBtn" title="Choisir les colonnes à afficher">▦ Colonnes ▾</button>
                 <div class="colsel-pop" id="colSelPop">
                   <div class="colsel-tools" style="border-bottom:1px solid #2a3a55;padding-bottom:6px">
                     <select id="colPreset" title="Favoris de colonnes"><option value="">★ Favoris…</option></select>
@@ -440,7 +438,7 @@
                 </div>
               </div>
               <button id="btnExportParams" title="Exporter le tableau (Excel)">⬇ Excel</button>
-              <label class="filebtn" title="Importer un Excel exporté pour mettre à jour les valeurs">⬆ MAJ<input type="file" id="paramImport" accept=".xlsx,.xls,.csv" hidden/></label>
+              <label class="filebtn" title="Importer un Excel exporté">⬆ MAJ<input type="file" id="paramImport" accept=".xlsx,.xls,.csv" hidden/></label>
             </div>
           </div>
           <div class="ptable-scroll">
@@ -449,24 +447,27 @@
           </div>
         </div>
 
-        <!-- VIEW 2: parameters to create (editable multi-row grid) -->
+        <!-- VUE 2 : paramètres à créer -->
         <div class="bp-view" id="viewCreate" style="display:none">
           <div class="ptable-hd">
-            <span>Paramètres à créer dans Revit — une ligne = un paramètre</span>
+            <span>Paramètres à créer dans Revit</span>
             <div class="htools">
               <button class="btn-add" id="btnAddCreate">+ Ligne</button>
-              <button id="btnTplExport" title="Télécharger un modèle Excel pré-rempli (à copier)">⬇ Modèle Excel</button>
-              <label class="filebtn" title="Importer un fichier Excel/CSV de paramètres">⬆ Importer<input type="file" id="tplImport" accept=".xlsx,.xls,.csv" hidden/></label>
+              <button id="btnGenAllGuids" title="Générer un GUID pour toutes les lignes vides" style="background:#0e4429;border:1px solid #238636;color:#3fb950;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer">🔑 GUIDs</button>
+              <button id="btnTplExport" title="Télécharger modèle Excel">⬇ Excel</button>
+              <label class="filebtn" title="Importer Excel/CSV">⬆ Importer<input type="file" id="tplImport" accept=".xlsx,.xls,.csv" hidden/></label>
+              <a href="/parametres.html" style="padding:3px 8px;font-size:10px;background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:4px;text-decoration:none;display:inline-flex;align-items:center" title="Page dédiée création de paramètres">↗ Plein écran</a>
             </div>
           </div>
           <div class="ptable-scroll">
-            <table class="pt"><thead><tr><th>Nom</th><th>Type</th><th>Groupe</th><th>Genre</th><th>Liaison</th><th>Défaut</th><th></th></tr></thead>
+            <table class="pt"><thead><tr><th>Nom</th><th>Type</th><th>Groupe</th><th>Genre</th><th>Liaison</th><th>Défaut</th><th>GUID</th><th></th></tr></thead>
               <tbody id="createBody"></tbody></table>
             <div class="bp-empty" id="createEmpty">Aucun paramètre — cliquez « + Ligne » ou importez un modèle Excel</div>
           </div>
         </div>
       </div>
     </div>
+
   </div>
 </main>
 
@@ -918,6 +919,11 @@ function renderCreateTable(){
       `<td><select class="pv-select npc" data-i="${i}" data-f="Kind">${optsHtml(KIND_OPTS,r.Kind||'shared')}</select></td>`+
       `<td><select class="pv-select npc" data-i="${i}" data-f="Bind">${optsHtml(BIND_OPTS,r.Instance===false?'type':'instance')}</select></td>`+
       `<td><input class="pv-input npc" data-i="${i}" data-f="DefaultValue" value="${escAttr(r.DefaultValue||'')}" placeholder="—"/></td>`+
+      `<td style="white-space:nowrap;min-width:140px">`+
+        `<input class="pv-input npc guid-inp" data-i="${i}" data-f="GUID" value="${escAttr(r.GUID||'')}" placeholder="—" style="width:calc(100% - 54px);min-width:60px;font-size:10px"/>`+
+        `<button class="guid-gen" data-i="${i}" title="Générer un GUID" style="padding:2px 5px;margin-left:2px;font-size:10px;background:#0e4429;border:1px solid #238636;color:#3fb950;border-radius:3px;cursor:pointer">🔑</button>`+
+        `<button class="guid-cpy" data-i="${i}" title="Copier le GUID" style="padding:2px 4px;margin-left:2px;font-size:10px;background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:3px;cursor:pointer">📋</button>`+
+      `</td>`+
       `<td><button class="rm-btn" data-i="${i}" title="Retirer">×</button></td>`;
     body.appendChild(tr);
   });
@@ -926,14 +932,27 @@ function renderCreateTable(){
       if(f==='Bind') newParamRequests[i].Instance=el.value==='instance'; else newParamRequests[i][f]=el.value; updateSendBtn(); };
     el.addEventListener('input',h); el.addEventListener('change',h);
   });
+  body.querySelectorAll('.guid-gen').forEach(b=>b.addEventListener('click',()=>{
+    const i=+b.getAttribute('data-i'); const g=genGUID(); newParamRequests[i].GUID=g;
+    const inp=body.querySelector(`.guid-inp[data-i="${i}"]`); if(inp) inp.value=g; updateSendBtn();
+  }));
+  body.querySelectorAll('.guid-cpy').forEach(b=>b.addEventListener('click',()=>{
+    const i=+b.getAttribute('data-i'); const g=newParamRequests[i].GUID||'';
+    if(!g){ alert('Aucun GUID — cliquez 🔑 pour en générer un.'); return; }
+    copyText(g); const orig=b.textContent; b.textContent='✓'; setTimeout(()=>b.textContent=orig,1200);
+  }));
   body.querySelectorAll('.rm-btn').forEach(b=>b.addEventListener('click',()=>{ newParamRequests.splice(+b.getAttribute('data-i'),1); renderCreateTable(); updateSendBtn(); }));
 }
 function addCreateRow(){
-  newParamRequests.push({ Name:'', Type:'text', Group:'data', Kind:'shared', Instance:true, DefaultValue:'' });
+  newParamRequests.push({ Name:'', Type:'text', Group:'data', Kind:'shared', Instance:true, DefaultValue:'', GUID:'' });
   renderCreateTable(); updateSendBtn();
   const names=$('createBody').querySelectorAll('input.npc[data-f="Name"]'); if(names.length) names[names.length-1].focus();
 }
 $('btnAddCreate').addEventListener('click',addCreateRow);
+$('btnGenAllGuids').addEventListener('click',()=>{
+  newParamRequests.forEach(r=>{ if(!r.GUID) r.GUID=genGUID(); });
+  renderCreateTable(); updateSendBtn();
+});
 
 function updateSendBtn(){ const validNew=newParamRequests.some(r=>r.Name&&r.Name.trim()); $('btnSendRevit').disabled=!(Object.keys(pendingEdits).length||validNew); }
 
@@ -1040,9 +1059,9 @@ async function exportTemplate(){
   try{
     const ExcelJS=await loadExcelJS();
     const wb=new ExcelJS.Workbook(); const ws=wb.addWorksheet('Paramètres');
-    ws.columns=[{header:'Name',width:26},{header:'Type',width:14},{header:'Group',width:18},{header:'Kind',width:12},{header:'Binding',width:12},{header:'Default',width:16}];
-    let rows=newParamRequests.filter(r=>r.Name&&r.Name.trim()).map(r=>[r.Name,r.Type||'text',r.Group||'data',r.Kind||'shared',r.Instance===false?'type':'instance',r.DefaultValue||'']);
-    if(!rows.length) rows=[['Sous-Projet','text','data','shared','instance','']];
+    ws.columns=[{header:'Name',width:26},{header:'Type',width:14},{header:'Group',width:18},{header:'Kind',width:12},{header:'Binding',width:12},{header:'Default',width:16},{header:'GUID',width:38}];
+    let rows=newParamRequests.filter(r=>r.Name&&r.Name.trim()).map(r=>[r.Name,r.Type||'text',r.Group||'data',r.Kind||'shared',r.Instance===false?'type':'instance',r.DefaultValue||'',r.GUID||'']);
+    if(!rows.length) rows=[['Sous-Projet','text','data','shared','instance','','']];
     rows.forEach(r=>ws.addRow(r));
     const hr=ws.getRow(1); hr.font=HDR_FONT; hr.fill=HDR_FILL;
     const lists={ B:'"text,multitext,integer,number,length,area,volume,angle,yesno,url,material,currency,mass"',
@@ -1069,7 +1088,7 @@ async function importTemplate(file){
     for(let i=start;i<rows.length;i++){
       const c=(rows[i]||[]).map(x=>x==null?'':String(x).trim()); const name=c[0]; if(!name) continue;
       newParamRequests.push({ Name:name, Type:(c[1]||'text').toLowerCase(), Group:(c[2]||'data').toLowerCase(),
-        Kind:(c[3]||'shared').toLowerCase(), Instance:(c[4]||'instance').toLowerCase()!=='type', DefaultValue:c[5]||'' });
+        Kind:(c[3]||'shared').toLowerCase(), Instance:(c[4]||'instance').toLowerCase()!=='type', DefaultValue:c[5]||'', GUID:c[6]||'' });
       added++;
     }
     renderCreateTable(); updateSendBtn(); showTab('create');
@@ -1360,80 +1379,82 @@ $('btnSendRevit').addEventListener('click',sendToRevit);
 $('btnRefresh').addEventListener('click',()=>{ lastLevelKeys=''; loadIndex(); });
 window.addEventListener('resize',()=>{ const s=$('mainSvg'); if(s&&plan){ const w=$('viewerWrap'); panX=w.clientWidth/2-W/2*zoom; panY=w.clientHeight/2-H/2*zoom; applyTx(s); } resize3D(); });
 
-/* ═══ DOCK LAYOUT — levels fixed left, rooms/params draggable ═══ */
-const PSEL={rooms:'.rooms-aside',params:'.bottom-panel'};
-const DOCKW={rooms:'220px',params:'340px'};
-const DEFLAYOUT={rooms:'right',params:'bottom'};
-let DZ={};
+/* ═══ GUID ═══ */
+function genGUID(){
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{
+    const r=Math.random()*16|0,v=c==='x'?r:(r&0x3|0x8); return v.toString(16);
+  });
+}
+function copyText(t){
+  try{ navigator.clipboard.writeText(t); }catch(e){
+    const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+  }
+}
 
-function makeSplitter(dir){
-  // dir: 'v' = vertical bar (resize width of prev sibling), 'h' = horizontal bar (resize height of prev sibling)
-  const bar=document.createElement('div');
-  bar.className=dir==='v'?'split-v':'split-h';
+/* ═══ SPLITTERS REDIMENSIONNABLES ═══ */
+function setupSplitLeft(id,el,min){
+  const bar=document.getElementById(id); if(!bar||!el)return;
   bar.addEventListener('mousedown',ev=>{
     ev.preventDefault(); bar.classList.add('dragging');
-    const prev=bar.previousElementSibling; if(!prev) return;
-    const startPos=dir==='v'?ev.clientX:ev.clientY;
-    const startSize=dir==='v'?prev.offsetWidth:prev.offsetHeight;
-    const move=e=>{
-      const delta=(dir==='v'?e.clientX:e.clientY)-startPos;
-      const minSize=dir==='v'?80:60;
-      if(dir==='v') prev.style.width=Math.max(minSize,startSize+delta)+'px';
-      else prev.style.height=Math.max(minSize,startSize+delta)+'px';
-      refitPlan(); setTimeout(resize3D,30);
-    };
-    const up=()=>{ bar.classList.remove('dragging'); document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); };
-    document.addEventListener('mousemove',move);
-    document.addEventListener('mouseup',up);
+    const s0=ev.clientX, w0=el.getBoundingClientRect().width;
+    const mv=e=>{ const w=Math.max(min,w0+(e.clientX-s0)); el.style.width=w+'px'; el.style.flex='0 0 '+w+'px'; refitPlan(); };
+    const up=()=>{ bar.classList.remove('dragging'); document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); };
+    document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
   });
-  return bar;
 }
-
-function buildDockScaffold(){
-  const main=document.querySelector('main'); main.classList.add('layout');
-  const mk=(c,id)=>{ const d=document.createElement('div'); d.className=c; if(id)d.id=id; return d; };
-  DZ.top=mk('dz zTop','zTop'); DZ.bottom=mk('dz zBottom','zBottom');
-  DZ.left=mk('dz zLeft','zLeft'); DZ.right=mk('dz zRight','zRight'); DZ.center=mk('dzc','zCenter');
-  // Levels panel is always fixed as leftmost column
-  const levelsEl=document.querySelector('.levels-aside');
-  DZ.left.appendChild(levelsEl);
-  DZ.left.appendChild(makeSplitter('v')); // splitter after levels, before any docked panel
-  const mid=mk('midrow','midRow'); mid.append(DZ.left,DZ.center,DZ.right);
-  // Splitter between left zone and center viewer
-  mid.insertBefore(makeSplitter('v'), DZ.center);
-  mid.insertBefore(makeSplitter('v'), DZ.right);
-  main.append(DZ.top,mid,DZ.bottom);
-  DZ.center.append($('viewerSplit'));
-  // Horizontal splitter between viewer and bottom zone
-  DZ.bottom._splitter=makeSplitter('h');
+function setupSplitRight(id,el,min){
+  const bar=document.getElementById(id); if(!bar||!el)return;
+  bar.addEventListener('mousedown',ev=>{
+    ev.preventDefault(); bar.classList.add('dragging');
+    const s0=ev.clientX, w0=el.getBoundingClientRect().width;
+    const mv=e=>{ const w=Math.max(min,w0-(e.clientX-s0)); el.style.width=w+'px'; el.style.flex='0 0 '+w+'px'; refitPlan(); setTimeout(resize3D,30); };
+    const up=()=>{ bar.classList.remove('dragging'); document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); };
+    document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+  });
 }
-
-function dockPanel(key,zone){
-  const el=document.querySelector(PSEL[key]); if(!el||!DZ[zone])return;
-  const horiz=(zone==='top'||zone==='bottom');
-  // For bottom zone: insert splitter before panel if first panel there
-  if(horiz && zone==='bottom' && DZ.bottom._splitter && !DZ.bottom._splitter.parentElement){
-    DZ.bottom.parentElement.insertBefore(DZ.bottom._splitter, DZ.bottom);
-  }
-  DZ[zone].appendChild(el); el.dataset.dock=zone;
-  el.style.flex   = horiz ? '1 1 0' : '1 1 auto';
-  el.style.width  = horiz ? 'auto' : DOCKW[key];
-  el.style.height = horiz ? '' : '';
-  if(horiz && !DZ[zone].style.height) DZ[zone].style.height='260px';
+function setupSplitBottom(id,el,min){
+  const bar=document.getElementById(id); if(!bar||!el)return;
+  bar.addEventListener('mousedown',ev=>{
+    ev.preventDefault(); bar.classList.add('dragging');
+    const s0=ev.clientY, h0=el.getBoundingClientRect().height;
+    const mv=e=>{ const h=Math.max(min,h0-(e.clientY-s0)); el.style.height=h+'px'; el.style.flex='0 0 '+h+'px'; };
+    const up=()=>{ bar.classList.remove('dragging'); document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); };
+    document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+  });
 }
-function curLayout(){ const o={}; Object.keys(PSEL).forEach(k=>{ const el=document.querySelector(PSEL[k]); o[k]=el?(el.dataset.dock||DEFLAYOUT[k]):DEFLAYOUT[k]; }); return o; }
-function applyLayout(L){ Object.keys(PSEL).forEach(k=>dockPanel(k,(L&&L[k])||DEFLAYOUT[k])); refitPlan(); setTimeout(()=>resize3D(),60); }
-function saveLayout(){ try{ localStorage.setItem('bimflow_layout',JSON.stringify(curLayout())); }catch(e){} }
+setupSplitLeft('splitLevels', document.querySelector('.levels-aside'), 80);
+setupSplitRight('splitRooms', document.querySelector('.rooms-aside'), 150);
+setupSplitBottom('splitBottom', document.getElementById('bottomPanel'), 60);
 
-buildDockScaffold();
-// applyLayout must run BEFORE removing right-col, so it can move .bottom-panel out first
-applyLayout(DEFLAYOUT);
-document.querySelector('.right-col')?.remove();
-$('roomsSplit')?.remove();
-
+/* ═══ TOGGLE PANNEAUX ═══ */
+$('toggleRooms').addEventListener('click',function(){
+  const rooms=document.querySelector('.rooms-aside');
+  const sp=document.getElementById('splitRooms');
+  const hidden=rooms.style.display==='none';
+  rooms.style.display=hidden?'':'none'; if(sp) sp.style.display=hidden?'':'none';
+  this.classList.toggle('on',!hidden); refitPlan(); setTimeout(resize3D,30);
+});
+$('togglePlan').addEventListener('click',function(){
+  const vr=document.getElementById('viewerRow');
+  const sp=document.getElementById('splitBottom');
+  const bp=document.getElementById('bottomPanel');
+  const hidden=vr.style.display==='none';
+  vr.style.display=hidden?'':'none'; if(sp) sp.style.display=hidden?'':'none';
+  if(bp){ if(hidden){ bp.style.flex=''; bp.style.height=''; } else { bp.style.flex='1'; bp.style.height='100%'; } }
+  this.classList.toggle('on',!hidden);
+  refitPlan(); setTimeout(()=>{ resize3D(); update3D(); },50);
+});
 $('btnLayout').addEventListener('click',e=>{ e.stopPropagation(); const p=$('layoutPop'); p.style.display=(p.style.display==='block')?'none':'block'; });
 document.addEventListener('click',e=>{ const p=$('layoutPop'); if(p&&p.style.display==='block'&&!p.contains(e.target)&&!$('btnLayout').contains(e.target)) p.style.display='none'; });
-$('tplReset').addEventListener('click',()=>{ applyLayout(DEFLAYOUT); saveLayout(); $('layoutPop').style.display='none'; });
+$('tplReset').addEventListener('click',()=>{
+  const la=document.querySelector('.levels-aside'); if(la){la.style.width=''; la.style.flex='';}
+  const ra=document.querySelector('.rooms-aside'); if(ra){ra.style.width=''; ra.style.flex=''; ra.style.display='';}
+  const sr=document.getElementById('splitRooms'); if(sr) sr.style.display='';
+  const bp=document.getElementById('bottomPanel'); if(bp){bp.style.height='260px'; bp.style.flex='0 0 260px';}
+  const vr=document.getElementById('viewerRow'); if(vr){vr.style.display=''; vr.style.flex='';}
+  const sb=document.getElementById('splitBottom'); if(sb) sb.style.display='';
+  $('layoutPop').style.display='none'; refitPlan(); setTimeout(resize3D,60);
+});
 
 /* ═══ THEME + LANGUAGE ═══ */
 const langBtn=$('langBtn'), themeBtn=$('themeBtn');
