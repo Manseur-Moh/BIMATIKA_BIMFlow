@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BIMFlow — Visionneuse de Plans</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+    /* TOP BAR */
+    .topbar{display:flex;align-items:center;background:#111827;border-bottom:1px solid #1f2937;flex-shrink:0;height:48px}
+    .logo{padding:0 16px;font-size:16px;font-weight:800;color:#38bdf8;letter-spacing:-.5px;white-space:nowrap;border-right:1px solid #1f2937;height:100%;display:flex;align-items:center}
+    .logo span{color:#7dd3fc}
+    .nav{display:flex;height:100%}
+    .nav a{display:flex;align-items:center;padding:0 16px;font-size:13px;font-weight:600;color:#64748b;text-decoration:none;border-right:1px solid #1f2937}
+    .nav a:hover{background:#1f2937;color:#e2e8f0}
+    .nav a.active{color:#38bdf8;background:#0c1a2e;box-shadow:inset 0 -2px 0 #38bdf8}
+    .topbar-right{display:flex;align-items:center;gap:8px;padding:0 16px;margin-left:auto}
+    .refresh-btn{background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:6px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer}
+    .refresh-btn:hover{background:#374151;color:#fff}
+    .status-dot{width:7px;height:7px;border-radius:50%;background:#334155;flex-shrink:0}
+    .status-dot.ok{background:#22c55e}.status-dot.err{background:#ef4444}.status-dot.loading{background:#f59e0b;animation:pulse 1s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .status-txt{font-size:12px;color:#64748b}
+
+    main{display:flex;flex-direction:row;flex:1;overflow:hidden}
+    /* viewer (top) + bottom params panel (below) stacked to the RIGHT of the sidebars,
+       so the rooms list keeps full height down the page */
+    .right-col{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+    /* resizers + collapse */
+    .vsplit{width:6px;flex-shrink:0;cursor:col-resize;background:#0d1526;position:relative}
+    .vsplit:hover{background:#1f2937}
+    .vsplit::after{content:"";position:absolute;left:2px;top:50%;transform:translateY(-50%);width:2px;height:34px;background:#374151;border-radius:2px}
+    .hsplit{height:8px;flex-shrink:0;cursor:row-resize;background:#0d1526;border-top:1px solid #1f2937;position:relative}
+    .hsplit:hover{background:#1f2937}
+    .hsplit::after{content:"";position:absolute;top:3px;left:50%;transform:translateX(-50%);height:2px;width:40px;background:#374151;border-radius:2px}
+    aside.rooms-aside.collapsed{display:none}
+    aside.rooms-aside.collapsed + .vsplit{display:none}
+    .right-col.noplan .viewer-split{display:none}
+    .right-col.noplan .bottom-panel{flex:1}
+    .refresh-btn.on{background:#1d4ed8;color:#fff;border-color:#1d4ed8}
+    /* 2D / 3D split */
+    .viewer-split{flex:1;display:flex;position:relative;min-height:0;overflow:hidden}
+    .viewer-split .viewer-wrap{flex:1}
+    .pane3d{flex:1;position:relative;background:#060e1f;border-left:1px solid #1f2937;overflow:hidden;min-width:0}
+    .pane3d canvas{display:block;width:100%;height:100%}
+    .viewer-split.m2d .pane3d{display:none}
+    .viewer-split.m3d .viewer-wrap{display:none}
+    .viewer-split.m3d .pane3d{border-left:none}
+    .pane3d-hint{position:absolute;left:12px;bottom:12px;font-size:11px;color:#475569;background:rgba(13,21,38,.7);padding:4px 8px;border-radius:5px;pointer-events:none}
+    .view-modes{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:20;display:flex;background:rgba(15,23,42,.92);border:1px solid #1f2937;border-radius:7px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+    .view-modes button{background:transparent;border:none;color:#94a3b8;font-size:12px;font-weight:600;padding:6px 12px;cursor:pointer;border-right:1px solid #1f2937}
+    .view-modes button:last-child{border-right:none}
+    .view-modes button:hover{color:#e2e8f0}
+    .view-modes button.active{background:#1d4ed8;color:#fff}
+    .mode3d{position:absolute;top:10px;right:12px;z-index:20;display:flex;background:rgba(15,23,42,.92);border:1px solid #1f2937;border-radius:7px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+    .mode3d button{background:transparent;border:none;color:#94a3b8;font-size:11px;font-weight:600;padding:5px 11px;cursor:pointer;border-right:1px solid #1f2937}
+    .mode3d button:last-child{border-right:none}
+    .mode3d button.active{background:#1d4ed8;color:#fff}
+    /* transparent plan: invert dark line-art so it shows on the dark viewer (no white bg) */
+    #mainSvg > image, #minimapSvg > image{filter:invert(1)}
+
+    /* LEVELS THUMBNAIL COLUMN */
+    aside.levels-aside{width:132px;flex-shrink:0;background:#0d1526;border-right:1px solid #1f2937;display:flex;flex-direction:column;overflow:hidden}
+    .levels-list{flex:1;overflow-y:auto;padding:6px}
+    .level-item{border:1px solid #1f2937;border-radius:7px;overflow:hidden;cursor:pointer;margin-bottom:8px;background:#0f172a;transition:border-color .12s}
+    .level-item:hover{border-color:#334155}
+    .level-item.active{border-color:#3b82f6;box-shadow:0 0 0 1px #3b82f6}
+    .level-thumb{width:100%;height:84px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+    .level-thumb img{width:100%;height:100%;object-fit:contain}
+    .level-thumb svg.thumb-svg{position:absolute;inset:0;width:100%;height:100%}
+    .level-thumb .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#334155;font-size:10px}
+    .thumb-sel polygon{fill:rgba(239,68,68,.55);stroke:#ef4444;stroke-width:6;stroke-linejoin:round}
+    .level-meta{padding:5px 7px}
+    .level-name{font-size:11px;font-weight:600;color:#e2e8f0;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .level-item.active .level-name{color:#93c5fd}
+    .level-sub{font-size:9px;color:#475569;margin-top:1px}
+
+    /* ROOMS SIDEBAR */
+    aside.rooms-aside{width:212px;flex-shrink:0;background:#111827;border-right:1px solid #1f2937;display:flex;flex-direction:column;overflow:hidden}
+    .sidebar-hd{padding:8px 12px;font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center}
+    .sel-count{font-size:10px;color:#f87171;font-weight:700}
+    .ctrl-wrap{padding:6px 8px;border-bottom:1px solid #1f2937;display:flex;flex-direction:column;gap:4px}
+    .ctrl-wrap label{font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em}
+    .ctrl-wrap select,.ctrl-wrap input{background:#0f172a;color:#e2e8f0;border:1px solid #1f2937;border-radius:5px;padding:4px 7px;font-size:12px;cursor:pointer;outline:none;width:100%}
+    .ctrl-wrap select:focus,.ctrl-wrap input:focus{border-color:#3b82f6}
+    .ctrl-row{display:flex;gap:4px}
+    .mini-btn{flex:1;background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:5px;padding:4px;font-size:10px;font-weight:600;cursor:pointer}
+    .mini-btn:hover{background:#374151;color:#fff}
+    .rooms-list{flex:1;overflow-y:auto;padding:3px}
+    .room-item{display:flex;align-items:flex-start;gap:6px;padding:5px 8px;border-radius:5px;cursor:pointer;margin-bottom:1px;border-left:3px solid transparent}
+    .room-item:hover{background:#1f2937}
+    .room-item.active{background:#3f1d2e;border-left-color:#ef4444}
+    .room-item input{margin-top:2px;cursor:pointer;accent-color:#ef4444;flex-shrink:0}
+    .ri-txt{flex:1;min-width:0}
+    .r-num{font-size:10px;color:#475569}.room-item.active .r-num{color:#fca5a5}
+    .r-name{font-size:13px;font-weight:500;line-height:1.3}
+    .r-lvl{font-size:10px;color:#38bdf8;margin-top:1px}
+
+    /* COLOR-BY + LEGEND */
+    #colorBy:focus{border-color:#3b82f6}
+    .legend{position:absolute;top:12px;left:12px;z-index:10;background:rgba(15,23,42,.93);border:1px solid #1f2937;border-radius:7px;padding:8px 10px;max-height:46%;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.5);display:none;min-width:130px}
+    .legend-hd{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+    .legend-row{display:flex;align-items:center;gap:6px;font-size:11px;color:#cbd5e1;margin-bottom:2px}
+    .legend-sw{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+    .legend-tx{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .legend-cnt{color:#475569}
+
+    /* VIEWER */
+    .viewer-wrap{flex:1;position:relative;overflow:hidden;background:#060e1f;cursor:grab;min-width:0}
+    .viewer-wrap:active{cursor:grabbing}
+    #mainSvg{position:absolute;will-change:transform}
+    .bimflow-room{cursor:pointer;fill:rgba(56,189,248,.04);stroke:rgba(56,189,248,.5);stroke-width:1.5;stroke-linejoin:round;transition:fill .12s,stroke .12s}
+    .bimflow-room:hover{fill:rgba(56,189,248,.18);stroke:#38bdf8;stroke-width:2.5}
+    .bimflow-room.selected{fill:rgba(239,68,68,.42)!important;stroke:#ef4444!important;stroke-width:3}
+    .zoom-wrap{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:3px;z-index:10}
+    .zbtn{width:28px;height:28px;background:#1f2937;border:1px solid #374151;color:#d1d5db;border-radius:5px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .zbtn:hover{background:#374151}
+
+    /* MINIMAP */
+    #minimap{position:absolute;bottom:12px;left:12px;z-index:10;border:1px solid #1f2937;border-radius:6px;overflow:hidden;background:#0f172a;box-shadow:0 4px 16px rgba(0,0,0,.6);width:150px;display:none}
+    #minimap-lbl{padding:3px 8px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;border-bottom:1px solid #1f2937}
+    #minimapSvg{display:block}
+    .mini-room{fill:rgba(56,189,248,.05);stroke:rgba(56,189,248,.25);stroke-width:.8;stroke-linejoin:round;cursor:pointer}
+    .mini-room.selected{fill:rgba(239,68,68,.5)!important;stroke:#ef4444!important;stroke-width:1.5}
+    #mini-vp{fill:rgba(255,255,255,.04);stroke:rgba(255,255,255,.5);stroke-width:.7}
+
+    /* BOTTOM PARAMETER PANEL */
+    .bottom-panel{height:266px;flex-shrink:0;background:#0d1526;border-top:1px solid #1f2937;display:flex;flex-direction:column;overflow:hidden}
+    .bp-bar{display:flex;align-items:center;gap:10px;padding:6px 12px;border-bottom:1px solid #1f2937;flex-shrink:0}
+    .bp-title{font-size:13px;font-weight:700;color:#f1f5f9}
+    .bp-sub{font-size:11px;color:#38bdf8}
+    .bp-spacer{flex:1}
+    .bp-btn{display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #334155;background:transparent;color:#cbd5e1}
+    .bp-btn:hover{background:#1f2937;color:#fff}
+    .bp-btn.on{background:#15803d;color:#fff;border-color:#16a34a}
+    .bp-btn.send{background:#1d4ed8;color:#e0f2fe;border-color:#1d4ed8}
+    .bp-btn.send:hover:not(:disabled){background:#2563eb}
+    .bp-btn.send:disabled{background:#1e293b;color:#334155;cursor:default;border-color:#1e293b}
+    .filebtn{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #334155;background:transparent;color:#cbd5e1}
+    .filebtn:hover{background:#1f2937;color:#fff}
+
+    .bp-tabs{display:flex}
+    .bp-tab{padding:5px 14px;font-size:12px;font-weight:700;color:#64748b;background:transparent;border:1px solid #1f2937;border-bottom:none;border-radius:6px 6px 0 0;cursor:pointer;margin-right:3px}
+    .bp-tab:hover{color:#e2e8f0}
+    .bp-tab.active{color:#38bdf8;background:#0f1d33;box-shadow:inset 0 -2px 0 #38bdf8}
+    .bp-content{flex:1;overflow:hidden;display:flex;min-height:0}
+    .bp-view{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+    table.matrix{table-layout:fixed}
+    table.matrix th:first-child,table.matrix td:first-child{position:sticky;left:0;background:#0d1526;z-index:2}
+    table.matrix thead th:first-child{background:#111c33}
+    table.matrix th{white-space:normal;word-break:break-word;vertical-align:bottom}
+    table.matrix td{white-space:normal;word-break:break-word;vertical-align:top}
+    table.matrix td.ro-cell{color:#475569}
+    table.matrix td.empty-cell{background:#0b1322}
+    .col-resizer{position:absolute;top:0;right:0;width:6px;height:100%;cursor:col-resize;user-select:none}
+    .col-resizer:hover{background:#3b82f6}
+    .col-lbl{display:block;padding-right:6px}
+    /* compare-mode diff highlighting */
+    table.matrix td.diff{background:#3b0d12;color:#fca5a5;font-weight:700}
+    table.matrix td.diff .old{color:#64748b;font-weight:400;text-decoration:line-through;margin-right:4px}
+    .bimflow-room.changed{fill:rgba(245,158,11,.5)!important;stroke:#f59e0b!important;stroke-width:3}
+    .mini-room.changed{fill:rgba(245,158,11,.6)!important;stroke:#f59e0b!important}
+    .ptable-hd{display:flex;align-items:center;gap:8px;padding:5px 10px;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #1f2937;flex-shrink:0}
+    .ptable-hd .htools{margin-left:auto;display:flex;gap:5px}
+    .ptable-hd .htools button,.ptable-hd .htools .filebtn{padding:3px 8px;font-size:10px;text-transform:none;letter-spacing:0}
+    .psearch{margin:5px 10px;flex-shrink:0}
+    .psearch input{width:100%;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:4px 8px;font-size:12px;outline:none}
+    .psearch input:focus{border-color:#3b82f6}
+    .ptable-scroll{flex:1;overflow:auto}
+    table.pt{width:100%;border-collapse:collapse;font-size:12px}
+    table.pt th{position:sticky;top:0;background:#111c33;color:#64748b;font-weight:600;text-align:left;padding:5px 9px;border-bottom:1px solid #1e2b45;white-space:nowrap;font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+    table.pt td{padding:3px 9px;border-bottom:1px solid #16233f;vertical-align:middle}
+    table.pt td.k{color:#94a3b8;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
+    table.pt td.t{color:#475569;font-size:10px;white-space:nowrap}
+    .pv-input,.pv-select{width:100%;background:#0f172a;color:#e2e8f0;border:1px solid #2a3a55;border-radius:4px;padding:2px 6px;font-size:12px;outline:none}
+    .pv-input:focus,.pv-select:focus{border-color:#3b82f6}
+    .pv-input.changed,.pv-select.changed{border-color:#f59e0b;background:#1a1100}
+    .pv-input:disabled{background:transparent;border-color:transparent;color:#64748b}
+    .lockico{color:#475569;font-size:10px;margin-left:4px}
+    .rm-btn{background:none;border:none;color:#64748b;cursor:pointer;font-size:14px;line-height:1}
+    .rm-btn:hover{color:#ef4444}
+    .create-form{display:flex;flex-wrap:wrap;gap:4px;padding:6px 10px;border-bottom:1px solid #1f2937;flex-shrink:0}
+    .create-form input,.create-form select{background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:4px;padding:4px 6px;font-size:11px;outline:none}
+    .create-form input:focus,.create-form select:focus{border-color:#3b82f6}
+    .create-form .cf-name{flex:1;min-width:110px}
+    .btn-add{background:#0e4429;color:#3fb950;border:1px solid #238636;border-radius:4px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer}
+    .btn-add:hover{background:#238636;color:#fff}
+    .bp-empty{padding:24px;text-align:center;color:#374151;font-size:12px}
+    /* column chooser */
+    .colsel{position:relative;display:inline-block}
+    #colSelBtn{background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:4px;padding:3px 8px;font-size:10px;font-weight:600;cursor:pointer}
+    #colSelBtn:hover{background:#374151;color:#fff}
+    /* position:fixed so the popup escapes the bottom panel's overflow clipping */
+    .colsel-pop{position:fixed;width:230px;max-height:60vh;background:#1f2937;border:1px solid #374151;border-radius:6px;z-index:1000;display:none;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,.7)}
+    .colsel-pop.open{display:flex}
+    #colSearch{margin:6px;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:4px;padding:4px 7px;font-size:11px;outline:none}
+    .colsel-tools{display:flex;gap:5px;padding:0 6px 5px}
+    .colsel-tools button{flex:1;background:#111827;border:1px solid #1f2937;color:#94a3b8;border-radius:4px;padding:3px;font-size:10px;cursor:pointer}
+    .colsel-tools button:hover{color:#fff;border-color:#374151}
+    .colsel-list{overflow-y:auto;padding:0 4px 6px}
+    .colsel-opt{display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:4px;font-size:11px;color:#cbd5e1;cursor:pointer}
+    .colsel-opt:hover{background:#374151}
+    .colsel-opt input{accent-color:#3b82f6;cursor:pointer}
+    .colsel-opt span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #colPreset{flex:2;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:4px;font-size:10px;padding:2px}
+    .ptable-hd .htools button,.ptable-hd .htools .filebtn{padding:3px 8px;font-size:10px;text-transform:none;letter-spacing:0;background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:4px;cursor:pointer}
+    .ptable-hd .htools button:hover,.ptable-hd .htools .filebtn:hover{background:#374151;color:#fff}
+
+    /* Empty viewer state */
+    .empty-state{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#374151}
+    .empty-state h2{font-size:16px;color:#4b5563}
+    .empty-state p{font-size:12px;max-width:260px;text-align:center;line-height:1.7}
+    .empty-hint{color:#374151;font-size:12px;text-align:center;padding:24px 14px;line-height:1.7}
+
+    /* ===== viewer background = app background, + transparent-plan handling ===== */
+    .viewer-wrap,.pane3d{background:#0a1120}                       /* dark: same as body */
+    #mainSvg > image,#minimapSvg > image{filter:invert(1)}        /* dark: white line-art */
+
+    /* ===== LIGHT THEME (override layer; dark stays default) ===== */
+    [data-theme=light]{}
+    [data-theme=light] body{background:#eef1f6;color:#1e2733}
+    [data-theme=light] .topbar{background:#fff;border-bottom-color:#dde2ec}
+    [data-theme=light] .logo{border-right-color:#dde2ec}
+    [data-theme=light] .nav a{color:#64748b;border-right-color:#dde2ec}
+    [data-theme=light] .nav a:hover{background:#eef2f8;color:#111}
+    [data-theme=light] .nav a.active{background:#e7f3fc;color:#0284c7}
+    [data-theme=light] .refresh-btn{background:#eef2f8;border-color:#d4dae6;color:#334155}
+    [data-theme=light] .refresh-btn:hover{background:#e2e8f2;color:#0f172a}
+    [data-theme=light] .refresh-btn.on{background:#1d4ed8;color:#fff;border-color:#1d4ed8}
+    [data-theme=light] aside.levels-aside,[data-theme=light] aside.rooms-aside{background:#f6f8fb;border-right-color:#dde2ec}
+    [data-theme=light] .vsplit,[data-theme=light] .hsplit{background:#e6e9f0}
+    [data-theme=light] .vsplit:hover,[data-theme=light] .hsplit:hover{background:#d4dae6}
+    [data-theme=light] .vsplit::after,[data-theme=light] .hsplit::after{background:#b4bccb}
+    [data-theme=light] .hsplit{border-top-color:#dde2ec}
+    [data-theme=light] .sidebar-hd{border-bottom-color:#dde2ec}
+    [data-theme=light] .ctrl-wrap{border-bottom-color:#dde2ec}
+    [data-theme=light] .ctrl-wrap select,[data-theme=light] .ctrl-wrap input,
+    [data-theme=light] .psearch input,[data-theme=light] .pv-input,[data-theme=light] .pv-select,
+    [data-theme=light] .create-form input,[data-theme=light] .create-form select{background:#fff;color:#1e2733;border-color:#d4dae6}
+    [data-theme=light] .mini-btn,[data-theme=light] .zbtn{background:#eef2f8;border-color:#d4dae6;color:#334155}
+    [data-theme=light] .mini-btn:hover,[data-theme=light] .zbtn:hover{background:#e2e8f2;color:#0f172a}
+    [data-theme=light] .level-item{background:#fff;border-color:#dde2ec}
+    [data-theme=light] .level-name{color:#1e2733}
+    [data-theme=light] .room-item:hover{background:#eef2f8}
+    [data-theme=light] .room-item.active{background:#fde6e6}
+    [data-theme=light] .viewer-wrap,[data-theme=light] .pane3d{background:#eef1f6}
+    [data-theme=light] .pane3d{border-left-color:#dde2ec}
+    [data-theme=light] #mainSvg > image,[data-theme=light] #minimapSvg > image{filter:none}  /* light: dark line-art */
+    [data-theme=light] #minimap{background:#fff;border-color:#dde2ec}
+    [data-theme=light] .legend,[data-theme=light] .view-modes,[data-theme=light] .colsel-pop{background:rgba(255,255,255,.97);border-color:#dde2ec;box-shadow:0 6px 20px rgba(0,0,0,.15)}
+    [data-theme=light] .legend-row,[data-theme=light] .legend-hd{color:#334155}
+    [data-theme=light] .view-modes button{color:#475569;border-right-color:#dde2ec}
+    [data-theme=light] .view-modes button:hover{color:#0f172a}
+    [data-theme=light] .colsel-opt{color:#334155}
+    [data-theme=light] .colsel-opt:hover{background:#eef2f8}
+    [data-theme=light] .bottom-panel{background:#f6f8fb;border-top-color:#dde2ec}
+    [data-theme=light] .bp-bar{border-bottom-color:#dde2ec}
+    [data-theme=light] .bp-title{color:#0f172a}
+    [data-theme=light] .bp-btn{border-color:#cdd5e3;color:#334155}
+    [data-theme=light] .bp-btn:hover{background:#eef2f8;color:#0f172a}
+    [data-theme=light] .filebtn{border-color:#cdd5e3;color:#334155}
+    [data-theme=light] .filebtn:hover{background:#eef2f8;color:#0f172a}
+    [data-theme=light] .bp-tab{color:#64748b;border-color:#dde2ec}
+    [data-theme=light] .bp-tab:hover{color:#0f172a}
+    [data-theme=light] .bp-tab.active{background:#e7f3fc;color:#0284c7}
+    [data-theme=light] .ptable-hd{border-bottom-color:#dde2ec}
+    [data-theme=light] .ptable-hd .htools button,[data-theme=light] .ptable-hd .htools .filebtn{background:#eef2f8;border:1px solid #d4dae6;color:#334155}
+    [data-theme=light] table.matrix th:first-child,[data-theme=light] table.matrix td:first-child{background:#f6f8fb}
+    [data-theme=light] table.matrix thead th:first-child,[data-theme=light] table.pt th{background:#eef2f8;color:#475569}
+    [data-theme=light] table.pt td{border-bottom-color:#e6e9f0}
+    [data-theme=light] table.pt td.k{color:#334155}
+    [data-theme=light] table.matrix td.empty-cell{background:#f0f2f6}
+    [data-theme=light] table.matrix td.diff{background:#fde6e6;color:#b91c1c}
+    [data-theme=light] #colSearch,[data-theme=light] #colPreset{background:#fff;color:#1e2733;border-color:#d4dae6}
+    [data-theme=light] .empty-hint,[data-theme=light] .empty-state,[data-theme=light] .empty-state h2{color:#94a3b8}
+
+    /* ===== dock layout (drag-to-edge) ===== */
+    main.layout{display:flex;flex-direction:column;flex:1;overflow:hidden}
+    .midrow{display:flex;flex:1;min-height:0;overflow:hidden}
+    .dz{display:flex;overflow:hidden}
+    .zLeft,.zRight{flex-direction:column;resize:horizontal;overflow:hidden;min-width:120px}
+    .zTop,.zBottom{flex-direction:row;flex-shrink:0;resize:vertical;overflow:hidden;min-height:90px}
+    .dzc{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
+    .dz:empty{display:none}
+    /* resize splitter bars */
+    .split-v{width:4px;cursor:col-resize;background:#1a2540;flex-shrink:0;transition:background .15s}
+    .split-v:hover,.split-v.dragging{background:#3b82f6}
+    .split-h{height:4px;cursor:row-resize;background:#1a2540;flex-shrink:0;transition:background .15s}
+    .split-h:hover,.split-h.dragging{background:#3b82f6}
+    /* drag handle in panel headers */
+    .dock-handle{display:inline-flex;align-items:center;cursor:grab;padding:0 6px;color:#475569;font-size:14px;user-select:none;flex-shrink:0;order:-1}
+    .dock-handle:active{cursor:grabbing}
+    .dock-handle:hover{color:#94a3b8}
+    /* drop zones that appear during drag */
+    .drop-zone{position:fixed;z-index:2000;display:none;align-items:center;justify-content:center;background:rgba(29,78,216,.35);border:2px dashed #3b82f6;border-radius:6px;pointer-events:all;font-size:20px;color:#93c5fd;transition:background .1s}
+    .drop-zone.active{display:flex}
+    .drop-zone.over{background:rgba(29,78,216,.65)}
+    #layoutPop{position:fixed;top:52px;right:12px;z-index:1200;background:#1f2937;border:1px solid #374151;border-radius:8px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.7);width:250px;font-size:12px;display:none}
+    #layoutPop .row{display:flex;gap:6px;margin-top:8px}
+    #layoutPop select,#layoutPop button{background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:5px;font-size:12px;cursor:pointer}
+    #layoutPop .lp-hint{font-size:10px;color:#64748b;margin-top:8px;line-height:1.5}
+    [data-theme=light] #layoutPop{background:#fff;border-color:#dde2ec;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+    [data-theme=light] #layoutPop select,[data-theme=light] #layoutPop button{background:#fff;color:#1e2733;border-color:#d4dae6}
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">BIM<span>Flow</span></div>
+  <div class="nav">
+    <a href="/" class="active">🗺 Plans</a>
+    <a href="/analyse.html" data-en="📊 Analysis">📊 Analyse</a>
+  </div>
+  <div class="topbar-right">
+    <button class="refresh-btn" id="langBtn" title="Language / Langue">EN</button>
+    <button class="refresh-btn" id="themeBtn" title="Thème clair / sombre">☾</button>
+    <button class="refresh-btn" id="toggleRooms" data-en="👥 Rooms" title="Afficher / masquer le panneau des pièces">👥 Pièces</button>
+    <button class="refresh-btn" id="togglePlan" data-en="🗺 Plan" title="Afficher / masquer le plan">🗺 Plan</button>
+    <button class="refresh-btn" id="btnSaveVersion" data-en="💾 Version" title="Enregistrer une copie horodatée">💾 Version</button>
+    <button class="refresh-btn" id="btnCompare" data-en="⇆ Compare" title="Comparer deux versions">⇆ Comparer</button>
+    <button class="refresh-btn" id="btnLayout" data-en="⟲ Layout" title="Ancrer / réinitialiser la disposition des panneaux">⟲ Disposition</button>
+    <button class="refresh-btn" id="btnRefresh" data-en="🔄 Refresh" title="Recharger les plans">🔄 Actualiser</button>
+    <div class="status-dot loading" id="statusDot"></div>
+    <div class="status-txt" id="statusTxt">Chargement…</div>
+  </div>
+</div>
+
+<!-- Compare picker -->
+<div id="cmpPop" style="display:none;position:fixed;top:52px;right:12px;z-index:1200;background:#1f2937;border:1px solid #374151;border-radius:8px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.7);width:300px;font-size:12px">
+  <div style="font-weight:700;color:#cbd5e1;margin-bottom:8px">Comparer deux versions</div>
+  <label style="font-size:10px;color:#64748b">Version A (avant)</label>
+  <select id="cmpA" style="width:100%;margin:2px 0 8px;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:4px"></select>
+  <label style="font-size:10px;color:#64748b">Version B (après)</label>
+  <select id="cmpB" style="width:100%;margin:2px 0 10px;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:4px"></select>
+  <div style="display:flex;gap:6px">
+    <button id="cmpRun" style="flex:1;background:#1d4ed8;color:#e0f2fe;border:none;border-radius:5px;padding:6px;font-weight:700;cursor:pointer">Comparer</button>
+    <button id="cmpClose" style="background:#30415b;color:#94a3b8;border:none;border-radius:5px;padding:6px 10px;cursor:pointer">Fermer</button>
+  </div>
+  <button id="cmpSaveAll" style="width:100%;margin-top:8px;background:#0e4429;color:#3fb950;border:1px solid #238636;border-radius:5px;padding:6px;font-weight:600;cursor:pointer">💾 Enregistrer une version de TOUS les niveaux</button>
+  <div style="font-size:10px;color:#64748b;margin-top:10px">Versions enregistrées (ce niveau) :</div>
+  <div id="cmpManage" style="margin-top:4px;font-size:11px;max-height:150px;overflow:auto"></div>
+</div>
+
+<!-- Layout / docking templates -->
+<div id="layoutPop">
+  <div style="font-weight:700;color:#cbd5e1;margin-bottom:4px">Disposition des panneaux</div>
+  <div class="lp-hint">Glissez l'icône ⠿ dans l'en-tête d'un panneau vers un bord de l'écran pour le déplacer. Enregistrez ensuite comme gabarit.</div>
+  <div class="row"><select id="tplSel" style="flex:1"><option value="">— Gabarits —</option></select><button id="tplDel" title="Supprimer">🗑</button></div>
+  <div class="row"><button id="tplSave" style="flex:1">💾 Enregistrer gabarit</button><button id="tplReset" title="Réinitialiser">⟲</button></div>
+</div>
+
+<main>
+  <aside class="levels-aside">
+    <div class="sidebar-hd" style="display:flex;align-items:center;gap:4px"><span data-en="Levels">Niveaux</span><button id="btnAllLevels" title="Afficher toutes les pièces de tous les niveaux" style="margin-left:auto;background:transparent;border:1px solid #374151;color:#94a3b8;border-radius:4px;font-size:9px;font-weight:700;padding:2px 5px;cursor:pointer;flex-shrink:0;line-height:1.4">Tous</button></div>
+    <div class="levels-list" id="levelsList"><div class="empty-hint">Aucun plan</div></div>
+  </aside>
+
+  <aside class="rooms-aside">
+    <div class="sidebar-hd"><span data-en="Rooms">Pièces</span><span class="sel-count" id="selCount"></span></div>
+    <div class="ctrl-wrap">
+      <label data-en="🎨 Color / filter by">🎨 Colorer / filtrer par</label>
+      <select id="colorBy"><option value="">Aucun (par défaut)</option></select>
+      <select id="filtVal"><option value="">— toutes les valeurs —</option></select>
+      <div class="ctrl-row">
+        <button class="mini-btn" id="btnSelectMatch" data-en="Select">Sélectionner</button>
+        <button class="mini-btn" id="btnClearSel" data-en="Deselect all">Tout désélect.</button>
+      </div>
+    </div>
+    <div class="ctrl-wrap" style="border-bottom:1px solid #1f2937">
+      <label data-en="🔍 Search / select by">🔍 Rechercher / sélectionner par</label>
+      <select id="searchKey"><option value="">Nom / Numéro</option></select>
+      <input id="roomSearch" type="text" placeholder="Rechercher…" data-en-ph="Search…"/>
+    </div>
+    <div class="rooms-list" id="roomsList"><div class="empty-hint">Aucun plan chargé</div></div>
+  </aside>
+
+  <div class="vsplit" id="roomsSplit" title="Glisser pour redimensionner"></div>
+
+  <div class="right-col">
+   <div class="viewer-split mboth" id="viewerSplit">
+    <div class="view-modes" id="viewModes">
+      <button data-m="m2d">🗺 2D</button><button data-m="mboth" class="active">⊞ 2D + 3D</button><button data-m="m3d">🧊 3D</button>
+    </div>
+    <div class="viewer-wrap" id="viewerWrap">
+      <div id="emptyState" class="empty-state">
+        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+        </svg>
+        <h2>BIMFlow Viewer</h2>
+        <p>Choisissez un niveau à gauche, ou envoyez depuis Revit via <strong>"Envoyer vers BIMFlow"</strong></p>
+      </div>
+      <div id="legend" class="legend"></div>
+      <div id="minimap"><div id="minimap-lbl">Vue d'ensemble</div><svg id="minimapSvg"></svg></div>
+      <div class="zoom-wrap">
+        <button class="zbtn" id="zIn">+</button>
+        <button class="zbtn" id="zOut">−</button>
+        <button class="zbtn" id="zReset" title="Ajuster">⌖</button>
+      </div>
+      <div style="position:absolute;left:12px;bottom:12px;font-size:11px;color:#475569;background:rgba(13,21,38,.7);padding:4px 8px;border-radius:5px;pointer-events:none">Clic molette / clic droit + glisser pour naviguer · Molette pour zoomer</div>
+    </div>
+    <div class="pane3d" id="pane3d">
+      <canvas id="canvas3d"></canvas>
+      <div class="mode3d" id="mode3d"><button data-v="level" class="active" data-en="Level">Niveau</button><button data-v="project" data-en="Project">Projet</button></div>
+      <div class="pane3d-hint" id="pane3dHint">Volumes 3D des pièces — glissez pour pivoter, molette pour zoomer</div>
+      <div class="zoom-wrap"><button class="zbtn" id="fit3d" title="Recadrer la vue 3D">⌖</button></div>
+    </div>
+   </div>
+
+    <!-- BOTTOM PARAMETER PANEL — single panel, 2 tabs -->
+    <div class="hsplit" id="bpSplit" title="Glisser pour redimensionner"></div>
+    <div class="bottom-panel">
+      <div class="bp-bar">
+        <div class="bp-tabs">
+          <button class="bp-tab active" id="tabParams" data-en="Parameters">Paramètres</button>
+          <button class="bp-tab" id="tabCreate" data-en="Create parameters">Créer des paramètres</button>
+        </div>
+        <span class="bp-sub" id="bpSub"></span>
+        <div class="bp-spacer"></div>
+        <button class="bp-btn" id="editToggle">✏ Éditer</button>
+        <button class="bp-btn send" id="btnSendRevit" disabled title="Modifiez des valeurs ou ajoutez des paramètres">↑ Envoyer vers Revit</button>
+      </div>
+
+      <div class="bp-content">
+        <!-- VIEW 1: parameters matrix (rooms × parameters) -->
+        <div class="bp-view" id="viewParams">
+          <div class="ptable-hd">
+            <span id="paramScope">Toutes les pièces</span>
+            <div class="htools">
+              <div class="colsel" id="colSel">
+                <button id="colSelBtn" title="Choisir les colonnes (paramètres) à afficher">▦ Colonnes ▾</button>
+                <div class="colsel-pop" id="colSelPop">
+                  <div class="colsel-tools" style="border-bottom:1px solid #2a3a55;padding-bottom:6px">
+                    <select id="colPreset" title="Favoris de colonnes"><option value="">★ Favoris…</option></select>
+                    <button id="colPresetSave" title="Enregistrer la sélection comme favori">💾</button>
+                    <button id="colPresetDel" title="Supprimer le favori">🗑</button>
+                  </div>
+                  <input id="colSearch" type="text" placeholder="Filtrer…"/>
+                  <div class="colsel-tools"><button id="colAll">Tout</button><button id="colNone">Aucun</button></div>
+                  <div class="colsel-list" id="colSelList"></div>
+                </div>
+              </div>
+              <button id="btnExportParams" title="Exporter le tableau (Excel)">⬇ Excel</button>
+              <label class="filebtn" title="Importer un Excel exporté pour mettre à jour les valeurs">⬆ MAJ<input type="file" id="paramImport" accept=".xlsx,.xls,.csv" hidden/></label>
+            </div>
+          </div>
+          <div class="ptable-scroll">
+            <table class="pt matrix" id="matrixTable"><thead id="matrixHead"></thead><tbody id="matrixBody"></tbody></table>
+            <div class="bp-empty" id="matrixEmpty">Aucune pièce</div>
+          </div>
+        </div>
+
+        <!-- VIEW 2: parameters to create (editable multi-row grid) -->
+        <div class="bp-view" id="viewCreate" style="display:none">
+          <div class="ptable-hd">
+            <span>Paramètres à créer dans Revit — une ligne = un paramètre</span>
+            <div class="htools">
+              <button class="btn-add" id="btnAddCreate">+ Ligne</button>
+              <button id="btnTplExport" title="Télécharger un modèle Excel pré-rempli (à copier)">⬇ Modèle Excel</button>
+              <label class="filebtn" title="Importer un fichier Excel/CSV de paramètres">⬆ Importer<input type="file" id="tplImport" accept=".xlsx,.xls,.csv" hidden/></label>
+            </div>
+          </div>
+          <div class="ptable-scroll">
+            <table class="pt"><thead><tr><th>Nom</th><th>Type</th><th>Groupe</th><th>Genre</th><th>Liaison</th><th>Défaut</th><th></th></tr></thead>
+              <tbody id="createBody"></tbody></table>
+            <div class="bp-empty" id="createEmpty">Aucun paramètre — cliquez « + Ligne » ou importez un modèle Excel</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+/* ═══ CORE PARAMS shown first ═══ */
+const CORE_KEYS=['nom','name','numéro','numero','number','surface','area','aire','niveau','level',
+  'département','department','occupation','occupancy','usage','commentaires','comments','phase'];
+const TYPE_LABELS={text:'Texte',multitext:'Texte multi',integer:'Entier',number:'Nombre',length:'Longueur',
+  area:'Surface',volume:'Volume',angle:'Angle',slope:'Pente',yesno:'Oui/Non',url:'URL',material:'Matériau',
+  currency:'Devise',mass:'Masse'};
+
+/* ═══ STATE ═══ */
+let plan=null, editMode=false, colorKey='', currentPlanKey='';
+let selIds=new Set(), lastSel=null, compareDiff=null;
+let pendingEdits={}, newParamRequests=[];
+let zoom=1,panX=0,panY=0,W=0,H=0,isPan=false,panStart={x:0,y:0},isRightPan=false;
+const planCache={}; let lastLevelKeys=''; let colorMap={};
+const $=id=>document.getElementById(id);
+
+const PALETTE=['#3b82f6','#ef4444','#22c55e','#f59e0b','#a855f7','#06b6d4','#ec4899','#84cc16',
+  '#f97316','#14b8a6','#6366f1','#eab308','#10b981','#f43f5e','#8b5cf6','#0ea5e9','#d946ef',
+  '#65a30d','#fb7185','#2dd4bf','#c084fc','#fbbf24','#34d399','#60a5fa','#f87171'];
+
+/* ═══ DATA ═══ */
+async function api(url,opts){ const r=await fetch(url,opts); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }
+function setStatus(msg,type){ $('statusTxt').textContent=msg; $('statusDot').className='status-dot'+(type?' '+type:''); }
+
+async function loadIndex(){
+  try{
+    const list=await api('/api/plans');
+    renderLevels(list);
+    if(list.length){
+      const k=list.find(p=>p.key===currentPlanKey)?currentPlanKey:list[list.length-1].key;
+      if(!plan||k!==currentPlanKey) loadPlan(k); else setActivePlan(k);
+    }
+    setStatus(list.length?`${list.length} niveau(x)`:'Aucun plan — envoyez depuis Revit',list.length?'ok':'');
+  }catch(e){ setStatus('Erreur: '+e.message,'err'); }
+}
+async function getPlanData(key){
+  if(planCache[key]) return planCache[key];
+  const p=await api('/api/plans?key='+encodeURIComponent(key)); planCache[key]=p; return p;
+}
+async function loadPlan(key){
+  if(!key)return;
+  setStatus('Chargement…','loading');
+  try{
+    plan=await getPlanData(key); currentPlanKey=key;
+    W=plan.ImageWidth; H=plan.ImageHeight;
+    pendingEdits={}; newParamRequests=[]; colorKey=''; selIds.clear(); lastSel=null; compareDiff=null;
+    renderPlan(); populateColorBy(); populateSearchKey(); renderList(); renderCreateTable();
+    document.querySelectorAll('.thumb-sel').forEach(g=>g.innerHTML='');
+    renderMatrix(); setActivePlan(key); update3D();
+    setStatus(`${plan.LevelName} — ${plan.ProjectName} (${plan.Rooms.length} pièces)`,'ok');
+  }catch(e){ setStatus('Erreur: '+e.message,'err'); }
+}
+
+/* ═══ LEVELS THUMBNAILS ═══ */
+const levelObserver=new IntersectionObserver((entries)=>{
+  entries.forEach(en=>{
+    if(!en.isIntersecting) return;
+    const el=en.target, key=el.getAttribute('data-key'); levelObserver.unobserve(el);
+    getPlanData(key).then(p=>{
+      const svg=el.querySelector('.thumb-svg'), img=svg&&svg.querySelector('image'), ph=el.querySelector('.ph');
+      if(svg&&img&&p.ImageBase64){
+        svg.setAttribute('viewBox',`0 0 ${p.ImageWidth} ${p.ImageHeight}`);
+        img.setAttribute('href','data:image/png;base64,'+p.ImageBase64);
+        img.setAttribute('x',0);img.setAttribute('y',0);img.setAttribute('width',p.ImageWidth);img.setAttribute('height',p.ImageHeight);
+        svg.style.display=''; if(ph)ph.style.display='none';
+        if(key===currentPlanKey) drawThumbSel(el,p);
+      }
+    }).catch(()=>{});
+  });
+},{root:$('levelsList'),rootMargin:'120px'});
+function renderLevels(list){
+  // Order by real elevation: highest level at the TOP, lowest at the bottom (building order).
+  // Plans without an elevation (older uploads) fall back to name order, placed last.
+  list=[...list].sort((a,b)=>{
+    const ea=(typeof a.elev==='number')?a.elev:null, eb=(typeof b.elev==='number')?b.elev:null;
+    if(ea!=null&&eb!=null) return eb-ea;          // descending elevation
+    if(ea!=null) return -1; if(eb!=null) return 1;
+    return (a.level||'').localeCompare(b.level||'',undefined,{numeric:true});
+  });
+  const keys=list.map(p=>p.key).join('|');
+  if(keys===lastLevelKeys){ setActivePlan(currentPlanKey); return; }
+  lastLevelKeys=keys;
+  const box=$('levelsList'); box.innerHTML='';
+  if(!list.length){ box.innerHTML='<div class="empty-hint">Aucun plan</div>'; return; }
+  list.forEach(p=>{
+    const item=document.createElement('div'); item.className='level-item'; item.setAttribute('data-key',p.key);
+    item.innerHTML=`<div class="level-thumb"><span class="ph">⏳</span>`+
+      `<svg class="thumb-svg" preserveAspectRatio="xMidYMid meet" style="display:none"><image/><g class="thumb-sel"></g></svg></div>`+
+      `<div class="level-meta"><div class="level-name" title="${p.level}">${p.level||'—'}</div>`+
+      `<div class="level-sub">${p.rooms||0} pièce${(p.rooms>1)?'s':''}</div></div>`;
+    item.addEventListener('click',()=>loadPlan(p.key));
+    box.appendChild(item); levelObserver.observe(item);
+  });
+  setActivePlan(currentPlanKey);
+}
+function setActivePlan(key){ document.querySelectorAll('.level-item').forEach(el=>el.classList.toggle('active',el.getAttribute('data-key')===key)); }
+
+// Draw the currently-selected rooms (red) onto a level thumbnail so its position shows
+function drawThumbSel(item,planData){
+  const svg=item.querySelector('.thumb-svg'), g=item.querySelector('.thumb-sel');
+  if(!svg||!g||!planData) return;
+  svg.setAttribute('viewBox',`0 0 ${planData.ImageWidth} ${planData.ImageHeight}`);
+  g.innerHTML='';
+  const ns='http://www.w3.org/2000/svg';
+  (planData.Rooms||[]).forEach(r=>{ if(selIds.has(r.RevitId)&&r.SvgPolygon){
+    const po=document.createElementNS(ns,'polygon'); po.setAttribute('points',r.SvgPolygon); g.appendChild(po); }});
+}
+function updateActiveThumbSel(){
+  const item=document.querySelector('.level-item[data-key="'+currentPlanKey+'"]');
+  if(item&&plan) drawThumbSel(item,plan);
+}
+
+/* ═══ RENDER SVG ═══ */
+function renderPlan(){
+  $('emptyState').style.display='none';
+  const old=$('mainSvg'); if(old) old.remove();
+  const ns='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(ns,'svg'); svg.id='mainSvg';
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.style.width=W+'px'; svg.style.height=H+'px';
+  const img=document.createElementNS(ns,'image');
+  img.setAttribute('href','data:image/png;base64,'+plan.ImageBase64);
+  img.setAttribute('x','0');img.setAttribute('y','0');img.setAttribute('width',W);img.setAttribute('height',H);
+  svg.appendChild(img);
+  plan.Rooms.forEach(room=>{
+    if(!room.SvgPolygon)return;
+    const poly=document.createElementNS(ns,'polygon');
+    poly.id='poly-'+room.RevitId; poly.setAttribute('class','bimflow-room'); poly.setAttribute('points',room.SvgPolygon);
+    poly.addEventListener('click',e=>{e.stopPropagation(); roomClicked(room.RevitId,e.ctrlKey||e.metaKey||e.shiftKey);});
+    svg.appendChild(poly);
+  });
+  $('viewerWrap').appendChild(svg);
+  resetView(svg); setupPanZoom(svg); setupMinimap();
+}
+
+/* ═══ PAN / ZOOM ═══ */
+function resetView(svg){
+  if(!svg) svg=$('mainSvg'); if(!svg)return;
+  const w=$('viewerWrap');
+  zoom=Math.min((w.clientWidth-40)/W,(w.clientHeight-40)/H);
+  panX=w.clientWidth/2-W/2*zoom; panY=w.clientHeight/2-H/2*zoom; applyTx(svg);
+}
+function applyTx(svg){
+  if(!svg)return;
+  svg.style.left='0'; svg.style.top='0'; svg.style.transformOrigin='0 0';
+  svg.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`;
+  updateMinimap();
+}
+function zoomAt(factor){
+  const w=$('viewerWrap').getBoundingClientRect(); const cx=w.width/2, cy=w.height/2;
+  const nz=Math.min(Math.max(zoom*factor,.07),30);
+  panX=cx-(cx-panX)*(nz/zoom); panY=cy-(cy-panY)*(nz/zoom); zoom=nz; applyTx($('mainSvg'));
+}
+function setupPanZoom(svg){
+  const wrap=$('viewerWrap');
+  wrap.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.deltaY<0?1.13:1/1.13);},{passive:false});
+  // Middle-click OR right-click drag = pan (like Revit)
+  wrap.addEventListener('mousedown',e=>{
+    if(e.button===1||e.button===2){
+      isPan=true; panStart={x:e.clientX-panX,y:e.clientY-panY};
+      wrap.style.cursor='grabbing'; e.preventDefault();
+    }
+  });
+  wrap.addEventListener('contextmenu',e=>e.preventDefault());
+  wrap.addEventListener('click',()=>clearSelection());
+  window.addEventListener('mouseup',e=>{
+    if(e.button===1||e.button===2){ isPan=false; wrap.style.cursor=''; }
+  });
+  window.addEventListener('mousemove',e=>{
+    if(!isPan)return;
+    panX=e.clientX-panStart.x; panY=e.clientY-panStart.y; applyTx($('mainSvg'));
+  });
+  $('zIn').onclick=()=>zoomAt(1.2); $('zOut').onclick=()=>zoomAt(1/1.2); $('zReset').onclick=()=>resetView(null);
+}
+
+/* ═══ SELECTION (multi) ═══ */
+function roomClicked(id,additive,planKey){
+  if(compareDiff) return;
+  // If room belongs to a different level, load that plan first then select
+  if(planKey && planKey!==currentPlanKey){
+    loadPlan(planKey).then(()=>{ selIds.clear(); selIds.add(id); lastSel=id; onSelectionChanged(true); });
+    return;
+  }
+  if(additive){ if(selIds.has(id)) selIds.delete(id); else selIds.add(id); }
+  else { selIds.clear(); selIds.add(id); }
+  lastSel=id;
+  onSelectionChanged(true);
+}
+function clearSelection(){ if(compareDiff||!selIds.size)return; selIds.clear(); lastSel=null; onSelectionChanged(false); }
+function selectMatching(){
+  const key=$('colorBy').value, val=$('filtVal').value;
+  if(!key){ alert('Choisissez d\'abord un paramètre dans "Colorer / filtrer par".'); return; }
+  if(!val){ alert('Choisissez une valeur à sélectionner.'); return; }
+  selIds.clear();
+  (plan?.Rooms||[]).forEach(r=>{ if((roomColorValue(r,key)||'(vide)')===val) selIds.add(r.RevitId); });
+  lastSel=[...selIds][0]||null;
+  onSelectionChanged(true);
+}
+function onSelectionChanged(center){
+  paintRooms();
+  markRoomSelection();
+  $('selCount').textContent=selIds.size?`${selIds.size} sélection(s)`:'';
+  if(center && lastSel){
+    const room=plan?.Rooms.find(r=>r.RevitId===lastSel);
+    const item=document.querySelector('.room-item[data-id="'+lastSel+'"]'); if(item) item.scrollIntoView({block:'nearest'});
+    if(room){ const w=$('viewerWrap'); panX=w.clientWidth/2-room.CentroidX*zoom; panY=w.clientHeight/2-room.CentroidY*zoom;
+      const svg=$('mainSvg'); if(svg){svg.style.transition='transform .35s ease'; applyTx(svg); setTimeout(()=>{if(svg)svg.style.transition='';},380);} }
+  }
+  renderMatrix(); updateActiveThumbSel(); updateMinimap(); if(typeof R3!=='undefined'&&R3.ready) recolor3D();
+}
+
+/* ═══ ROOM LIST ═══ */
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function activeRooms(){ return allLevelsMode ? allLevelsRooms : (plan?.Rooms||[]); }
+function renderList(){
+  const list=$('roomsList'); list.innerHTML='';
+  const rooms=activeRooms();
+  if(!rooms.length){ list.innerHTML='<div class="empty-hint">Aucune pièce</div>'; return; }
+  const sk=$('searchKey').value;
+  [...rooms].sort((a,b)=>(a.Number||'').localeCompare(b.Number||'',undefined,{numeric:true})).forEach(room=>{
+    const div=document.createElement('div'); div.className='room-item'; div.setAttribute('data-id',room.RevitId);
+    const lvl=room._levelName||room.LevelName||'';
+    let extra=lvl?`<div class="r-lvl">${esc(lvl)}</div>`:'';
+    if(sk && sk!=='__name' && sk!=='__number'){ const v=roomColorValue(room,sk); if(v) extra=`<div class="r-lvl">${colorByLabel(sk)}: ${esc(v)}</div>`; }
+    div.innerHTML=`<input type="checkbox"/><div class="ri-txt"><div class="r-num">${esc(room.Number||'')}</div>`+
+      `<div class="r-name">${esc(room.Name||'—')}</div>${extra}</div>`;
+    const pk=room._planKey||null;
+    div.querySelector('input').addEventListener('click',e=>{ e.stopPropagation(); roomClicked(room.RevitId,true,pk); });
+    div.querySelector('.ri-txt').addEventListener('click',()=>roomClicked(room.RevitId,false,pk));
+    list.appendChild(div);
+  });
+  markRoomSelection(); applyRoomSearch();
+}
+function markRoomSelection(){
+  document.querySelectorAll('.room-item').forEach(el=>{ const on=selIds.has(el.getAttribute('data-id'));
+    el.classList.toggle('active',on); const cb=el.querySelector('input'); if(cb) cb.checked=on; });
+}
+function applyRoomSearch(){
+  const q=($('roomSearch').value||'').toLowerCase(), sk=$('searchKey').value;
+  document.querySelectorAll('.room-item').forEach(el=>{
+    let hay;
+    if(sk){ const room=plan?.Rooms.find(r=>r.RevitId===el.getAttribute('data-id')); hay=(roomColorValue(room,sk)||'').toLowerCase(); }
+    else hay=el.textContent.toLowerCase();
+    el.style.display=!q||hay.includes(q)?'':'none';
+  });
+}
+function populateSearchKey(){
+  const sel=$('searchKey'); sel.innerHTML='<option value="">Nom / Numéro</option>';
+  SPECIAL_FIELDS.forEach(f=>sel.appendChild(new Option(f.label,f.key)));
+  const names=new Set(); (plan?.Rooms||[]).forEach(r=>Object.keys(r.Parameters||{}).forEach(k=>names.add(k)));
+  if(names.size){ const sep=document.createElement('option'); sep.disabled=true; sep.textContent='──────────'; sel.appendChild(sep);
+    [...names].sort((a,b)=>a.localeCompare(b)).forEach(n=>sel.appendChild(new Option(n,n))); }
+  sel.value='';
+}
+$('roomSearch').addEventListener('input',applyRoomSearch);
+$('searchKey').addEventListener('change',renderList);
+
+/* ═══ ALL-LEVELS MODE ═══ */
+let allLevelsMode=false, allLevelsRooms=[];
+async function loadAllLevels(){
+  setStatus('Chargement tous niveaux…','loading');
+  try{
+    const list=await api('/api/plans');
+    const results=await Promise.all(list.map(p=>getPlanData(p.key)));
+    allLevelsRooms=[];
+    results.forEach(p=>{ (p.Rooms||[]).forEach(r=>allLevelsRooms.push({...r,_levelName:p.LevelName,_planKey:p.key})); });
+    setStatus(`${allLevelsRooms.length} pièces — tous niveaux`,'ok');
+  }catch(e){ setStatus('Erreur: '+e.message,'err'); allLevelsMode=false; updateAllLevelsBtn(); }
+}
+function updateAllLevelsBtn(){
+  const b=$('btnAllLevels');
+  b.style.background=allLevelsMode?'#1d4ed8':'transparent';
+  b.style.color=allLevelsMode?'#e0f2fe':'#94a3b8';
+  b.style.borderColor=allLevelsMode?'#1d4ed8':'#374151';
+}
+$('btnAllLevels').addEventListener('click',async()=>{
+  allLevelsMode=!allLevelsMode; updateAllLevelsBtn();
+  if(allLevelsMode){ await loadAllLevels(); }
+  renderList(); renderMatrix();
+});
+
+/* ═══ PARAMETERS — table of ROOMS × PARAMETERS ═══ */
+function isCore(k){ return CORE_KEYS.some(c=>k.toLowerCase().includes(c)||c.includes(k.toLowerCase())); }
+function selectedRooms(){ return (plan?.Rooms||[]).filter(r=>selIds.has(r.RevitId)); }
+function escAttr(s){ return String(s).replace(/"/g,'&quot;'); }
+function numericType(t){ return t==='number'||t==='integer'||t==='length'||t==='area'||t==='volume'||t==='mass'||t==='currency'; }
+
+// Rows = selected rooms, or ALL rooms when nothing is selected.
+function matrixRooms(){ const s=selectedRooms(); return s.length?s:activeRooms(); }
+
+function renderMatrix(){
+  if(compareDiff){ compareDiff=null; document.querySelectorAll('.changed').forEach(p=>p.classList.remove('changed')); $('bpSub').textContent=''; }
+  const rooms=matrixRooms();
+  $('paramScope').textContent = selIds.size ? `${selIds.size} pièce(s) sélectionnée(s)` : `Toutes les pièces (${rooms.length})`;
+  const head=$('matrixHead'), body=$('matrixBody'), empty=$('matrixEmpty');
+  if(!rooms.length){ head.innerHTML=''; body.innerHTML=''; empty.style.display=''; applyEditMode(); updateSendBtn(); return; }
+  empty.style.display='none';
+
+  // columns = union of parameter names (core first)
+  const keys=new Set(); rooms.forEach(r=>Object.keys(r.Parameters||{}).forEach(k=>keys.add(k)));
+  const cols=[...keys].sort((a,b)=>{ const ca=isCore(a),cb=isCore(b); if(ca!==cb)return ca?-1:1; return a.localeCompare(b); });
+
+  const wP=colW['__piece']||170;
+  let th='<tr><th style="width:'+wP+'px"><span class="col-lbl">Pièce</span><span class="col-resizer" data-col="__piece"></span></th>';
+  cols.forEach(k=>{ const w=colW[k]||DEF_COLW;
+    th+=`<th data-pname="${escAttr(k)}" title="${escAttr(k)}" style="width:${w}px"><span class="col-lbl">${k}</span><span class="col-resizer" data-col="${escAttr(k)}"></span></th>`; });
+  th+='</tr>'; head.innerHTML=th;
+  attachResizers();
+
+  body.innerHTML='';
+  rooms.forEach(room=>{
+    const tr=document.createElement('tr');
+    const tdR=document.createElement('td'); tdR.className='k';
+    tdR.textContent=(room.Number?room.Number+' · ':'')+(room.Name||room.RevitId); tdR.title=tdR.textContent;
+    tr.appendChild(tdR);
+    const P=room.Parameters||{}, T=room.ParameterTypes||{}, RO=room.ParameterReadOnly||{}, CH=room.ParameterChoices||{};
+    cols.forEach(k=>{
+      const td=document.createElement('td'); td.setAttribute('data-pname',k);
+      if(!(k in P)){ td.className='empty-cell'; tr.appendChild(td); return; }
+      const orig=P[k]??'', pType=T[k]||'text', isRO=RO[k]===true, opts=CH[k]||[];
+      const hasChoice=opts.length>=2||pType==='boolean'||pType==='choice';
+      if(!editMode||isRO){
+        td.textContent=orig; if(isRO){ td.className='ro-cell'; td.title='Lecture seule'; }
+      } else if(hasChoice){
+        const sel=document.createElement('select'); sel.className='pv-select';
+        (opts.length>=2?opts:['Yes','No']).forEach(o=>{ const op=document.createElement('option'); op.value=o; op.textContent=o; if(o===orig)op.selected=true; sel.appendChild(op); });
+        sel.addEventListener('change',()=>{ sel.classList.toggle('changed',sel.value!==orig); trackEdit(room.RevitId,k,sel.value,orig); });
+        td.appendChild(sel);
+      } else {
+        const inp=document.createElement('input'); inp.className='pv-input';
+        inp.type=numericType(pType)?'number':'text'; inp.value=orig;
+        inp.addEventListener('input',()=>{ inp.classList.toggle('changed',inp.value!==orig); trackEdit(room.RevitId,k,inp.value,orig); });
+        td.appendChild(inp);
+      }
+      tr.appendChild(td);
+    });
+    body.appendChild(tr);
+  });
+  applyEditMode(); updateSendBtn(); buildColChooser(cols); applyColVisibility();
+}
+function applyEditMode(){
+  const btn=$('editToggle'); btn.textContent=editMode?'✓ Terminé':'✏ Éditer'; btn.classList.toggle('on',editMode);
+}
+function trackEdit(id,key,val,orig){
+  if(!pendingEdits[id]) pendingEdits[id]={};
+  if(String(val)===String(orig)){ delete pendingEdits[id][key]; if(!Object.keys(pendingEdits[id]).length) delete pendingEdits[id]; }
+  else pendingEdits[id][key]=val;
+  updateSendBtn();
+}
+/* ═══ COLUMN WIDTH (resizable, fixed default, wrapping) ═══ */
+const DEF_COLW=120;
+let colW={};
+function attachResizers(){
+  $('matrixHead').querySelectorAll('.col-resizer').forEach(rz=>{
+    rz.addEventListener('mousedown',e=>{
+      e.preventDefault(); e.stopPropagation();
+      const th=rz.parentElement, col=rz.getAttribute('data-col');
+      const startX=e.clientX, startW=th.getBoundingClientRect().width;
+      const mv=ev=>{ const w=Math.max(40,startW+(ev.clientX-startX)); th.style.width=w+'px'; colW[col]=w; };
+      const up=()=>{ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); };
+      document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+    });
+  });
+}
+
+/* ═══ COLUMN CHOOSER (select which parameters to display) ═══ */
+function loadColHidden(){ try{ const a=JSON.parse(localStorage.getItem('bimflow_colhidden')); return new Set(Array.isArray(a)?a:[]); }catch(e){ return new Set(); } }
+function saveColHidden(){ try{ localStorage.setItem('bimflow_colhidden',JSON.stringify([...colHidden])); }catch(e){} }
+let colHidden=loadColHidden();   // remembered across reloads & plan loads (the "default")
+function applyColVisibility(){
+  $('matrixHead').querySelectorAll('th[data-pname]').forEach(th=>{ th.style.display=colHidden.has(th.getAttribute('data-pname'))?'none':''; });
+  $('matrixBody').querySelectorAll('td[data-pname]').forEach(td=>{ td.style.display=colHidden.has(td.getAttribute('data-pname'))?'none':''; });
+}
+function updateColBtn(cols){ const shown=cols.filter(c=>!colHidden.has(c)).length; $('colSelBtn').textContent=`▦ Colonnes (${shown}/${cols.length}) ▾`; }
+function buildColChooser(cols){
+  const list=$('colSelList'); list.innerHTML='';
+  cols.forEach(k=>{
+    const lab=document.createElement('label'); lab.className='colsel-opt'; lab.setAttribute('data-name',k.toLowerCase());
+    const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!colHidden.has(k);
+    cb.addEventListener('change',()=>{ if(cb.checked) colHidden.delete(k); else colHidden.add(k); saveColHidden(); applyColVisibility(); updateColBtn(cols); });
+    const sp=document.createElement('span'); sp.textContent=k; sp.title=k;
+    lab.appendChild(cb); lab.appendChild(sp); list.appendChild(lab);
+  });
+  filterColChooser(); updateColBtn(cols);
+}
+function filterColChooser(){ const q=($('colSearch').value||'').toLowerCase();
+  $('colSelList').querySelectorAll('.colsel-opt').forEach(o=>{ o.style.display=!q||(o.getAttribute('data-name')||'').includes(q)?'':'none'; }); }
+$('colSelBtn').addEventListener('click',e=>{
+  e.stopPropagation();
+  const pop=$('colSelPop'); const opening=!pop.classList.contains('open');
+  pop.classList.toggle('open');
+  if(opening){ const r=$('colSelBtn').getBoundingClientRect();
+    pop.style.left=Math.max(8,Math.min(r.right-230,window.innerWidth-238))+'px';
+    pop.style.bottom=(window.innerHeight-r.top+6)+'px';   // open upward above the button
+    pop.style.top='auto';
+    setTimeout(()=>$('colSearch').focus(),0);
+  }
+});
+document.addEventListener('click',e=>{ if(!$('colSel').contains(e.target)) $('colSelPop').classList.remove('open'); });
+$('colSearch').addEventListener('input',filterColChooser);
+$('colAll').addEventListener('click',()=>{ colHidden.clear(); saveColHidden(); renderMatrix(); });
+$('colNone').addEventListener('click',()=>{ $('matrixHead').querySelectorAll('th[data-pname]').forEach(th=>colHidden.add(th.getAttribute('data-pname'))); saveColHidden(); renderMatrix(); });
+
+/* ── favorite column presets (saved selections of which params to show) ── */
+function curCols(){ return [...$('matrixHead').querySelectorAll('th[data-pname]')].map(th=>th.getAttribute('data-pname')); }
+function loadColPresets(){ try{ return JSON.parse(localStorage.getItem('bimflow_colpresets'))||{}; }catch(e){ return {}; } }
+function saveColPresetsObj(p){ localStorage.setItem('bimflow_colpresets',JSON.stringify(p)); }
+function refreshPresetSelect(){ const sel=$('colPreset'); if(!sel) return; const p=loadColPresets();
+  sel.innerHTML='<option value="">★ Favoris…</option>'+Object.keys(p).map(n=>`<option value="${escAttr(n)}">${esc(n)}</option>`).join(''); }
+$('colPresetSave').addEventListener('click',()=>{
+  const name=prompt('Nom du favori de colonnes :'); if(!name) return;
+  const visible=curCols().filter(c=>!colHidden.has(c));
+  const p=loadColPresets(); p[name]=visible; saveColPresetsObj(p); refreshPresetSelect(); $('colPreset').value=name;
+});
+$('colPresetDel').addEventListener('click',()=>{ const name=$('colPreset').value; if(!name){ alert('Choisissez un favori à supprimer.'); return; }
+  const p=loadColPresets(); delete p[name]; saveColPresetsObj(p); refreshPresetSelect(); });
+$('colPreset').addEventListener('change',()=>{ const name=$('colPreset').value; if(!name) return;
+  const visible=loadColPresets()[name]||[];
+  colHidden=new Set(curCols().filter(c=>!visible.includes(c))); saveColHidden(); renderMatrix(); });
+refreshPresetSelect();
+
+/* ═══ BOTTOM PANEL TABS ═══ */
+function showTab(which){
+  const p=which==='params';
+  $('tabParams').classList.toggle('active',p); $('tabCreate').classList.toggle('active',!p);
+  $('viewParams').style.display=p?'flex':'none'; $('viewCreate').style.display=p?'none':'flex';
+}
+$('tabParams').addEventListener('click',()=>showTab('params'));
+$('tabCreate').addEventListener('click',()=>showTab('create'));
+
+/* ═══ PARAMETERS TO CREATE — editable multi-row grid ═══ */
+const TYPE_OPTS=[['text','Texte'],['multitext','Texte multiligne'],['integer','Entier'],['number','Nombre'],['length','Longueur'],['area','Surface'],['volume','Volume'],['angle','Angle'],['yesno','Oui/Non'],['url','URL'],['material','Matériau'],['currency','Devise'],['mass','Masse']];
+const GROUP_OPTS=[['data','Données'],['identity','Identité'],['dimensions','Dimensions'],['constraints','Contraintes'],['text','Texte'],['graphics','Graphismes'],['materials','Matériaux et finitions'],['phasing','Phases'],['general','Général']];
+const KIND_OPTS=[['shared','Partagé'],['project','De projet']];
+const BIND_OPTS=[['instance','Occurrence'],['type','Type']];
+const optsHtml=(opts,sel)=>opts.map(([v,l])=>`<option value="${v}"${v===sel?' selected':''}>${l}</option>`).join('');
+
+function renderCreateTable(){
+  const body=$('createBody'); body.innerHTML='';
+  $('createEmpty').style.display=newParamRequests.length?'none':'';
+  newParamRequests.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=
+      `<td><input class="pv-input npc" data-i="${i}" data-f="Name" value="${escAttr(r.Name||'')}" placeholder="nom"/></td>`+
+      `<td><select class="pv-select npc" data-i="${i}" data-f="Type">${optsHtml(TYPE_OPTS,r.Type||'text')}</select></td>`+
+      `<td><select class="pv-select npc" data-i="${i}" data-f="Group">${optsHtml(GROUP_OPTS,r.Group||'data')}</select></td>`+
+      `<td><select class="pv-select npc" data-i="${i}" data-f="Kind">${optsHtml(KIND_OPTS,r.Kind||'shared')}</select></td>`+
+      `<td><select class="pv-select npc" data-i="${i}" data-f="Bind">${optsHtml(BIND_OPTS,r.Instance===false?'type':'instance')}</select></td>`+
+      `<td><input class="pv-input npc" data-i="${i}" data-f="DefaultValue" value="${escAttr(r.DefaultValue||'')}" placeholder="—"/></td>`+
+      `<td><button class="rm-btn" data-i="${i}" title="Retirer">×</button></td>`;
+    body.appendChild(tr);
+  });
+  body.querySelectorAll('.npc').forEach(el=>{
+    const h=()=>{ const i=+el.getAttribute('data-i'), f=el.getAttribute('data-f');
+      if(f==='Bind') newParamRequests[i].Instance=el.value==='instance'; else newParamRequests[i][f]=el.value; updateSendBtn(); };
+    el.addEventListener('input',h); el.addEventListener('change',h);
+  });
+  body.querySelectorAll('.rm-btn').forEach(b=>b.addEventListener('click',()=>{ newParamRequests.splice(+b.getAttribute('data-i'),1); renderCreateTable(); updateSendBtn(); }));
+}
+function addCreateRow(){
+  newParamRequests.push({ Name:'', Type:'text', Group:'data', Kind:'shared', Instance:true, DefaultValue:'' });
+  renderCreateTable(); updateSendBtn();
+  const names=$('createBody').querySelectorAll('input.npc[data-f="Name"]'); if(names.length) names[names.length-1].focus();
+}
+$('btnAddCreate').addEventListener('click',addCreateRow);
+
+function updateSendBtn(){ const validNew=newParamRequests.some(r=>r.Name&&r.Name.trim()); $('btnSendRevit').disabled=!(Object.keys(pendingEdits).length||validNew); }
+
+/* ═══ SEND TO REVIT ═══ */
+async function sendToRevit(){
+  if($('btnSendRevit').disabled) return;
+  const news=newParamRequests.filter(r=>r.Name&&r.Name.trim());
+  const payload={ PlanKey:currentPlanKey,
+    Updates:Object.entries(pendingEdits).map(([id,p])=>({RevitId:id,Parameters:p})),
+    NewParameters:news };
+  try{
+    await api('/api/updates',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const btn=$('btnSendRevit'); btn.textContent='✓ Envoyé !';
+    setTimeout(()=>{btn.textContent='↑ Envoyer vers Revit';},3000);
+    pendingEdits={}; newParamRequests=[]; renderCreateTable(); renderMatrix();
+    alert('Envoyé !\nDans Revit : cliquez "Recevoir depuis BIMFlow".');
+  }catch(e){ alert('Erreur: '+e.message); }
+}
+
+/* ═══ EXCEL (ExcelJS) — lazy-loaded; supports dropdowns, autofilter, formatting ═══ */
+let _exjsPromise=null;
+function loadExcelJS(){
+  if(window.ExcelJS) return Promise.resolve(window.ExcelJS);
+  if(_exjsPromise) return _exjsPromise;
+  _exjsPromise=new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+    s.onload=()=>res(window.ExcelJS); s.onerror=()=>rej(new Error('Échec du chargement de la librairie Excel (connexion ?)'));
+    document.head.appendChild(s);
+  });
+  return _exjsPromise;
+}
+function dlBuf(buf,name){ const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); }
+function cellText(v){ if(v==null) return ''; if(typeof v==='object'){ if(v.text!=null) return String(v.text); if(v.result!=null) return String(v.result);
+  if(Array.isArray(v.richText)) return v.richText.map(t=>t.text).join(''); if(v.hyperlink) return String(v.hyperlink); return ''; } return String(v); }
+async function sheetRows(file){
+  const ExcelJS=await loadExcelJS(); const wb=new ExcelJS.Workbook(); await wb.xlsx.load(await file.arrayBuffer());
+  const ws=wb.worksheets[0]; const rows=[]; ws.eachRow({includeEmpty:false},row=>rows.push((row.values||[]).slice(1).map(cellText))); return rows;
+}
+const HDR_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FF1D4ED8'}};
+const HDR_FONT={bold:true,color:{argb:'FFFFFFFF'}};
+function matrixCols(rooms){ const k=new Set(); rooms.forEach(r=>Object.keys(r.Parameters||{}).forEach(x=>k.add(x)));
+  return [...k].sort((a,b)=>{ const ca=isCore(a),cb=isCore(b); if(ca!==cb)return ca?-1:1; return a.localeCompare(b); }); }
+const IDENTITY_COLS=new Set(['revitid','niveau','numéro','numero','nom','name','level']);
+
+// Export cross-table (rooms × parameters): bold header, per-column autofilter, frozen header, hidden RevitId key.
+async function exportParamsXLSX(){
+  const rooms=selIds.size?selectedRooms():(plan?.Rooms||[]); if(!rooms.length){ alert('Aucune pièce.'); return; }
+  try{
+    const ExcelJS=await loadExcelJS();
+    const cols=matrixCols(rooms).filter(k=>!colHidden.has(k));
+    const header=['RevitId','Niveau','Numéro','Nom',...cols];
+    const wb=new ExcelJS.Workbook();
+    const ws=wb.addWorksheet((plan?.LevelName||'Pièces').replace(/[\\\/?*\[\]:]/g,'_').substring(0,28),{views:[{state:'frozen',xSplit:4,ySplit:1}]});
+    ws.columns=header.map((h,i)=>({header:h,width: i===0?12 : i===3?26 : i<4?14 : Math.max(12,Math.round((colW[cols[i-4]]||DEF_COLW)/7))}));
+    rooms.forEach(r=>ws.addRow([r.RevitId,r.LevelName||'',r.Number||'',r.Name||'',...cols.map(k=>(r.Parameters||{})[k]??'')]));
+    const hr=ws.getRow(1); hr.font=HDR_FONT; hr.fill=HDR_FILL; hr.alignment={vertical:'middle',wrapText:true};
+    ws.getColumn(1).hidden=true;
+    ws.autoFilter={from:{row:1,column:1},to:{row:1,column:header.length}};
+    // Grey out READ-ONLY parameter columns so it's clear which values won't sync back to Revit.
+    const roFill={type:'pattern',pattern:'solid',fgColor:{argb:'FF8A8F98'}};
+    const roBody={type:'pattern',pattern:'solid',fgColor:{argb:'FFE6E7EA'}};
+    cols.forEach((k,ci)=>{
+      if(!rooms.some(r=>(r.ParameterReadOnly||{})[k]===true)) return;
+      ws.getColumn(5+ci).eachCell({includeEmpty:true},(cell,rn)=>{
+        if(rn===1){ cell.fill=roFill; cell.font={bold:true,color:{argb:'FFFFFFFF'}}; cell.note='🔒 Lecture seule — non modifiable (ne sera pas renvoyé à Revit)'; }
+        else { cell.fill=roBody; cell.font={italic:true,color:{argb:'FF6B7280'}}; }
+      });
+    });
+    dlBuf(await wb.xlsx.writeBuffer(),'BIMFlow_'+(plan?.LevelName||'plan')+'.xlsx');
+  }catch(e){ alert('Erreur Excel: '+e.message); }
+}
+
+// Re-import an exported cross-table to UPDATE parameter values (matched by RevitId).
+async function importParamsUpdate(file){
+  try{
+    const rows=await sheetRows(file);
+    const hi=rows.findIndex(r=>(r||[]).some(c=>String(c).trim().toLowerCase()==='revitid'));
+    if(hi<0){ alert('Fichier non reconnu — exportez d\'abord le tableau via « ⬇ Excel » (la colonne RevitId est nécessaire).'); return; }
+    const header=rows[hi].map(c=>String(c).trim());
+    const idCol=header.findIndex(c=>c.toLowerCase()==='revitid');
+    let nRooms=0, nEdits=0;
+    for(let i=hi+1;i<rows.length;i++){
+      const row=rows[i]||[]; const rid=String(row[idCol]==null?'':row[idCol]).trim(); if(!rid) continue;
+      const room=(plan?.Rooms||[]).find(r=>String(r.RevitId)===rid); if(!room) continue;
+      let any=false;
+      header.forEach((h,ci)=>{
+        if(IDENTITY_COLS.has(h.toLowerCase())) return;
+        const orig=(room.Parameters||{})[h]; if(orig===undefined) return;
+        if((room.ParameterReadOnly||{})[h]===true) return;
+        const val=row[ci]==null?'':String(row[ci]);
+        if(String(val)!==String(orig??'')){ trackEdit(rid,h,val,orig??''); any=true; nEdits++; }
+      });
+      if(any) nRooms++;
+    }
+    renderMatrix();
+    alert(nEdits?`${nEdits} valeur(s) sur ${nRooms} pièce(s) prêtes à envoyer. Cliquez « ↑ Envoyer vers Revit ».`:'Aucune différence détectée par rapport au plan chargé.');
+  }catch(e){ alert('Erreur import: '+e.message); }
+}
+
+// Template with dropdown lists on the choice columns + autofilter + an "Aide" sheet.
+async function exportTemplate(){
+  try{
+    const ExcelJS=await loadExcelJS();
+    const wb=new ExcelJS.Workbook(); const ws=wb.addWorksheet('Paramètres');
+    ws.columns=[{header:'Name',width:26},{header:'Type',width:14},{header:'Group',width:18},{header:'Kind',width:12},{header:'Binding',width:12},{header:'Default',width:16}];
+    let rows=newParamRequests.filter(r=>r.Name&&r.Name.trim()).map(r=>[r.Name,r.Type||'text',r.Group||'data',r.Kind||'shared',r.Instance===false?'type':'instance',r.DefaultValue||'']);
+    if(!rows.length) rows=[['Sous-Projet','text','data','shared','instance','']];
+    rows.forEach(r=>ws.addRow(r));
+    const hr=ws.getRow(1); hr.font=HDR_FONT; hr.fill=HDR_FILL;
+    const lists={ B:'"text,multitext,integer,number,length,area,volume,angle,yesno,url,material,currency,mass"',
+      C:'"data,identity,dimensions,constraints,text,graphics,materials,phasing,general"', D:'"shared,project"', E:'"instance,type"' };
+    for(let r=2;r<=300;r++) for(const col in lists) ws.getCell(col+r).dataValidation={type:'list',allowBlank:true,formulae:[lists[col]]};
+    ws.autoFilter={from:{row:1,column:1},to:{row:1,column:6}};
+    const hs=wb.addWorksheet('Aide'); hs.columns=[{header:'Colonne',width:14},{header:'Valeurs acceptées',width:92}];
+    [['Type','text, multitext, integer, number, length, area, volume, angle, yesno, url, material, currency, mass'],
+     ['Group','data, identity, dimensions, constraints, text, graphics, materials, phasing, general'],
+     ['Kind','shared (partagé), project (de projet)'],['Binding','instance (occurrence), type']].forEach(r=>hs.addRow(r));
+    hs.getRow(1).font={bold:true};
+    dlBuf(await wb.xlsx.writeBuffer(),'BIMFlow_modele_parametres.xlsx');
+  }catch(e){ alert('Erreur Excel: '+e.message); }
+}
+
+// Import .xlsx / .xls / .csv → fill the "to create" grid
+async function importTemplate(file){
+  try{
+    const rows=await sheetRows(file);
+    if(!rows.length){ alert('Fichier vide.'); return; }
+    let start=0; const h=(rows[0]||[]).map(x=>String(x).toLowerCase());
+    if(h.includes('name')||h.includes('nom')) start=1;
+    let added=0;
+    for(let i=start;i<rows.length;i++){
+      const c=(rows[i]||[]).map(x=>x==null?'':String(x).trim()); const name=c[0]; if(!name) continue;
+      newParamRequests.push({ Name:name, Type:(c[1]||'text').toLowerCase(), Group:(c[2]||'data').toLowerCase(),
+        Kind:(c[3]||'shared').toLowerCase(), Instance:(c[4]||'instance').toLowerCase()!=='type', DefaultValue:c[5]||'' });
+      added++;
+    }
+    renderCreateTable(); updateSendBtn(); showTab('create');
+    alert(added+' paramètre(s) importé(s). Vérifiez la liste puis « Envoyer vers Revit ».');
+  }catch(e){ alert('Erreur import: '+e.message); }
+}
+$('btnExportParams').addEventListener('click',exportParamsXLSX);
+$('paramImport').addEventListener('change',function(){ if(this.files[0]) importParamsUpdate(this.files[0]); this.value=''; });
+$('btnTplExport').addEventListener('click',exportTemplate);
+$('tplImport').addEventListener('change',function(){ if(this.files[0]) importTemplate(this.files[0]); this.value=''; });
+
+/* ═══ COLOR-BY / FILTER PARAMETER ═══ */
+const SPECIAL_FIELDS=[{key:'__name',label:'Nom'},{key:'__number',label:'Numéro'},{key:'__level',label:'Niveau'},{key:'__id',label:'ID Revit'}];
+function roomColorValue(room,key){
+  if(key==='__name')return room.Name||''; if(key==='__number')return room.Number||'';
+  if(key==='__level')return room.LevelName||''; if(key==='__id')return room.RevitId||'';
+  return (room.Parameters||{})[key]||'';
+}
+function colorByLabel(key){ const sf=SPECIAL_FIELDS.find(f=>f.key===key); return sf?sf.label:key; }
+function populateColorBy(){
+  const sel=$('colorBy'); sel.innerHTML='<option value="">Aucun (par défaut)</option>';
+  SPECIAL_FIELDS.forEach(f=>sel.appendChild(new Option(f.label,f.key)));
+  const names=new Set(); (plan?.Rooms||[]).forEach(r=>Object.keys(r.Parameters||{}).forEach(k=>names.add(k)));
+  if(names.size){ const sep=document.createElement('option'); sep.disabled=true; sep.textContent='──────────'; sel.appendChild(sep);
+    [...names].sort((a,b)=>a.localeCompare(b)).forEach(n=>sel.appendChild(new Option(n,n))); }
+  sel.value=''; colorKey=''; populateFiltVal();
+}
+function populateFiltVal(){
+  const key=$('colorBy').value, fv=$('filtVal'); fv.innerHTML='<option value="">— toutes les valeurs —</option>';
+  if(!key)return; const vals=new Set();
+  (plan?.Rooms||[]).forEach(r=>vals.add(roomColorValue(r,key)||'(vide)'));
+  [...vals].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).forEach(v=>fv.appendChild(new Option(v,v)));
+}
+function hexA(hex,a){ const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex); if(!m)return hex;
+  return `rgba(${parseInt(m[1],16)},${parseInt(m[2],16)},${parseInt(m[3],16)},${a})`; }
+function applyColorBy(key){
+  colorKey=key; const legend=$('legend');
+  if(!key){ colorMap={}; paintRooms(); legend.style.display='none'; if(typeof R3!=='undefined'&&R3.ready) recolor3D(); return; }
+  const counts={}; (plan?.Rooms||[]).forEach(r=>{ const v=roomColorValue(r,key)||'(vide)'; counts[v]=(counts[v]||0)+1; });
+  const values=Object.keys(counts).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  colorMap={}; let ci=0; values.forEach(v=>{ colorMap[v]= v==='(vide)'?'#64748b':PALETTE[ci++%PALETTE.length]; });
+  paintRooms();
+  legend.innerHTML='<div class="legend-hd">'+colorByLabel(key)+'</div>'+
+    values.map(v=>`<div class="legend-row"><span class="legend-sw" style="background:${colorMap[v]}"></span><span class="legend-tx" title="${v}">${v}</span><span class="legend-cnt">${counts[v]}</span></div>`).join('');
+  legend.style.display='';
+  if(typeof R3!=='undefined'&&R3.ready) recolor3D();
+}
+function paintRooms(){
+  (plan?.Rooms||[]).forEach(r=>{
+    const sel=selIds.has(r.RevitId);
+    let fill=''; if(colorKey){ const v=roomColorValue(r,colorKey)||'(vide)'; fill=hexA(colorMap[v]||'#64748b',0.55); }
+    [$('poly-'+r.RevitId),$('mp-'+r.RevitId)].forEach(p=>{ if(!p)return; p.classList.toggle('selected',sel); p.style.fill=sel?'':fill; });
+  });
+}
+$('colorBy').addEventListener('change',function(){ applyColorBy(this.value); populateFiltVal(); });
+$('btnSelectMatch').addEventListener('click',selectMatching);
+$('btnClearSel').addEventListener('click',clearSelection);
+
+/* ═══ MINIMAP ═══ */
+const MINI_W=148;
+function setupMinimap(){
+  const ns='http://www.w3.org/2000/svg'; const miniH=Math.round(H*MINI_W/W);
+  const svg=$('minimapSvg'); svg.setAttribute('width',MINI_W); svg.setAttribute('height',miniH); svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.innerHTML='';
+  const img=document.createElementNS(ns,'image'); img.setAttribute('href','data:image/png;base64,'+plan.ImageBase64);
+  img.setAttribute('x','0');img.setAttribute('y','0');img.setAttribute('width',W);img.setAttribute('height',H); svg.appendChild(img);
+  plan.Rooms.forEach(room=>{ if(!room.SvgPolygon)return;
+    const p=document.createElementNS(ns,'polygon'); p.id='mp-'+room.RevitId; p.setAttribute('class','mini-room'); p.setAttribute('points',room.SvgPolygon);
+    p.addEventListener('click',()=>roomClicked(room.RevitId,false)); svg.appendChild(p); });
+  const rect=document.createElementNS(ns,'rect'); rect.id='mini-vp'; svg.appendChild(rect);
+  $('minimap').style.display=''; paintRooms(); updateMinimap();
+}
+function updateMinimap(){
+  if(!plan)return;
+  const wrap=$('viewerWrap'); const wW=wrap.clientWidth,wH=wrap.clientHeight;
+  const x1=Math.max(0,(0-panX)/zoom), y1=Math.max(0,(0-panY)/zoom);
+  const x2=Math.min(W,(wW-panX)/zoom), y2=Math.min(H,(wH-panY)/zoom);
+  const r=$('mini-vp'); if(r){r.setAttribute('x',x1);r.setAttribute('y',y1);r.setAttribute('width',Math.max(0,x2-x1));r.setAttribute('height',Math.max(0,y2-y1));}
+}
+
+/* ═══ VERSIONS + COMPARE ═══ */
+function snapKey(){ return 'bimflow_snaps_'+currentPlanKey; }
+function loadSnaps(){ try{ return JSON.parse(localStorage.getItem(snapKey()))||[]; }catch(e){ return []; } }
+function saveSnaps(a){ try{ localStorage.setItem(snapKey(),JSON.stringify(a)); return true; }catch(e){ alert('Stockage plein — supprimez d\'anciennes versions.'); return false; } }
+function snapshotRooms(){ const m={}; (plan?.Rooms||[]).forEach(r=>m[r.RevitId]={Number:r.Number,Name:r.Name,P:Object.assign({},r.Parameters||{})}); return m; }
+$('btnSaveVersion').addEventListener('click',()=>{
+  if(!plan){ alert('Aucun plan chargé.'); return; }
+  const snaps=loadSnaps(); const ts=new Date();
+  snaps.push({ts:ts.toISOString(), label:ts.toLocaleString('fr-FR'), rooms:snapshotRooms()});
+  while(snaps.length>20) snaps.shift();
+  if(saveSnaps(snaps)) alert('Version enregistrée : '+ts.toLocaleString('fr-FR')+'\n('+snaps.length+' version(s) sauvegardée(s) pour ce niveau)');
+});
+
+function versionRooms(val){ if(val==='current') return snapshotRooms(); const s=loadSnaps()[+val]; return s?s.rooms:{}; }
+function openCompare(){
+  if(!plan){ alert('Aucun plan chargé.'); return; }
+  const snaps=loadSnaps();
+  const opts='<option value="current">Actuel (plan chargé)</option>'+snaps.map((s,i)=>`<option value="${i}">${esc(s.label)}</option>`).join('');
+  $('cmpA').innerHTML=opts; $('cmpB').innerHTML=opts;
+  if(snaps.length) $('cmpA').value=String(snaps.length-1);
+  $('cmpB').value='current';
+  $('cmpManage').innerHTML = snaps.length
+    ? snaps.map((s,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:2px 0;border-bottom:1px solid rgba(127,127,127,.15)"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.label)}</span><button class="vdel" data-i="${i}" title="Supprimer cette version" style="background:transparent;border:1px solid #5b2330;color:#f87171;border-radius:4px;cursor:pointer;font-size:11px;padding:1px 6px">🗑</button></div>`).join('')
+    : '<span style="color:#64748b">Aucune version pour ce niveau.</span>';
+  $('cmpManage').querySelectorAll('.vdel').forEach(b=>b.addEventListener('click',()=>{
+    const arr=loadSnaps(); arr.splice(+b.getAttribute('data-i'),1); saveSnaps(arr); openCompare();
+  }));
+  $('cmpPop').style.display='block';
+}
+async function saveAllVersions(){
+  try{
+    const list=await api('/api/plans'); if(!list.length){ alert('Aucun plan.'); return; }
+    const ts=new Date(); let n=0;
+    for(const m of list){
+      try{
+        const p=await api('/api/plans?key='+encodeURIComponent(m.key)+'&light=1');
+        const k='bimflow_snaps_'+m.key; let snaps=[]; try{ snaps=JSON.parse(localStorage.getItem(k))||[]; }catch(e){}
+        const rooms={}; (p.Rooms||[]).forEach(r=>rooms[r.RevitId]={Number:r.Number,Name:r.Name,P:Object.assign({},r.Parameters||{})});
+        snaps.push({ts:ts.toISOString(),label:ts.toLocaleString('fr-FR'),rooms}); while(snaps.length>20) snaps.shift();
+        localStorage.setItem(k,JSON.stringify(snaps)); n++;
+      }catch(e){}
+    }
+    openCompare(); alert(n+' niveau(x) enregistré(s) à '+ts.toLocaleString('fr-FR')+'.');
+  }catch(e){ alert('Erreur: '+e.message); }
+}
+$('cmpSaveAll').addEventListener('click',saveAllVersions);
+$('btnCompare').addEventListener('click',openCompare);
+$('cmpClose').addEventListener('click',()=>$('cmpPop').style.display='none');
+$('cmpRun').addEventListener('click',()=>{
+  const A=versionRooms($('cmpA').value), B=versionRooms($('cmpB').value);
+  const aLabel=$('cmpA').selectedOptions[0].textContent, bLabel=$('cmpB').selectedOptions[0].textContent;
+  const ids=new Set([...Object.keys(A),...Object.keys(B)]); const rooms=[]; const changedIds=new Set();
+  ids.forEach(id=>{ const ra=A[id], rb=B[id]; const pa=ra?ra.P:{}, pb=rb?rb.P:{};
+    const keys=new Set([...Object.keys(pa),...Object.keys(pb)]); const changes=[];
+    keys.forEach(k=>{ const va=pa[k]??'', vb=pb[k]??''; if(String(va)!==String(vb)) changes.push({key:k,a:va,b:vb}); });
+    if(changes.length){ rooms.push({id,number:(rb||ra).Number,name:(rb||ra).Name,changes}); changedIds.add(id); }
+  });
+  compareDiff={aLabel,bLabel,rooms,changedIds};
+  $('cmpPop').style.display='none';
+  renderCompare();
+});
+function renderCompare(){
+  if(!compareDiff) return;
+  showTab('params');
+  $('paramScope').textContent='Comparaison : '+compareDiff.aLabel+'  ⇆  '+compareDiff.bLabel+'  ('+compareDiff.rooms.length+' pièce(s) modifiée(s))';
+  $('bpSub').innerHTML='<span id="cmpExit" style="color:#f59e0b;cursor:pointer;font-weight:700">✕ Quitter la comparaison</span>';
+  const cols=[...new Set(compareDiff.rooms.flatMap(r=>r.changes.map(c=>c.key)))].sort((a,b)=>a.localeCompare(b));
+  $('matrixHead').innerHTML='<tr><th style="width:180px">Pièce</th>'+cols.map(k=>`<th style="width:170px">${esc(k)}</th>`).join('')+'</tr>';
+  const body=$('matrixBody'); body.innerHTML='';
+  compareDiff.rooms.forEach(r=>{
+    const map={}; r.changes.forEach(c=>map[c.key]=c);
+    let cells=`<td class="k">${esc((r.number?r.number+' · ':'')+(r.name||r.id))}</td>`;
+    cols.forEach(k=>{ const c=map[k]; cells+= c?`<td class="diff"><span class="old">${esc(c.a||'∅')}</span>${esc(c.b||'∅')}</td>`:'<td></td>'; });
+    const tr=document.createElement('tr'); tr.innerHTML=cells; body.appendChild(tr);
+  });
+  $('matrixEmpty').style.display=compareDiff.rooms.length?'none':'';
+  $('matrixEmpty').textContent='Aucune différence entre ces deux versions.';
+  (plan?.Rooms||[]).forEach(r=>{ const ch=compareDiff.changedIds.has(r.RevitId);
+    [$('poly-'+r.RevitId),$('mp-'+r.RevitId)].forEach(p=>{ if(p) p.classList.toggle('changed',ch); }); });
+  $('cmpExit').addEventListener('click',()=>{ renderMatrix(); paintRooms(); });
+}
+
+/* ═══ PANEL TOGGLES ═══ */
+function refitPlan(){ const s=$('mainSvg'); if(s&&plan) setTimeout(()=>resetView(s),30); }
+$('toggleRooms').addEventListener('click',function(){
+  const a=document.querySelector('.rooms-aside');
+  const collapsed=a.classList.toggle('collapsed');
+  this.classList.toggle('on',collapsed); refitPlan();
+});
+$('togglePlan').addEventListener('click',function(){
+  const v=$('viewerSplit'); const hidden=v.style.display==='none';
+  v.style.display=hidden?'':'none'; this.classList.toggle('on',!hidden);
+  refitPlan(); setTimeout(()=>{ resize3D(); update3D(); },50);
+});
+
+/* ═══ 3D ROOM VOLUMES (Three.js, lazy-loaded) ═══ */
+let _threeP=null;
+function loadThree(){
+  if(window.THREE && THREE.OrbitControls) return Promise.resolve();
+  if(_threeP) return _threeP;
+  _threeP=new Promise((res,rej)=>{
+    const s1=document.createElement('script'); s1.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+    s1.onload=()=>{ const s2=document.createElement('script'); s2.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
+      s2.onload=()=>res(); s2.onerror=()=>rej(new Error('OrbitControls')); document.head.appendChild(s2); };
+    s1.onerror=()=>rej(new Error('Three.js')); document.head.appendChild(s1);
+  });
+  return _threeP;
+}
+const R3={ready:false,planKey:null};
+function init3D(){
+  const cv=$('canvas3d');
+  R3.renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+  R3.renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+  R3.scene=new THREE.Scene();
+  R3.camera=new THREE.PerspectiveCamera(45,1,0.1,1e6);
+  R3.controls=new THREE.OrbitControls(R3.camera,cv); R3.controls.enableDamping=true; R3.controls.dampingFactor=.08;
+  R3.scene.add(new THREE.AmbientLight(0xffffff,.78));
+  const dl=new THREE.DirectionalLight(0xffffff,.55); dl.position.set(1,2,1.2); R3.scene.add(dl);
+  R3.group=new THREE.Group(); R3.group.rotation.x=-Math.PI/2; R3.scene.add(R3.group);
+  R3.meshes={}; R3.ready=true; resize3D();
+  (function loop(){ R3.raf=requestAnimationFrame(loop); R3.controls.update(); R3.renderer.render(R3.scene,R3.camera); })();
+  const ray=new THREE.Raycaster(), v=new THREE.Vector2();
+  cv.addEventListener('click',e=>{ const r=cv.getBoundingClientRect(); v.x=((e.clientX-r.left)/r.width)*2-1; v.y=-((e.clientY-r.top)/r.height)*2+1;
+    ray.setFromCamera(v,R3.camera); const hit=ray.intersectObjects(R3.group.children,true)[0];
+    let o=hit&&hit.object; while(o&&!o.userData.id) o=o.parent;
+    if(o&&o.userData.id) roomClicked(o.userData.id, e.ctrlKey||e.metaKey||e.shiftKey); });
+}
+function resize3D(){ if(!R3.ready)return; const p=$('pane3d'); const w=p.clientWidth||1,h=p.clientHeight||1;
+  R3.renderer.setSize(w,h,false); R3.camera.aspect=w/h; R3.camera.updateProjectionMatrix(); }
+let view3dMode='level', proj3dRooms=null, proj3dKey=null;
+function rooms3D(){ return view3dMode==='project' ? (proj3dRooms||[]) : (plan?.Rooms||[]); }
+async function ensureProjectRooms(){
+  const list=await api('/api/plans'); const sig=list.map(m=>m.key).join('|');
+  if(proj3dKey===sig && proj3dRooms) return proj3dRooms;
+  const all=[]; for(const m of list){ try{ const p=await getPlanData(m.key); (p.Rooms||[]).forEach(r=>all.push(r)); }catch(e){} }
+  proj3dRooms=all; proj3dKey=sig; return all;
+}
+function build3D(){
+  if(!R3.ready)return;
+  while(R3.group.children.length){ const c=R3.group.children.pop(); c.traverse(o=>{ if(o.geometry)o.geometry.dispose(); if(o.material)o.material.dispose(); }); }
+  R3.meshes={}; let any=false;
+  rooms3D().forEach(r=>{
+    const fp=r.Footprint; if(!fp||fp.length<3)return;
+    const shape=new THREE.Shape(); shape.moveTo(fp[0][0],fp[0][1]); for(let i=1;i<fp.length;i++) shape.lineTo(fp[i][0],fp[i][1]); shape.closePath();
+    const h=Math.max(0.3,r.Height||2.8);
+    const geo=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:false}); geo.translate(0,0,(r.BaseZ||0));
+    const mesh=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:0x3b82f6,transparent:true,opacity:.85}));
+    mesh.userData.id=r.RevitId;
+    const edges=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:0x0b1424})); mesh.add(edges);
+    R3.group.add(mesh); R3.meshes[r.RevitId]=mesh; any=true;
+  });
+  if(any) fit3D();
+  recolor3D();
+  $('pane3dHint').style.display=any?'':'';
+  if(!any) $('pane3dHint').textContent='Aucune géométrie 3D — renvoyez le plan depuis Revit (version récente du plugin).';
+}
+function fit3D(){
+  if(!R3.ready)return; const box=new THREE.Box3().setFromObject(R3.group); if(box.isEmpty())return;
+  const c=box.getCenter(new THREE.Vector3()), s=box.getSize(new THREE.Vector3()); const d=Math.max(s.x,s.y,s.z,5);
+  R3.controls.target.copy(c); R3.camera.position.set(c.x+d*.75,c.y+d*.9,c.z+d*.75);
+  R3.camera.near=Math.max(.05,d/2000); R3.camera.far=d*200; R3.camera.updateProjectionMatrix(); R3.controls.update();
+}
+function recolor3D(){
+  if(!R3.ready)return;
+  rooms3D().forEach(r=>{ const mesh=R3.meshes[r.RevitId]; if(!mesh)return;
+    let col=0x3b82f6;
+    if(selIds.has(r.RevitId)) col=0xef4444;
+    else if(colorKey){ const v=roomColorValue(r,colorKey)||'(vide)'; const hex=colorMap[v]; if(hex) col=parseInt(hex.slice(1),16); }
+    mesh.material.color.setHex(col);
+    mesh.material.opacity = selIds.size ? (selIds.has(r.RevitId)?.95:.32) : .85;
+  });
+}
+function threeVisible(){ const vs=$('viewerSplit');
+  if(!vs||vs.style.display==='none') return false;
+  return vs.classList.contains('m3d')||vs.classList.contains('mboth'); }
+async function update3D(){
+  if(!threeVisible()||!plan) return;
+  try{ await loadThree(); }catch(e){ $('pane3dHint').style.display=''; $('pane3dHint').textContent='3D indisponible (connexion ?) : '+e.message; return; }
+  if(!R3.ready) init3D();
+  resize3D();
+  if(view3dMode==='project'){
+    $('pane3dHint').style.display=''; $('pane3dHint').textContent='Chargement du projet 3D…';
+    try{ await ensureProjectRooms(); }catch(e){}
+    R3.planKey='__project__:'+proj3dKey; build3D();
+  } else {
+    const want='level:'+currentPlanKey;
+    if(R3.planKey!==want){ R3.planKey=want; build3D(); } else recolor3D();
+  }
+}
+$('viewModes').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b)return;
+  const vs=$('viewerSplit'); vs.classList.remove('m2d','m3d','mboth'); vs.classList.add(b.getAttribute('data-m'));
+  [...$('viewModes').children].forEach(x=>x.classList.toggle('active',x===b));
+  refitPlan(); update3D(); setTimeout(resize3D,60); });
+$('fit3d').addEventListener('click',fit3D);
+$('mode3d').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b)return;
+  view3dMode=b.getAttribute('data-v'); [...$('mode3d').children].forEach(x=>x.classList.toggle('active',x===b));
+  R3.planKey=null; update3D(); });
+
+/* ═══ EVENTS ═══ */
+$('editToggle').addEventListener('click',()=>{ editMode=!editMode; renderMatrix(); });
+$('btnSendRevit').addEventListener('click',sendToRevit);
+$('btnRefresh').addEventListener('click',()=>{ lastLevelKeys=''; loadIndex(); });
+window.addEventListener('resize',()=>{ const s=$('mainSvg'); if(s&&plan){ const w=$('viewerWrap'); panX=w.clientWidth/2-W/2*zoom; panY=w.clientHeight/2-H/2*zoom; applyTx(s); } resize3D(); });
+
+/* ═══ DOCK LAYOUT — levels fixed left, rooms/params draggable ═══ */
+const PSEL={rooms:'.rooms-aside',params:'.bottom-panel'};
+const DOCKW={rooms:'220px',params:'340px'};
+const DEFLAYOUT={rooms:'left',params:'bottom'};
+let DZ={};
+
+function makeSplitter(dir){
+  // dir: 'v' = vertical bar (resize width of prev sibling), 'h' = horizontal bar (resize height of prev sibling)
+  const bar=document.createElement('div');
+  bar.className=dir==='v'?'split-v':'split-h';
+  bar.addEventListener('mousedown',ev=>{
+    ev.preventDefault(); bar.classList.add('dragging');
+    const prev=bar.previousElementSibling; if(!prev) return;
+    const startPos=dir==='v'?ev.clientX:ev.clientY;
+    const startSize=dir==='v'?prev.offsetWidth:prev.offsetHeight;
+    const move=e=>{
+      const delta=(dir==='v'?e.clientX:e.clientY)-startPos;
+      const minSize=dir==='v'?80:60;
+      if(dir==='v') prev.style.width=Math.max(minSize,startSize+delta)+'px';
+      else prev.style.height=Math.max(minSize,startSize+delta)+'px';
+      refitPlan(); setTimeout(resize3D,30);
+    };
+    const up=()=>{ bar.classList.remove('dragging'); document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); };
+    document.addEventListener('mousemove',move);
+    document.addEventListener('mouseup',up);
+  });
+  return bar;
+}
+
+function buildDockScaffold(){
+  const main=document.querySelector('main'); main.classList.add('layout');
+  const mk=(c,id)=>{ const d=document.createElement('div'); d.className=c; if(id)d.id=id; return d; };
+  DZ.top=mk('dz zTop','zTop'); DZ.bottom=mk('dz zBottom','zBottom');
+  DZ.left=mk('dz zLeft','zLeft'); DZ.right=mk('dz zRight','zRight'); DZ.center=mk('dzc','zCenter');
+  // Levels panel is always fixed as leftmost column
+  const levelsEl=document.querySelector('.levels-aside');
+  DZ.left.appendChild(levelsEl);
+  DZ.left.appendChild(makeSplitter('v')); // splitter after levels, before any docked panel
+  const mid=mk('midrow','midRow'); mid.append(DZ.left,DZ.center,DZ.right);
+  // Splitter between left zone and center viewer
+  mid.insertBefore(makeSplitter('v'), DZ.center);
+  mid.insertBefore(makeSplitter('v'), DZ.right);
+  main.append(DZ.top,mid,DZ.bottom);
+  DZ.center.append($('viewerSplit'));
+  // Horizontal splitter between viewer and bottom zone
+  DZ.bottom._splitter=makeSplitter('h');
+}
+
+function dockPanel(key,zone){
+  const el=document.querySelector(PSEL[key]); if(!el||!DZ[zone])return;
+  const horiz=(zone==='top'||zone==='bottom');
+  // For bottom zone: insert splitter before panel if first panel there
+  if(horiz && zone==='bottom' && DZ.bottom._splitter && !DZ.bottom._splitter.parentElement){
+    DZ.bottom.parentElement.insertBefore(DZ.bottom._splitter, DZ.bottom);
+  }
+  DZ[zone].appendChild(el); el.dataset.dock=zone;
+  el.style.flex   = horiz ? '1 1 0' : '1 1 auto';
+  el.style.width  = horiz ? 'auto' : DOCKW[key];
+  el.style.height = horiz ? '' : '';
+  if(horiz && !DZ[zone].style.height) DZ[zone].style.height='260px';
+  addDockHandle(key);
+}
+/* ── drop-zone overlay elements (created once) ── */
+const DROP_ZONES={};
+(()=>{
+  [['left','◀',{top:'20%',left:'8px',width:'60px',height:'60%'}],
+   ['right','▶',{top:'20%',right:'8px',width:'60px',height:'60%'}],
+   ['top','▲',{left:'20%',top:'8px',height:'60px',width:'60%'}],
+   ['bottom','▼',{left:'20%',bottom:'8px',height:'60px',width:'60%'}]
+  ].forEach(([z,ic,style])=>{
+    const d=document.createElement('div');
+    d.className='drop-zone'; d.dataset.z=z; d.textContent=ic;
+    Object.assign(d.style,style); document.body.appendChild(d);
+    DROP_ZONES[z]=d;
+  });
+  // Wire drop zone events ONCE here
+  Object.entries(DROP_ZONES).forEach(([z,d])=>{
+    d.addEventListener('mouseover',()=>{ if(_dragKey) d.classList.add('over'); });
+    d.addEventListener('mouseout',()=>d.classList.remove('over'));
+    d.addEventListener('mouseup',()=>{
+      if(!_dragKey)return;
+      dockPanel(_dragKey,z); saveLayout(); refitPlan(); setTimeout(()=>resize3D(),50);
+      showDropZones(false); _dragKey=null;
+    });
+  });
+})();
+
+let _dragKey=null;
+function showDropZones(show){
+  Object.values(DROP_ZONES).forEach(d=>{
+    d.classList.toggle('active',show);
+    d.classList.remove('over');
+  });
+}
+function addDockHandle(key){
+  const el=document.querySelector(PSEL[key]); if(!el)return;
+  const hd=el.querySelector('.sidebar-hd,.bp-bar'); if(!hd)return;
+  // Remove any existing handle to avoid duplicates after re-dock
+  hd.querySelectorAll('.dock-handle').forEach(h=>h.remove());
+  const handle=document.createElement('span');
+  handle.className='dock-handle'; handle.title='Glisser pour déplacer le panneau';
+  handle.innerHTML='⠿';
+  handle.addEventListener('mousedown',ev=>{
+    ev.preventDefault(); _dragKey=key; showDropZones(true);
+    const onUp=()=>{ showDropZones(false); _dragKey=null; document.removeEventListener('mouseup',onUp); };
+    document.addEventListener('mouseup',onUp);
+  });
+  hd.insertBefore(handle, hd.firstChild);
+}
+function curLayout(){ const o={}; Object.keys(PSEL).forEach(k=>{ const el=document.querySelector(PSEL[k]); o[k]=el?(el.dataset.dock||DEFLAYOUT[k]):DEFLAYOUT[k]; }); return o; }
+function applyLayout(L){ Object.keys(PSEL).forEach(k=>dockPanel(k,(L&&L[k])||DEFLAYOUT[k])); refitPlan(); setTimeout(()=>resize3D(),60); }
+function saveLayout(){ try{ localStorage.setItem('bimflow_layout',JSON.stringify(curLayout())); }catch(e){} }
+
+buildDockScaffold();
+// applyLayout must run BEFORE removing right-col, so it can move .bottom-panel out first
+(function(){
+  let L=null;
+  try{ L=JSON.parse(localStorage.getItem('bimflow_layout')); }catch(e){}
+  if(L){ delete L.levels; }
+  applyLayout(L||DEFLAYOUT);
+})();
+document.querySelector('.right-col')?.remove();
+$('roomsSplit')?.remove();
+
+/* layout templates (gabarits) */
+function loadTpls(){ try{ return JSON.parse(localStorage.getItem('bimflow_layouts'))||{}; }catch(e){ return {}; } }
+function saveTpls(o){ try{ localStorage.setItem('bimflow_layouts',JSON.stringify(o)); }catch(e){} }
+function refreshTplSel(){ const sel=$('tplSel'); if(!sel)return; const t=loadTpls(); sel.innerHTML='<option value="">— Gabarits —</option>'+Object.keys(t).map(n=>`<option>${esc(n)}</option>`).join(''); }
+$('btnLayout').addEventListener('click',e=>{ e.stopPropagation(); const p=$('layoutPop'); p.style.display=(p.style.display==='block')?'none':'block'; });
+document.addEventListener('click',e=>{ const p=$('layoutPop'); if(p&&p.style.display==='block'&&!p.contains(e.target)&&!$('btnLayout').contains(e.target)) p.style.display='none'; });
+$('tplSave').addEventListener('click',()=>{ const n=prompt('Nom du gabarit de disposition :'); if(!n)return; const t=loadTpls(); t[n]=curLayout(); saveTpls(t); refreshTplSel(); $('tplSel').value=n; });
+$('tplSel').addEventListener('change',()=>{ const n=$('tplSel').value; if(!n)return; const L=loadTpls()[n]; if(L){ applyLayout(L); saveLayout(); } });
+$('tplDel').addEventListener('click',()=>{ const n=$('tplSel').value; if(!n){ alert('Choisissez un gabarit à supprimer.'); return; } const t=loadTpls(); delete t[n]; saveTpls(t); refreshTplSel(); });
+$('tplReset').addEventListener('click',()=>{ applyLayout(DEFLAYOUT); saveLayout(); });
+refreshTplSel();
+
+/* ═══ THEME + LANGUAGE ═══ */
+const langBtn=$('langBtn'), themeBtn=$('themeBtn');
+function applyLang(l){
+  document.documentElement.lang=l;
+  document.querySelectorAll('[data-en]').forEach(el=>{ if(el._fr===undefined) el._fr=el.innerHTML; el.innerHTML=(l==='en')?el.getAttribute('data-en'):el._fr; });
+  document.querySelectorAll('[data-en-ph]').forEach(el=>{ if(el._frph===undefined) el._frph=el.getAttribute('placeholder')||''; el.setAttribute('placeholder',(l==='en')?el.getAttribute('data-en-ph'):el._frph); });
+  langBtn.textContent=(l==='en')?'FR':'EN';
+  try{ localStorage.setItem('bimflow_lang',l); }catch(e){}
+}
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  themeBtn.textContent=(t==='dark')?'☀':'☾';
+  try{ localStorage.setItem('bimflow_theme',t); }catch(e){}
+  if(typeof R3!=='undefined'&&R3.ready) resize3D();
+}
+langBtn.addEventListener('click',()=>applyLang(document.documentElement.lang==='en'?'fr':'en'));
+themeBtn.addEventListener('click',()=>applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light'));
+(function(){ let l='fr',t='dark'; try{ l=localStorage.getItem('bimflow_lang')||'fr'; t=localStorage.getItem('bimflow_theme')||'dark'; }catch(e){}
+  applyTheme(t); if(l==='en') applyLang('en'); else langBtn.textContent='EN'; })();
+
+/* ═══ INIT ═══ */
+loadIndex();
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+# Fichiers Revit volumineux
+*.rvt
+*.rws
+*.zip
+*.log
+REVIT/
+1-1-ARC_*
+BIMFlow_Export/
+_canva/
+
+# Dossiers de compilation
+bin/
+obj/
+Debug/
+Release/
+
+# Dossiers système
+.vs/
+.vscode/
+.git/
+
+# Dépendances
+packages/

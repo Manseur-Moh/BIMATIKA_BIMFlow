@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyName>BIMFlowPlugin</AssemblyName>
+    <RootNamespace>BIMFlowPlugin</RootNamespace>
+    <Nullable>enable</Nullable>
+    <LangVersion>10</LangVersion>
+    <Platforms>x64</Platforms>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <!-- Copy output to Revit addins folder automatically -->
+    <PostBuildEvent>xcopy /Y "$(TargetPath)" "%APPDATA%\Autodesk\Revit\Addins\2024\" &amp;&amp; xcopy /Y "$(ProjectDir)BIMFlow.addin" "%APPDATA%\Autodesk\Revit\Addins\2024\"</PostBuildEvent>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Revit API references — adjust path to your Revit installation -->
+    <Reference Include="RevitAPI">
+      <HintPath>C:\Program Files\Autodesk\Revit 2024\RevitAPI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="RevitAPIUI">
+      <HintPath>C:\Program Files\Autodesk\Revit 2024\RevitAPIUI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- WinForms for FolderBrowserDialog -->
+    <Reference Include="System.Windows.Forms" />
+    <!-- HTTP client for sending data to BIMFlow web app -->
+    <Reference Include="System.Net.Http" />
+    <!-- Newtonsoft for JSON export -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+</Project>

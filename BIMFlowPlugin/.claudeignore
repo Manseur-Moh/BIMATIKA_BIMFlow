@@ -1,0 +1,8 @@
+bin/
+obj/
+Debug/
+Release/
+.vs/
+packages/
+*.log
+*.user

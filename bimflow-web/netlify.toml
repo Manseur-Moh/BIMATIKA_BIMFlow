@@ -1,0 +1,18 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/upload"
+  to = "/.netlify/functions/upload"
+  status = 200
+
+[[redirects]]
+  from = "/api/plans"
+  to = "/.netlify/functions/plans"
+  status = 200
+
+[[redirects]]
+  from = "/api/updates"
+  to = "/.netlify/functions/updates"
+  status = 200

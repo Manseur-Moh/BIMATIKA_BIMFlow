@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BIMFlow — Analyse & Coûts</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+  /* TOP BAR */
+  .topbar{display:flex;align-items:center;background:#111827;border-bottom:1px solid #1f2937;flex-shrink:0;height:48px}
+  .logo{padding:0 16px;font-size:16px;font-weight:800;color:#38bdf8;letter-spacing:-.5px;white-space:nowrap;height:100%;display:flex;align-items:center;border-right:1px solid #1f2937}
+  .logo span{color:#7dd3fc}
+  .nav{display:flex;height:100%}
+  .nav a{display:flex;align-items:center;padding:0 16px;font-size:13px;font-weight:600;color:#64748b;text-decoration:none;border-right:1px solid #1f2937}
+  .nav a:hover{background:#1f2937;color:#e2e8f0}
+  .nav a.active{color:#38bdf8;background:#0c1a2e;box-shadow:inset 0 -2px 0 #38bdf8}
+  .tb-ctrl{display:flex;align-items:center;gap:7px;padding:0 14px;border-right:1px solid #1f2937;height:100%}
+  .tb-ctrl label{font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
+  .tb-ctrl select{background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:5px 9px;font-size:13px;cursor:pointer;outline:none}
+  .tb-ctrl select:focus{border-color:#3b82f6}
+  .topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px;padding:0 16px}
+  .status-dot{width:7px;height:7px;border-radius:50%;background:#334155}
+  .status-dot.ok{background:#22c55e}.status-dot.err{background:#ef4444}.status-dot.loading{background:#f59e0b;animation:pulse 1s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .status-txt{font-size:12px;color:#64748b}
+
+  main{display:flex;flex:1;overflow:hidden}
+
+  /* SETTINGS PANEL */
+  .settings{width:228px;flex-shrink:0;background:#111827;border-right:1px solid #1f2937;overflow-y:auto;padding:10px}
+  .set-group{margin-bottom:16px}
+  .set-hd{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px;display:flex;align-items:center;gap:5px}
+  .set-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+  .set-row label{font-size:12px;color:#94a3b8;flex:1}
+  .set-row .unit{font-size:10px;color:#475569}
+  .set-input{width:78px;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:4px 7px;font-size:12px;outline:none;text-align:right}
+  .set-input:focus{border-color:#3b82f6}
+  .set-select{width:100%;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:5px 8px;font-size:12px;cursor:pointer;outline:none}
+  .set-select:focus{border-color:#3b82f6}
+  .swatch{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:2px}
+  .btn{width:100%;padding:7px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:#1d4ed8;color:#e0f2fe;margin-top:4px}
+  .btn:hover{background:#2563eb}
+  .btn.ghost{background:transparent;border:1px solid #334155;color:#94a3b8}
+  .btn.ghost:hover{background:#1f2937;color:#e2e8f0}
+  /* finish editor */
+  .fin-block{border:1px solid #1f2937;border-radius:6px;padding:6px;margin-bottom:7px;background:#0f172a}
+  .fin-top{display:flex;align-items:center;gap:5px;margin-bottom:4px}
+  .fin-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+  .fin-name{flex:1;background:#0b1424;color:#e2e8f0;border:1px solid #374151;border-radius:4px;padding:3px 6px;font-size:12px;font-weight:600;outline:none;min-width:0}
+  .fin-name:focus{border-color:#3b82f6}
+  .fin-row{display:flex;align-items:center;gap:5px;margin-top:3px}
+  .fin-row label{font-size:10px;color:#64748b;width:46px;flex-shrink:0}
+  .fin-formula{flex:1;background:#0b1424;color:#7dd3fc;border:1px solid #374151;border-radius:4px;padding:3px 6px;font-size:11px;font-family:ui-monospace,Menlo,Consolas,monospace;outline:none;min-width:0}
+  .fin-formula:focus{border-color:#3b82f6}
+  .fin-formula.bad{border-color:#ef4444;color:#fca5a5}
+  .fin-price{width:64px;flex-shrink:0;background:#0b1424;color:#e2e8f0;border:1px solid #374151;border-radius:4px;padding:3px 6px;font-size:11px;text-align:right;outline:none}
+  .fin-price:focus{border-color:#3b82f6}
+
+  /* SYNOPTIC */
+  .synoptic{flex:1;position:relative;overflow:hidden;background:#060e1f;cursor:grab;min-width:280px}
+  .synoptic:active{cursor:grabbing}
+  #synSvg{position:absolute;will-change:transform}
+  .syn-room{cursor:pointer;stroke:rgba(15,23,42,.65);stroke-width:1;stroke-linejoin:round;transition:opacity .1s}
+  .syn-room:hover{stroke:#fff;stroke-width:2}
+  .syn-room.dim{opacity:.18}
+  .zoom-wrap{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:3px;z-index:10}
+  .zbtn{width:28px;height:28px;background:#1f2937;border:1px solid #374151;color:#d1d5db;border-radius:5px;font-size:15px;cursor:pointer}
+  .zbtn:hover{background:#374151}
+  .syn-legend{position:absolute;bottom:12px;left:12px;z-index:10;background:rgba(15,23,42,.93);border:1px solid #1f2937;border-radius:7px;padding:9px 11px;box-shadow:0 4px 16px rgba(0,0,0,.5);display:none}
+  .syn-legend .ll-hd{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .grad-bar{width:170px;height:11px;border-radius:3px;background:linear-gradient(90deg,#22c55e,#eab308,#ef4444)}
+  .grad-lbls{display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;margin-top:3px}
+  .syn-tip{position:fixed;pointer-events:none;background:#0b1424;border:1px solid #334155;border-radius:6px;padding:7px 9px;font-size:11px;z-index:50;display:none;box-shadow:0 4px 14px rgba(0,0,0,.6);max-width:230px}
+  .syn-tip .t-name{font-weight:700;color:#f1f5f9;margin-bottom:3px}
+  .syn-tip .t-row{display:flex;justify-content:space-between;gap:14px;color:#94a3b8}
+  .syn-tip .t-row b{color:#e2e8f0;font-weight:600}
+  .syn-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#374151;font-size:13px;text-align:center;padding:20px}
+
+  /* DASHBOARD (right) */
+  .dash{width:340px;flex-shrink:0;background:#0d1526;border-left:1px solid #1f2937;overflow-y:auto;padding:12px}
+  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+  .kpi{background:#111c33;border:1px solid #1e2b45;border-radius:8px;padding:9px 11px}
+  .kpi.wide{grid-column:1 / -1;background:linear-gradient(135deg,#0f2a4a,#10233f)}
+  .kpi-lbl{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.04em}
+  .kpi-val{font-size:18px;font-weight:800;color:#f1f5f9;margin-top:2px;line-height:1.1}
+  .kpi.wide .kpi-val{font-size:22px;color:#7dd3fc}
+  .kpi-sub{font-size:10px;color:#475569;margin-top:2px}
+
+  .card{background:#111c33;border:1px solid #1e2b45;border-radius:8px;padding:11px;margin-bottom:12px}
+  .card-hd{font-size:11px;font-weight:700;color:#cbd5e1;margin-bottom:9px;display:flex;align-items:center;justify-content:space-between}
+  .card-hd .sub{font-size:10px;color:#475569;font-weight:500}
+
+  /* donut */
+  .donut-wrap{display:flex;align-items:center;gap:12px}
+  .donut-legend{flex:1;display:flex;flex-direction:column;gap:5px}
+  .dl-row{display:flex;align-items:center;gap:6px;font-size:11px;color:#cbd5e1}
+  .dl-sw{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+  .dl-val{margin-left:auto;color:#94a3b8;font-variant-numeric:tabular-nums}
+
+  /* bars */
+  .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:11px}
+  .bar-name{width:84px;flex-shrink:0;color:#cbd5e1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bar-track{flex:1;height:14px;background:#0c1730;border-radius:3px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#3b82f6,#60a5fa)}
+  .bar-val{width:74px;flex-shrink:0;text-align:right;color:#94a3b8;font-variant-numeric:tabular-nums}
+
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:11px}
+  th,td{text-align:right;padding:4px 5px;border-bottom:1px solid #1a2740;white-space:nowrap}
+  th{color:#64748b;font-weight:600;cursor:pointer;user-select:none;position:sticky;top:0;background:#111c33}
+  th:hover{color:#e2e8f0}
+  td:first-child,th:first-child{text-align:left}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:#16233f}
+  tbody tr.sel{background:#1e3a5f}
+  .tbl-scroll{max-height:280px;overflow-y:auto}
+  .empty-hint{color:#374151;font-size:12px;text-align:center;padding:30px 14px;line-height:1.7}
+
+  /* bill of quantities */
+  table.boq{width:100%;border-collapse:collapse;font-size:11px}
+  table.boq th{position:static;color:#64748b;font-weight:600;text-align:right;padding:3px 5px;border-bottom:1px solid #1e2b45;cursor:default}
+  table.boq th:first-child{text-align:left}
+  table.boq td{text-align:right;padding:4px 5px;border-bottom:1px solid #16233f;white-space:nowrap}
+  table.boq td:first-child{text-align:left;color:#cbd5e1}
+  table.boq tfoot td{border-top:2px solid #1e2b45;border-bottom:none;font-weight:800;color:#7dd3fc;padding-top:6px}
+  table.boq tfoot tr:last-child td{font-weight:600;color:#94a3b8}
+  .boq-sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">BIM<span>Flow</span></div>
+  <div class="nav">
+    <a href="/">🗺 Plans</a>
+    <a href="/analyse.html" class="active">📊 Analyse</a>
+  </div>
+  <div class="tb-ctrl">
+    <label>Niveau</label>
+    <select id="levelSel"></select>
+  </div>
+  <div class="tb-ctrl">
+    <label>Portée</label>
+    <select id="scopeSel">
+      <option value="current">Niveau actuel</option>
+      <option value="all">Tous les niveaux</option>
+    </select>
+  </div>
+  <div class="topbar-right">
+    <div class="status-dot loading" id="statusDot"></div>
+    <div class="status-txt" id="statusTxt">Chargement…</div>
+  </div>
+</div>
+
+<main>
+  <!-- SETTINGS -->
+  <div class="settings">
+    <div class="set-group">
+      <div class="set-hd">🧱 Finitions — formules</div>
+      <div id="finishEditor"></div>
+      <div class="set-row"><span class="unit">Variables : <b>area</b> (m²), <b>perim</b> (m), <b>height</b> (m). Le total = quantité × P.U.</span></div>
+    </div>
+
+    <div class="set-group">
+      <div class="set-hd">📐 Hypothèses</div>
+      <div class="set-row"><label>Hauteur sous plafond</label><input class="set-input" id="wallH" type="number" min="0" step="0.1" value="2.8"/></div>
+      <div class="set-row"><span class="unit">mètres — sert au calcul des murs (périmètre × hauteur)</span></div>
+      <div class="set-row" style="margin-top:8px"><label>Devise</label>
+        <select class="set-select" id="curSel" style="width:84px">
+          <option value="€">€</option>
+          <option value="DA">DA</option>
+          <option value="MAD">MAD</option>
+          <option value="$">$</option>
+          <option value="£">£</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="set-group">
+      <div class="set-hd">💱 Conversion</div>
+      <div class="set-row"><label>Vers</label>
+        <select class="set-select" id="curSel2" style="width:84px">
+          <option value="">—</option>
+          <option value="€">€</option>
+          <option value="DA">DA</option>
+          <option value="MAD">MAD</option>
+          <option value="$">$</option>
+          <option value="£">£</option>
+        </select>
+      </div>
+      <div class="set-row"><label>Taux (1 = ? )</label><input class="set-input" id="convRate" type="number" min="0" step="0.0001" value="145"/></div>
+      <div class="set-row"><span class="unit">ex. 1 € = 145 DA → affiche le total converti</span></div>
+    </div>
+
+    <div class="set-group">
+      <div class="set-hd">🔎 Filtre (slicer)</div>
+      <select class="set-select" id="filtParam" style="margin-bottom:5px"><option value="">— Aucun filtre —</option></select>
+      <select class="set-select" id="filtVal"><option value="">Toutes les valeurs</option></select>
+    </div>
+
+    <div class="set-group">
+      <div class="set-hd">🎨 Synoptique — colorer par</div>
+      <select class="set-select" id="metricSel"></select>
+    </div>
+
+    <div class="set-group">
+      <div class="set-hd">📊 Répartition par</div>
+      <select class="set-select" id="groupSel">
+        <option value="__level">Niveau</option>
+      </select>
+    </div>
+
+    <button class="btn" id="btnExport">⬇ Exporter CSV</button>
+    <button class="btn ghost" id="btnReset" style="margin-top:6px">↺ Réinitialiser les prix</button>
+  </div>
+
+  <!-- SYNOPTIC -->
+  <div class="synoptic" id="synoptic">
+    <div class="syn-empty" id="synEmpty">Aucun plan — envoyez un niveau depuis Revit puis sélectionnez-le ci-dessus.</div>
+    <div class="syn-legend" id="synLegend">
+      <div class="ll-hd" id="legHd">Coût total</div>
+      <div class="grad-bar"></div>
+      <div class="grad-lbls"><span id="legMin">0</span><span id="legMax">0</span></div>
+    </div>
+    <div class="zoom-wrap">
+      <button class="zbtn" id="zIn">+</button>
+      <button class="zbtn" id="zOut">−</button>
+      <button class="zbtn" id="zReset" title="Ajuster">⌖</button>
+    </div>
+  </div>
+  <div class="syn-tip" id="synTip"></div>
+
+  <!-- DASHBOARD -->
+  <div class="dash">
+    <div class="kpis">
+      <div class="kpi wide"><div class="kpi-lbl">Coût total finitions</div><div class="kpi-val" id="kTotal">—</div><div class="kpi-sub" id="kScope"></div></div>
+      <div class="kpi"><div class="kpi-lbl">Surface totale</div><div class="kpi-val" id="kArea">—</div><div class="kpi-sub">m²</div></div>
+      <div class="kpi"><div class="kpi-lbl">Pièces</div><div class="kpi-val" id="kRooms">—</div><div class="kpi-sub" id="kPerim"></div></div>
+      <div class="kpi"><div class="kpi-lbl">Coût moyen</div><div class="kpi-val" id="kPerM2">—</div><div class="kpi-sub">par m²</div></div>
+      <div class="kpi"><div class="kpi-lbl">Coût pièce moy.</div><div class="kpi-val" id="kPerRoom">—</div><div class="kpi-sub">par pièce</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd">Répartition du coût par finition</div>
+      <div class="donut-wrap">
+        <svg id="donut" width="96" height="96" viewBox="0 0 96 96"></svg>
+        <div class="donut-legend" id="donutLegend"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><span>Quantitatif / Devis</span><span class="sub" id="boqScope"></span></div>
+      <table class="boq">
+        <thead><tr><th>Poste</th><th>Quantité</th><th>P.U.</th><th>Total</th></tr></thead>
+        <tbody id="boqBody"></tbody>
+        <tfoot><tr><td>Total</td><td></td><td></td><td id="boqTotal">—</td></tr>
+        <tr id="boqConvRow" style="display:none"><td colspan="3" id="boqConvLbl"></td><td id="boqConv">—</td></tr></tfoot>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><span id="grpTitle">Coût par niveau</span><span class="sub" id="grpSub"></span></div>
+      <div id="grpBars"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd">Top pièces (coût)</div>
+      <div id="topBars"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><span>Détail des pièces</span><span class="sub" id="tblScopeLbl"></span></div>
+      <div class="tbl-scroll">
+        <table id="tbl">
+          <thead id="tblHead"></thead>
+          <tbody id="tblBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+/* ════════ STATE ════════ */
+const $=id=>document.getElementById(id);
+let index=[], plans={}, levelKey='', curPlan=null;
+let zoom=1,panX=0,panY=0,W=0,H=0,isPan=false,pStart={x:0,y:0};
+let sortKey='total', sortDir=-1, selRoomId=null;
+
+const FIN_COLORS=['#3b82f6','#a855f7','#f59e0b','#10b981','#ef4444'];
+const DEFAULT_FINISHES=[
+  {name:'Sol',     formula:'area',           price:45},
+  {name:'Plafond', formula:'area',           price:30},
+  {name:'Murs',    formula:'perim * height', price:25},
+];
+let finishes = loadFinishes();
+function loadFinishes(){
+  try{ const a=JSON.parse(localStorage.getItem('bimflow_finishes')); if(Array.isArray(a)&&a.length) return a; }catch(e){}
+  return DEFAULT_FINISHES.map(f=>({...f}));
+}
+function saveRates(){
+  localStorage.setItem('bimflow_finishes',JSON.stringify(finishes));
+  localStorage.setItem('bimflow_cfg',JSON.stringify({height:+wallH.value,cur:curSel.value,cur2:$('curSel2').value,rate:+$('convRate').value}));
+}
+function applySavedRates(){
+  let c={}; try{ c=JSON.parse(localStorage.getItem('bimflow_cfg'))||{}; }catch(e){}
+  if(c.height!=null) wallH.value=c.height;
+  if(c.cur)          curSel.value=c.cur;
+  if(c.cur2!=null)   $('curSel2').value=c.cur2;
+  if(c.rate!=null)   $('convRate').value=c.rate;
+}
+const curSel=$('curSel'), wallH=$('wallH');
+function finColor(i){ return FIN_COLORS[i%FIN_COLORS.length]; }
+
+/* ── formula evaluator — variables: area, perim, height ── */
+function evalFormula(expr,vars){
+  if(!/^[0-9a-zA-Z_+\-*/().,\s]*$/.test(expr||'')) return NaN;
+  try{
+    const f=new Function('area','perim','height','"use strict";return ('+(expr&&expr.trim()?expr:'0')+');');
+    const v=f(vars.area||0,vars.perim||0,vars.height||0);
+    return (typeof v==='number'&&isFinite(v))?v:NaN;
+  }catch(e){ return NaN; }
+}
+
+/* ── finish editor (name + quantity formula + unit price, all editable) ── */
+function buildFinishEditor(){
+  const box=$('finishEditor'); box.innerHTML='';
+  finishes.forEach((f,i)=>{
+    const b=document.createElement('div'); b.className='fin-block';
+    b.innerHTML=
+      `<div class="fin-top"><span class="fin-dot" style="background:${finColor(i)}"></span>`+
+      `<input class="fin-name" data-i="${i}" data-f="name" value="${(f.name||'').replace(/"/g,'&quot;')}"/></div>`+
+      `<div class="fin-row"><label>Quantité</label><input class="fin-formula" data-i="${i}" data-f="formula" value="${(f.formula||'').replace(/"/g,'&quot;')}"/></div>`+
+      `<div class="fin-row"><label>P.U.</label><input class="fin-price" type="number" min="0" step="0.01" data-i="${i}" data-f="price" value="${f.price}"/></div>`;
+    box.appendChild(b);
+  });
+  box.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{
+    const i=+inp.getAttribute('data-i'), fld=inp.getAttribute('data-f');
+    finishes[i][fld] = fld==='price' ? (+inp.value||0) : inp.value;
+    if(fld==='formula'){ const ok=isFinite(evalFormula(inp.value,{area:1,perim:1,height:1})); inp.classList.toggle('bad',!ok); }
+    buildMetricOptions(); recompute();
+  }));
+}
+
+/* ── synoptic metric options ── */
+function metricLabel(m){
+  if(m==='total')return 'Coût total'; if(m==='perm2')return 'Coût au m²'; if(m==='area')return 'Surface (m²)';
+  if(m.startsWith('fin')){ const f=finishes[+m.slice(3)]; return f?('Coût '+f.name):m; } return m;
+}
+function metricVal(c,m){
+  if(m==='total')return c.total; if(m==='perm2')return c.perm2; if(m==='area')return c.area;
+  if(m.startsWith('fin')){ const f=c.fin[+m.slice(3)]; return f?f.cost:0; } return 0;
+}
+function buildMetricOptions(){
+  const sel=$('metricSel'), cur=sel.value;
+  sel.innerHTML='';
+  sel.appendChild(new Option('Coût total finitions','total'));
+  sel.appendChild(new Option('Coût au m²','perm2'));
+  sel.appendChild(new Option('Surface (m²)','area'));
+  finishes.forEach((f,i)=>sel.appendChild(new Option('Coût '+(f.name||('Finition '+(i+1))),'fin'+i)));
+  sel.value = [...sel.options].some(o=>o.value===cur) ? cur : 'total';
+}
+
+/* ════════ DATA ════════ */
+async function api(u){ const r=await fetch(u); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }
+function setStatus(m,t){ $('statusTxt').textContent=m; $('statusDot').className='status-dot'+(t?' '+t:''); }
+
+async function init(){
+  applySavedRates();
+  buildFinishEditor();
+  buildMetricOptions();
+  try{
+    index=await api('/api/plans');
+    const sel=$('levelSel'); sel.innerHTML='';
+    index.forEach(p=>{ const o=document.createElement('option'); o.value=p.key; o.textContent=`${p.level} (${p.rooms})`; sel.appendChild(o); });
+    if(!index.length){ setStatus('Aucun plan','err'); return; }
+    // Load every plan WITHOUT its image (light mode) — charts/costs only need room data.
+    // The full image is fetched on demand for the level you actually view (saves bandwidth).
+    setStatus('Chargement des niveaux…','loading');
+    await Promise.all(index.map(async p=>{ try{ plans[p.key]=await api('/api/plans?key='+encodeURIComponent(p.key)+'&light=1'); }catch(e){} }));
+    levelKey=index[index.length-1].key; sel.value=levelKey;
+    buildGroupOptions();
+    selectLevel(levelKey);
+    setStatus(`${index.length} niveau(x) chargé(s)`,'ok');
+  }catch(e){ setStatus('Erreur: '+e.message,'err'); }
+}
+
+function buildGroupOptions(){
+  const names=new Set();
+  Object.values(plans).forEach(pl=>(pl.Rooms||[]).forEach(r=>Object.keys(r.Parameters||{}).forEach(k=>{
+    const t=(r.ParameterTypes||{})[k]||'text';
+    if(t==='text'||t==='choice') names.add(k);
+  })));
+  const sorted=[...names].sort((a,b)=>a.localeCompare(b));
+  const g=$('groupSel'), f=$('filtParam');
+  sorted.forEach(n=>{
+    g.appendChild(new Option(n,n));
+    f.appendChild(new Option(n,n));
+  });
+}
+// Populate the slicer's value list from the chosen parameter (across all loaded plans)
+function buildFilterValues(){
+  const p=$('filtParam').value, fv=$('filtVal');
+  fv.innerHTML='<option value="">Toutes les valeurs</option>';
+  if(!p) return;
+  const vals=new Set();
+  Object.values(plans).forEach(pl=>(pl.Rooms||[]).forEach(r=>{ const v=(r.Parameters||{})[p]; if(v) vals.add(v); }));
+  [...vals].sort((a,b)=>a.localeCompare(b)).forEach(v=>fv.appendChild(new Option(v,v)));
+}
+function passesFilter(room){
+  const p=$('filtParam').value, v=$('filtVal').value;
+  if(!p||!v) return true;
+  return ((room.Parameters||{})[p]||'')===v;
+}
+
+/* ════════ COMPUTE ════════ */
+function parseNum(s){
+  if(s==null) return 0; if(typeof s==='number') return s;
+  let t=String(s).replace(/[^0-9,.\-]/g,'').trim(); if(!t) return 0;
+  const lc=t.lastIndexOf(','), ld=t.lastIndexOf('.');
+  if(lc>-1&&ld>-1){ t = lc>ld ? t.replace(/\./g,'').replace(',','.') : t.replace(/,/g,''); }
+  else if(lc>-1){ const parts=t.replace(/,/g,'.').split('.'); t = parts.length>2 ? parts.slice(0,-1).join('')+'.'+parts[parts.length-1] : parts.join('.'); }
+  const v=parseFloat(t); return isNaN(v)?0:v;
+}
+function pick(room,re){ const k=Object.keys(room.Parameters||{}).find(x=>re.test(x)); return k?room.Parameters[k]:null; }
+function roomArea(r){ if(r.AreaM2>0) return r.AreaM2; return parseNum(pick(r,/surface|area|aire|superficie/i)); }
+function roomPerim(r){ if(r.PerimeterM>0) return r.PerimeterM; return parseNum(pick(r,/p[eé]rim/i)); }
+
+function computeRoom(r){
+  const area=roomArea(r), perim=roomPerim(r), height=+wallH.value||0;
+  const fin=finishes.map(f=>{
+    const q=evalFormula(f.formula,{area,perim,height});
+    const qty=isFinite(q)?q:0;
+    return {name:f.name,qty,price:+f.price||0,cost:qty*(+f.price||0)};
+  });
+  const total=fin.reduce((s,f)=>s+f.cost,0);
+  return {area,perim,height,fin,total,perm2:area>0?total/area:0};
+}
+function roomsInScope(){
+  let arr;
+  if($('scopeSel').value==='all'){
+    arr=[]; Object.entries(plans).forEach(([k,pl])=>(pl.Rooms||[]).forEach(r=>arr.push({room:r,planKey:k})));
+  } else {
+    arr=(curPlan?.Rooms||[]).map(r=>({room:r,planKey:levelKey}));
+  }
+  return arr.filter(x=>passesFilter(x.room));
+}
+
+/* ════════ FORMAT ════════ */
+const nf=(v,d=0)=>(isFinite(v)?v:0).toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const money=(v,d=0)=>nf(v,d)+' '+curSel.value;
+// Convert a primary-currency amount to the secondary currency (manual rate)
+function convert(v){ return v*(+$('convRate').value||0); }
+function moneyConv(v,d=0){ return nf(convert(v),d)+' '+$('curSel2').value; }
+
+/* ════════ SELECT LEVEL ════════ */
+async function selectLevel(key){
+  levelKey=key; curPlan=plans[key]; selRoomId=null;
+  recompute();                        // charts/costs use light data → instant
+  // Fetch the full image once for the level being viewed (cached afterwards)
+  if(curPlan && !curPlan.ImageBase64){
+    try{ const full=await api('/api/plans?key='+encodeURIComponent(key)); plans[key]=full; if(levelKey===key) curPlan=full; }catch(e){}
+  }
+  if(curPlan && curPlan.ImageBase64 && levelKey===key){
+    W=curPlan.ImageWidth; H=curPlan.ImageHeight; renderSynoptic(); recolorSynoptic();
+  }
+}
+
+/* ════════ RECOMPUTE EVERYTHING ════════ */
+function recompute(){
+  saveRates();
+  const scope=roomsInScope();
+  const computed=scope.map(x=>({...x,c:computeRoom(x.room)}));
+
+  // KPIs
+  let area=0,perim=0,total=0; const finSum=finishes.map(()=>0);
+  computed.forEach(x=>{ area+=x.c.area;perim+=x.c.perim;total+=x.c.total; x.c.fin.forEach((f,i)=>finSum[i]+=f.cost); });
+  const n=computed.length;
+  $('kTotal').textContent=money(total);
+  $('kArea').textContent=nf(area,1);
+  $('kRooms').textContent=n;
+  $('kPerim').textContent=nf(perim,0)+' m périmètre';
+  $('kPerM2').textContent=money(area>0?total/area:0);
+  $('kPerRoom').textContent=money(n>0?total/n:0);
+  const scopeLbl=$('scopeSel').value==='all'?'Tous les niveaux':(curPlan?.LevelName||'');
+  const filtLbl=$('filtParam').value&&$('filtVal').value?` · ${$('filtParam').value}=${$('filtVal').value}`:'';
+  $('kScope').textContent=scopeLbl+filtLbl;
+
+  renderDonut(finSum,total);
+  renderBoQ(computed,total);
+  renderGroup(computed);
+  renderTop(computed);
+  renderTable(computed);
+  recolorSynoptic();
+}
+
+/* ════════ QUANTITATIF / DEVIS ════════ */
+function renderBoQ(computed,total){
+  const qtySum=finishes.map(()=>0), costSum=finishes.map(()=>0);
+  computed.forEach(x=>x.c.fin.forEach((f,i)=>{ qtySum[i]+=f.qty; costSum[i]+=f.cost; }));
+  $('boqScope').textContent=$('scopeSel').value==='all'?'tous niveaux':(curPlan?.LevelName||'');
+  $('boqBody').innerHTML=finishes.map((f,i)=>
+    `<tr data-fin="${i}" style="cursor:pointer"><td><span class="boq-sw" style="background:${finColor(i)}"></span>${f.name||('Finition '+(i+1))}</td>`+
+    `<td>${nf(qtySum[i],1)}</td><td>${nf(f.price)}</td><td>${nf(costSum[i])}</td></tr>`).join('');
+  $('boqTotal').textContent=money(total);
+  const c2=$('curSel2').value;
+  if(c2){ $('boqConvRow').style.display=''; $('boqConvLbl').textContent='≈ en '+c2+' (taux '+nf(+$('convRate').value,2)+')'; $('boqConv').textContent=moneyConv(total); }
+  else { $('boqConvRow').style.display='none'; }
+  $('boqBody').querySelectorAll('tr').forEach(tr=>tr.addEventListener('click',()=>{
+    $('metricSel').value='fin'+tr.getAttribute('data-fin'); recolorSynoptic();
+  }));
+}
+
+/* ════════ DONUT ════════ */
+function renderDonut(finSum,total){
+  const sum=total||1, R=40, C=2*Math.PI*R; let off=0;
+  let svg='<circle cx="48" cy="48" r="40" fill="none" stroke="#0c1730" stroke-width="14"/>';
+  finSum.forEach((v,i)=>{ const len=(v/sum)*C;
+    svg+=`<circle cx="48" cy="48" r="40" fill="none" stroke="${finColor(i)}" stroke-width="14" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 48 48)"/>`;
+    off+=len; });
+  $('donut').innerHTML=svg;
+  $('donutLegend').innerHTML=finishes.map((f,i)=>
+    `<div class="dl-row" data-fin="${i}" style="cursor:pointer"><span class="dl-sw" style="background:${finColor(i)}"></span>${f.name||('Finition '+(i+1))}<span class="dl-val">${money(finSum[i])} · ${nf(100*finSum[i]/sum,0)}%</span></div>`).join('');
+  $('donutLegend').querySelectorAll('.dl-row').forEach(row=>row.addEventListener('click',()=>{
+    $('metricSel').value='fin'+row.getAttribute('data-fin'); recolorSynoptic();
+  }));
+}
+
+/* ════════ GROUP BARS (by level or param) ════════ */
+function renderGroup(computed){
+  const gk=$('groupSel').value;
+  const groups={};
+  // group across ALL plans when grouping by level (so you always see every level)
+  const src = gk==='__level'
+    ? Object.entries(plans).flatMap(([k,pl])=>(pl.Rooms||[]).map(r=>({room:r,planKey:k,c:computeRoom(r)})))
+    : computed;
+  src.forEach(x=>{
+    const key = gk==='__level' ? (plans[x.planKey]?.LevelName||x.planKey) : ((x.room.Parameters||{})[gk]||'(vide)');
+    groups[key]=(groups[key]||0)+x.c.total;
+  });
+  $('grpTitle').textContent = gk==='__level'?'Coût par niveau':('Coût par '+gk);
+  $('grpSub').textContent = gk==='__level'?'tous niveaux':'';
+  const rows=Object.entries(groups).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const max=Math.max(1,...rows.map(r=>r[1]));
+  $('grpBars').innerHTML=rows.map(([name,v])=>
+    `<div class="bar-row"><span class="bar-name" title="${name}">${name}</span>`+
+    `<div class="bar-track"><div class="bar-fill" style="width:${100*v/max}%"></div></div>`+
+    `<span class="bar-val">${money(v)}</span></div>`).join('')||'<div class="empty-hint">—</div>';
+}
+
+/* ════════ TOP ROOMS ════════ */
+function renderTop(computed){
+  const rows=[...computed].sort((a,b)=>b.c.total-a.c.total).slice(0,8);
+  const max=Math.max(1,...rows.map(r=>r.c.total));
+  $('topBars').innerHTML=rows.map(x=>{
+    const nm=x.room.Name||x.room.Number||x.room.RevitId;
+    return `<div class="bar-row"><span class="bar-name" title="${nm}">${nm}</span>`+
+      `<div class="bar-track"><div class="bar-fill" style="width:${100*x.c.total/max}%;background:linear-gradient(90deg,#f59e0b,#fbbf24)"></div></div>`+
+      `<span class="bar-val">${money(x.c.total)}</span></div>`;
+  }).join('')||'<div class="empty-hint">—</div>';
+}
+
+/* ════════ TABLE ════════ */
+function tableVal(c,key){
+  if(key==='area')return c.area; if(key==='total')return c.total;
+  if(key.startsWith('fin')){ const f=c.fin[+key.slice(3)]; return f?f.cost:0; } return 0;
+}
+function buildTableHeader(){
+  let h='<tr><th data-k="name">Pièce</th><th data-k="area">m²</th>';
+  finishes.forEach((f,i)=>h+=`<th data-k="fin${i}" title="${f.name||''}">${(f.name||('F'+(i+1))).slice(0,6)}</th>`);
+  h+='<th data-k="total">Total</th></tr>';
+  $('tblHead').innerHTML=h;
+  $('tblHead').querySelectorAll('th').forEach(th=>th.addEventListener('click',()=>{
+    const k=th.getAttribute('data-k'); if(sortKey===k) sortDir*=-1; else {sortKey=k;sortDir=k==='name'?1:-1;} recompute();
+  }));
+}
+function renderTable(computed){
+  buildTableHeader();
+  $('tblScopeLbl').textContent=$('scopeSel').value==='all'?'tous niveaux':(curPlan?.LevelName||'');
+  const rows=[...computed].sort((a,b)=>{
+    const va=sortKey==='name'?(a.room.Name||''):tableVal(a.c,sortKey);
+    const vb=sortKey==='name'?(b.room.Name||''):tableVal(b.c,sortKey);
+    return (va<vb?-1:va>vb?1:0)*sortDir;
+  });
+  $('tblBody').innerHTML=rows.map(x=>{
+    const nm=x.room.Name||x.room.Number||x.room.RevitId;
+    let cells=`<td title="${nm}">${nm}</td><td>${nf(x.c.area,1)}</td>`;
+    x.c.fin.forEach(f=>cells+=`<td>${nf(f.cost)}</td>`);
+    cells+=`<td><b>${nf(x.c.total)}</b></td>`;
+    return `<tr data-id="${x.room.RevitId}" data-pk="${x.planKey}" class="${x.room.RevitId===selRoomId?'sel':''}">${cells}</tr>`;
+  }).join('');
+  $('tblBody').querySelectorAll('tr').forEach(tr=>tr.addEventListener('click',()=>{
+    const id=tr.getAttribute('data-id'), pk=tr.getAttribute('data-pk');
+    if(pk!==levelKey){ $('levelSel').value=pk; selectLevel(pk); }
+    focusRoom(id);
+  }));
+}
+
+/* ════════ SYNOPTIC RENDER ════════ */
+function renderSynoptic(){
+  $('synEmpty').style.display='none';
+  const old=$('synSvg'); if(old) old.remove();
+  const ns='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(ns,'svg'); svg.id='synSvg';
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.style.width=W+'px'; svg.style.height=H+'px';
+  const img=document.createElementNS(ns,'image');
+  img.setAttribute('href','data:image/png;base64,'+curPlan.ImageBase64);
+  img.setAttribute('x',0);img.setAttribute('y',0);img.setAttribute('width',W);img.setAttribute('height',H);
+  img.setAttribute('opacity','0.55');
+  svg.appendChild(img);
+  (curPlan.Rooms||[]).forEach(r=>{
+    if(!r.SvgPolygon) return;
+    const poly=document.createElementNS(ns,'polygon');
+    poly.id='syn-'+r.RevitId; poly.setAttribute('class','syn-room'); poly.setAttribute('points',r.SvgPolygon);
+    poly.addEventListener('mousemove',e=>showTip(e,r));
+    poly.addEventListener('mouseleave',hideTip);
+    poly.addEventListener('click',ev=>{ev.stopPropagation();focusRoom(r.RevitId);});
+    svg.appendChild(poly);
+  });
+  $('synoptic').appendChild(svg);
+  resetView(); setupPanZoom();
+}
+
+function recolorSynoptic(){
+  if(!curPlan) return;
+  const metric=$('metricSel').value;
+  const vals=(curPlan.Rooms||[]).map(r=>({id:r.RevitId,v:metricVal(computeRoom(r),metric)}));
+  const nums=vals.map(x=>x.v).filter(v=>isFinite(v));
+  const min=Math.min(...nums,0), max=Math.max(...nums,1);
+  vals.forEach(x=>{
+    const poly=document.getElementById('syn-'+x.id); if(!poly) return;
+    const t=max>min?(x.v-min)/(max-min):0;
+    poly.style.fill=heat(t); poly.style.fillOpacity='0.78';
+  });
+  // legend
+  $('synLegend').style.display='';
+  $('legHd').textContent=metricLabel(metric);
+  const isMoney=metric!=='area';
+  $('legMin').textContent=isMoney?money(min):nf(min,1);
+  $('legMax').textContent=isMoney?money(max):nf(max,1);
+}
+
+function heat(t){
+  t=Math.max(0,Math.min(1,t));
+  const stops=[[0,[34,197,94]],[0.5,[234,179,8]],[1,[239,68,68]]];
+  let a=stops[0],b=stops[1];
+  if(t>0.5){a=stops[1];b=stops[2];}
+  const lt=(t-a[0])/(b[0]-a[0]);
+  const c=a[1].map((v,i)=>Math.round(v+(b[1][i]-v)*lt));
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+
+function focusRoom(id){
+  selRoomId=id;
+  document.querySelectorAll('.syn-room').forEach(p=>p.classList.toggle('dim', p.id!=='syn-'+id));
+  document.querySelectorAll('#tblBody tr').forEach(tr=>tr.classList.toggle('sel',tr.getAttribute('data-id')===id));
+  const r=(curPlan?.Rooms||[]).find(x=>x.RevitId===id);
+  if(r){ const w=$('synoptic'); panX=w.clientWidth/2-r.CentroidX*zoom; panY=w.clientHeight/2-r.CentroidY*zoom; applyTx(true); }
+  setTimeout(()=>document.querySelectorAll('.syn-room').forEach(p=>p.classList.remove('dim')),1400);
+}
+
+/* ════════ TOOLTIP ════════ */
+function showTip(e,r){
+  const c=computeRoom(r), tip=$('synTip');
+  tip.innerHTML=`<div class="t-name">${r.Name||r.Number||r.RevitId}</div>`+
+    `<div class="t-row">Surface <b>${nf(c.area,1)} m²</b></div>`+
+    `<div class="t-row">Périmètre <b>${nf(c.perim,1)} m</b></div>`+
+    `<div class="t-row">Sol <b>${money(c.floor)}</b></div>`+
+    `<div class="t-row">Plafond <b>${money(c.ceiling)}</b></div>`+
+    `<div class="t-row">Murs <b>${money(c.wall)}</b></div>`+
+    `<div class="t-row" style="margin-top:3px;border-top:1px solid #1f2937;padding-top:3px">Total <b style="color:#7dd3fc">${money(c.total)}</b></div>`;
+  tip.style.display='block';
+  let x=e.clientX+14, y=e.clientY+14;
+  if(x+240>innerWidth) x=e.clientX-240; if(y+150>innerHeight) y=e.clientY-150;
+  tip.style.left=x+'px'; tip.style.top=y+'px';
+}
+function hideTip(){ $('synTip').style.display='none'; }
+
+/* ════════ PAN / ZOOM ════════ */
+function resetView(){
+  const w=$('synoptic'); if(!W) return;
+  zoom=Math.min((w.clientWidth-30)/W,(w.clientHeight-30)/H);
+  panX=w.clientWidth/2-W/2*zoom; panY=w.clientHeight/2-H/2*zoom; applyTx();
+}
+function applyTx(anim){
+  const svg=$('synSvg'); if(!svg) return;
+  svg.style.transition=anim?'transform .35s ease':''; svg.style.transformOrigin='0 0';
+  svg.style.left='0';svg.style.top='0';
+  svg.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`;
+  if(anim) setTimeout(()=>{const s=$('synSvg');if(s)s.style.transition='';},380);
+}
+function zoomAt(f){ const w=$('synoptic').getBoundingClientRect(),cx=w.width/2,cy=w.height/2;
+  const nz=Math.min(Math.max(zoom*f,.05),30); panX=cx-(cx-panX)*(nz/zoom); panY=cy-(cy-panY)*(nz/zoom); zoom=nz; applyTx(); }
+function setupPanZoom(){
+  const wrap=$('synoptic');
+  wrap.onwheel=e=>{e.preventDefault();zoomAt(e.deltaY<0?1.13:1/1.13);};
+  wrap.onmousedown=e=>{if(e.button!==0)return;isPan=true;pStart={x:e.clientX-panX,y:e.clientY-panY};};
+  window.addEventListener('mouseup',()=>isPan=false);
+  window.addEventListener('mousemove',e=>{if(!isPan)return;panX=e.clientX-pStart.x;panY=e.clientY-pStart.y;applyTx();});
+}
+$('zIn').onclick=()=>zoomAt(1.2); $('zOut').onclick=()=>zoomAt(1/1.2); $('zReset').onclick=resetView;
+
+/* ════════ CSV EXPORT ════════ */
+function exportCSV(){
+  const scope=roomsInScope();
+  const finCols=finishes.map(f=>'Cout_'+(f.name||'fin').replace(/[^a-zA-Z0-9]/g,'_'));
+  const head=['Niveau','Numero','Nom','Surface_m2','Perimetre_m',...finCols,'Cout_total','Cout_par_m2','Devise'];
+  const lines=[head.join(';')];
+  scope.forEach(x=>{ const c=computeRoom(x.room);
+    lines.push([plans[x.planKey]?.LevelName||'',x.room.Number||'',(x.room.Name||'').replace(/;/g,','),
+      c.area.toFixed(2),c.perim.toFixed(2),
+      ...c.fin.map(f=>f.cost.toFixed(0)),
+      c.total.toFixed(0),c.perm2.toFixed(0),curSel.value].join(';')); });
+  const blob=new Blob(['﻿'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='BIMFlow_couts_'+($('scopeSel').value==='all'?'tous':(curPlan?.LevelName||'niveau'))+'.csv'; a.click();
+}
+
+/* ════════ EVENTS ════════ */
+wallH.addEventListener('input',recompute);
+curSel.addEventListener('change',recompute);
+$('levelSel').addEventListener('change',e=>selectLevel(e.target.value));
+$('scopeSel').addEventListener('change',recompute);
+$('metricSel').addEventListener('change',recolorSynoptic);
+$('groupSel').addEventListener('change',recompute);
+$('curSel2').addEventListener('change',recompute);
+$('convRate').addEventListener('input',recompute);
+$('filtParam').addEventListener('change',()=>{ buildFilterValues(); recompute(); });
+$('filtVal').addEventListener('change',recompute);
+$('btnExport').addEventListener('click',exportCSV);
+$('btnReset').addEventListener('click',()=>{ finishes=DEFAULT_FINISHES.map(f=>({...f})); wallH.value=2.8; buildFinishEditor(); buildMetricOptions(); recompute(); });
+window.addEventListener('resize',()=>{ if($('synSvg')){ resetView(); } });
+
+init();
+</script>
+</body>
+</html>
