@@ -65,8 +65,20 @@
   .fin-val-price:focus{border-color:#3b82f6}
   .fin-unit{font-size:10px;color:#475569;flex-shrink:0;width:28px}
 
-  /* SYNOPTIC */
-  .synoptic{flex:1;position:relative;overflow:hidden;background:#060e1f;cursor:grab;min-width:280px}
+  /* SYNOPTIC AREA */
+  .syn-area{flex:1;display:flex;flex-direction:column;min-width:280px;overflow:hidden}
+  .syn-toolbar{background:#0c1526;border-bottom:1px solid #1e2b45;padding:5px 10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-shrink:0;min-height:40px}
+  .fin-tab{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid #334155;color:#64748b;background:#111827;transition:all .15s;white-space:nowrap;outline:none}
+  .fin-tab:hover{color:#e2e8f0}
+  .fin-tab.active{color:#fff;border-color:transparent}
+  .fchip{padding:3px 10px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid;color:#94a3b8;background:transparent;transition:all .15s;white-space:nowrap;outline:none}
+  .fchip:hover{color:#e2e8f0}
+  .fchip.active{color:#fff;font-weight:700}
+  .fchip-sep{width:1px;height:16px;background:#1f2937;flex-shrink:0}
+  .cat-item{display:flex;align-items:center;gap:6px;font-size:11px;color:#94a3b8;margin-bottom:3px;cursor:pointer}
+  .cat-item:hover .cat-sw{outline:2px solid #fff}
+  .cat-sw{width:10px;height:10px;border-radius:2px;flex-shrink:0;transition:outline .1s}
+  .synoptic{flex:1;position:relative;overflow:hidden;background:#060e1f;cursor:grab;min-width:0}
   .synoptic:active{cursor:grabbing}
   #synSvg{position:absolute;will-change:transform}
   .syn-room{cursor:pointer;stroke:rgba(15,23,42,.65);stroke-width:1;stroke-linejoin:round;transition:opacity .1s}
@@ -224,18 +236,25 @@
     <button class="btn ghost" id="btnReset" style="margin-top:6px">↺ Réinitialiser les prix</button>
   </div>
 
-  <!-- SYNOPTIC -->
-  <div class="synoptic" id="synoptic">
-    <div class="syn-empty" id="synEmpty">Aucun plan — envoyez un niveau depuis Revit puis sélectionnez-le ci-dessus.</div>
-    <div class="syn-legend" id="synLegend">
-      <div class="ll-hd" id="legHd">Coût total</div>
-      <div class="grad-bar"></div>
-      <div class="grad-lbls"><span id="legMin">0</span><span id="legMax">0</span></div>
+  <!-- SYNOPTIC AREA -->
+  <div class="syn-area">
+    <div class="syn-toolbar">
+      <div id="finTabs" style="display:flex;gap:5px;align-items:center;flex-shrink:0"></div>
+      <div class="fchip-sep"></div>
+      <div id="filterChips" style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;flex:1"></div>
     </div>
-    <div class="zoom-wrap">
-      <button class="zbtn" id="zIn">+</button>
-      <button class="zbtn" id="zOut">−</button>
-      <button class="zbtn" id="zReset" title="Ajuster">⌖</button>
+    <div class="synoptic" id="synoptic">
+      <div class="syn-empty" id="synEmpty">Aucun plan — envoyez un niveau depuis Revit puis sélectionnez-le ci-dessus.</div>
+      <div class="syn-legend" id="synLegend">
+        <div class="ll-hd" id="legHd">Coût total</div>
+        <div class="grad-bar"></div>
+        <div class="grad-lbls"><span id="legMin">0</span><span id="legMax">0</span></div>
+      </div>
+      <div class="zoom-wrap">
+        <button class="zbtn" id="zIn">+</button>
+        <button class="zbtn" id="zOut">−</button>
+        <button class="zbtn" id="zReset" title="Ajuster">⌖</button>
+      </div>
     </div>
   </div>
   <div class="syn-tip" id="synTip"></div>
@@ -298,6 +317,9 @@ let zoom=1,panX=0,panY=0,W=0,H=0,isPan=false,pStart={x:0,y:0};
 let sortKey='total', sortDir=-1, selRoomId=null;
 
 const FIN_COLORS=['#3b82f6','#a855f7','#f59e0b','#10b981','#ef4444'];
+const VAL_PALETTE=['#3b82f6','#f59e0b','#10b981','#ef4444','#a855f7','#06b6d4','#f97316','#84cc16','#ec4899','#14b8a6'];
+let activeFinIdx=0, activeFilterVal=''; // which finish tab is active + chip filter
+
 const DEFAULT_FINISHES=[
   {name:'Sol',     formula:'area',           param:'', prices:{'':45}},
   {name:'Plafond', formula:'area',           param:'', prices:{'':30}},
@@ -360,9 +382,9 @@ function buildFinishEditor(){
   finishes.forEach((f,i)=>{
     const card=document.createElement('div'); card.className='fin-card';
 
-    // param options
-    const paramOpts='<option value="">— Prix fixe —</option>'+
-      params.map(n=>`<option value="${n}"${n===f.param?' selected':''}>${n}</option>`).join('');
+    // datalist for free-typing + dropdown
+    const dlId=`pdl-${i}`;
+    const dlOpts=params.map(n=>`<option value="${n}">`).join('');
 
     // price rows
     let priceRows='';
@@ -392,9 +414,10 @@ function buildFinishEditor(){
         `<input class="fin-name" data-i="${i}" value="${(f.name||'').replace(/"/g,'&quot;')}"/>`+
       `</div>`+
       `<div class="fin-fields">`+
+        `<datalist id="${dlId}">${dlOpts}</datalist>`+
         `<div class="fin-field-row">`+
-          `<label>Paramètre Revit</label>`+
-          `<select class="set-select fin-param-sel" style="font-size:11px" data-i="${i}">${paramOpts}</select>`+
+          `<label>Paramètre Revit${params.length?'':' <span style="color:#f59e0b;font-size:9px">⚠ Chargez un plan Revit</span>'}</label>`+
+          `<input class="set-input fin-param-inp" list="${dlId}" style="width:100%;text-align:left" data-i="${i}" value="${(f.param||'').replace(/"/g,'&quot;')}" placeholder="${params.length?'Tapez ou choisissez…':'Envoyez un plan depuis Revit…'}"/>`+
         `</div>`+
         `<div class="fin-field-row">`+
           `<label>Formule quantité</label>`+
@@ -422,12 +445,11 @@ function buildFinishEditor(){
     inp.classList.toggle('bad',!isFinite(evalFormula(inp.value,{area:1,perim:1,height:1})));
     recompute();
   }));
-  box.querySelectorAll('.fin-param-sel').forEach(sel=>sel.addEventListener('change',()=>{
-    const i=+sel.getAttribute('data-i'); finishes[i].param=sel.value;
-    // seed any new values with the fallback price
-    if(sel.value){ const fb=(finishes[i].prices||{})['']||0;
-      getParamValues(sel.value).forEach(v=>{ if(finishes[i].prices[v]==null) finishes[i].prices[v]=fb; }); }
-    buildFinishEditor(); recompute();
+  box.querySelectorAll('.fin-param-inp').forEach(inp=>inp.addEventListener('change',()=>{
+    const i=+inp.getAttribute('data-i'); finishes[i].param=inp.value.trim();
+    if(finishes[i].param){ const fb=(finishes[i].prices||{})['']||0;
+      getParamValues(finishes[i].param).forEach(v=>{ if(finishes[i].prices[v]==null) finishes[i].prices[v]=fb; }); }
+    buildFinishEditor(); buildFinTabs(); buildFilterChips(); recompute();
   }));
   box.querySelectorAll('.fin-val-price').forEach(inp=>inp.addEventListener('input',()=>{
     const i=+inp.getAttribute('data-i'), v=inp.getAttribute('data-v');
@@ -435,6 +457,59 @@ function buildFinishEditor(){
     finishes[i].prices[v]=+inp.value||0;
     recompute();
   }));
+}
+
+/* ── finish tabs (above synoptic) ── */
+function buildFinTabs(){
+  const box=$('finTabs'); if(!box) return;
+  box.innerHTML='';
+  // "Coût total" tab
+  const t0=document.createElement('button'); t0.className='fin-tab'+(activeFinIdx===-1?' active':'');
+  t0.textContent='💰 Coût'; t0.title='Gradient de coût total';
+  t0.addEventListener('click',()=>{ activeFinIdx=-1; activeFilterVal=''; buildFinTabs(); buildFilterChips(); recolorSynoptic(); });
+  box.appendChild(t0);
+  // one tab per finish
+  finishes.forEach((f,i)=>{
+    const tab=document.createElement('button');
+    tab.className='fin-tab'+(activeFinIdx===i?' active':'');
+    tab.style.borderColor=activeFinIdx===i?finColor(i):'#334155';
+    if(activeFinIdx===i){ tab.style.background=finColor(i)+'22'; tab.style.color=finColor(i); }
+    tab.innerHTML=`<span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${finColor(i)};margin-right:4px;vertical-align:middle"></span>${f.name||('F'+(i+1))}`;
+    tab.addEventListener('click',()=>{
+      activeFinIdx=i; activeFilterVal='';
+      $('metricSel').value='fin'+i;
+      buildFinTabs(); buildFilterChips(); recolorSynoptic();
+    });
+    box.appendChild(tab);
+  });
+}
+
+/* ── filter chips (slicers) per finish value ── */
+function buildFilterChips(){
+  const box=$('filterChips'); if(!box) return;
+  box.innerHTML='';
+  if(activeFinIdx<0 || !finishes[activeFinIdx]?.param) return;
+  const f=finishes[activeFinIdx];
+  const vals=getParamValues(f.param).filter(v=>v);
+  if(!vals.length){ box.innerHTML='<span style="font-size:11px;color:#475569;font-style:italic">Aucune valeur — les pièces Revit ont-elles ce paramètre ?</span>'; return; }
+  // "Toutes" chip
+  const all=document.createElement('button');
+  all.className='fchip'+(!activeFilterVal?' active':'');
+  all.style.borderColor='#334155'; if(!activeFilterVal) all.style.background='#334155';
+  all.textContent='Toutes'; all.title='Afficher toutes les pièces';
+  all.addEventListener('click',()=>{ activeFilterVal=''; buildFilterChips(); recolorSynoptic(); });
+  box.appendChild(all);
+  // one chip per value
+  vals.forEach((v,vi)=>{
+    const color=VAL_PALETTE[vi%VAL_PALETTE.length];
+    const chip=document.createElement('button');
+    chip.className='fchip'+(activeFilterVal===v?' active':'');
+    chip.style.borderColor=color;
+    if(activeFilterVal===v) chip.style.background=color;
+    chip.textContent=v; chip.title=`Filtrer : ${v}`;
+    chip.addEventListener('click',()=>{ activeFilterVal=v; buildFilterChips(); recolorSynoptic(); });
+    box.appendChild(chip);
+  });
 }
 
 /* ── synoptic metric options ── */
@@ -475,6 +550,9 @@ async function init(){
     await Promise.all(index.map(async p=>{ try{ plans[p.key]=await api('/api/plans?key='+encodeURIComponent(p.key)+'&light=1'); }catch(e){} }));
     levelKey=index[index.length-1].key; sel.value=levelKey;
     buildGroupOptions();
+    buildFinishEditor();   // rebuild now that params are known from loaded plans
+    buildFinTabs();
+    buildFilterChips();
     selectLevel(levelKey);
     setStatus(`${index.length} niveau(x) chargé(s)`,'ok');
   }catch(e){ setStatus('Erreur: '+e.message,'err'); }
@@ -727,20 +805,47 @@ function renderSynoptic(){
 function recolorSynoptic(){
   if(!curPlan) return;
   const metric=$('metricSel').value;
-  const vals=(curPlan.Rooms||[]).map(r=>({id:r.RevitId,v:metricVal(computeRoom(r),metric)}));
+  const activeFin=activeFinIdx>=0?finishes[activeFinIdx]:null;
+
+  // ── Categorical mode: finish tab active + that finish has a param ──
+  if(activeFin?.param){
+    const paramVals=getParamValues(activeFin.param).filter(v=>v);
+    const valIdx=Object.fromEntries(paramVals.map((v,i)=>[v,i]));
+    (curPlan.Rooms||[]).forEach(r=>{
+      const poly=document.getElementById('syn-'+r.RevitId); if(!poly) return;
+      const val=String((r.Parameters||{})[activeFin.param]||'');
+      const dimmed=activeFilterVal&&val!==activeFilterVal;
+      if(dimmed){ poly.style.fill='#0f172a'; poly.style.fillOpacity='0.12'; }
+      else if(val&&valIdx[val]!=null){ poly.style.fill=VAL_PALETTE[valIdx[val]%VAL_PALETTE.length]; poly.style.fillOpacity='0.84'; }
+      else { poly.style.fill='#64748b'; poly.style.fillOpacity='0.22'; }
+    });
+    // categorical legend
+    const leg=$('synLegend'); leg.style.display='';
+    leg.innerHTML=`<div class="ll-hd" style="color:#94a3b8">${activeFin.name} — ${activeFin.param}</div>`+
+      paramVals.map((v,vi)=>`<div class="cat-item"><span class="cat-sw" style="background:${VAL_PALETTE[vi%VAL_PALETTE.length]}"></span>${v}</div>`).join('')+
+      (getParamValues(activeFin.param).some(v=>!v)?'<div class="cat-item"><span class="cat-sw" style="background:#475569"></span><i>(non défini)</i></div>':'');
+    return;
+  }
+
+  // ── Gradient mode: cost or metric heatmap ──
+  const vals=(curPlan.Rooms||[]).map(r=>{
+    const c=computeRoom(r);
+    const dimmed=activeFin&&activeFilterVal?String((r.Parameters||{})[activeFin?.param||'']||'')!==activeFilterVal:false;
+    return {id:r.RevitId, v:metricVal(c,metric), dimmed};
+  });
   const nums=vals.map(x=>x.v).filter(v=>isFinite(v));
   const min=Math.min(...nums,0), max=Math.max(...nums,1);
   vals.forEach(x=>{
     const poly=document.getElementById('syn-'+x.id); if(!poly) return;
     const t=max>min?(x.v-min)/(max-min):0;
-    poly.style.fill=heat(t); poly.style.fillOpacity='0.78';
+    poly.style.fill=heat(t); poly.style.fillOpacity=x.dimmed?'0.12':'0.78';
   });
-  // legend
-  $('synLegend').style.display='';
-  $('legHd').textContent=metricLabel(metric);
+  // gradient legend
+  const leg=$('synLegend'); leg.style.display='';
   const isMoney=metric!=='area';
-  $('legMin').textContent=isMoney?money(min):nf(min,1);
-  $('legMax').textContent=isMoney?money(max):nf(max,1);
+  leg.innerHTML=`<div class="ll-hd" id="legHd">${metricLabel(metric)}</div>`+
+    `<div class="grad-bar"></div>`+
+    `<div class="grad-lbls"><span>${isMoney?money(min):nf(min,1)}</span><span>${isMoney?money(max):nf(max,1)}</span></div>`;
 }
 
 function heat(t){
@@ -834,7 +939,7 @@ $('convRate').addEventListener('input',recompute);
 $('filtParam').addEventListener('change',()=>{ buildFilterValues(); recompute(); });
 $('filtVal').addEventListener('change',recompute);
 $('btnExport').addEventListener('click',exportCSV);
-$('btnReset').addEventListener('click',()=>{ finishes=DEFAULT_FINISHES.map(f=>({...f})); wallH.value=2.8; buildFinishEditor(); buildMetricOptions(); recompute(); });
+$('btnReset').addEventListener('click',()=>{ finishes=DEFAULT_FINISHES.map(f=>({...f,prices:{...f.prices}})); activeFinIdx=0; activeFilterVal=''; wallH.value=2.8; buildFinishEditor(); buildMetricOptions(); buildFinTabs(); buildFilterChips(); recompute(); });
 window.addEventListener('resize',()=>{ if($('synSvg')){ resetView(); } });
 
 init();
