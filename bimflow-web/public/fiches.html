@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>BIMFlow — Fiches de Local</title>
+<title>BIMFlow — Fiches de Locaux</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
@@ -240,7 +240,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
     <a href="/">🗺 Plans</a>
     <a href="/analyse.html">📊 Analyse</a>
     <a href="/parametres.html">🔧 Paramètres</a>
-    <a href="/fiches.html" class="active">📋 Fiches</a>
+    <a href="/fiches.html" class="active">📋 Fiches de Locaux</a>
   </div>
   <div class="tbr">
     <button class="tbtn" id="langBtn">EN</button>
@@ -320,18 +320,19 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
   <!-- ══ RIGHT — Fiche A4 ══ -->
   <div id="ficheCol">
     <div class="fbar">
-      <span class="ftitle">Fiche de Local</span>
+      <span class="ftitle">Fiches de Locaux</span>
       <span class="fsub" id="ftopSub"></span>
       <div class="fbtns">
         <button class="fb warn" id="btnCP" style="display:none">⚠ Créer params</button>
-        <button class="fb" id="btnPrint">🖨 Imprimer</button>
         <div class="edrop-wrap" id="edWrap">
-          <button class="edrop-btn" id="edBtn">⬇ Exporter ▾</button>
+          <button class="edrop-btn" id="edBtn">🖨 Imprimer / Excel ▾</button>
           <div class="edrop" id="edDrop">
-            <div class="ei" onclick="exportCSV(false)"><b>📊 CSV — pièces filtrées</b><small>Phase/Usage actuels, tous niveaux</small></div>
-            <div class="ei" onclick="exportCSV(true)"><b>📊 CSV — tout le projet</b><small>Toutes les pièces, tous niveaux</small></div>
-            <div class="ei" onclick="exportPDF(false)"><b>📄 PDF — pièces filtrées</b><small>Toutes les fiches A4 (impression)</small></div>
-            <div class="ei" onclick="exportPDF(true)"><b>📄 PDF — tout le projet</b><small>Toutes les fiches A4 (impression)</small></div>
+            <div style="padding:4px 12px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid #1f2937">Imprimer (PDF)</div>
+            <div class="ei" onclick="doPrint('sel')"><b>🖨 Sélection</b><small>Fiches des pièces sélectionnées</small></div>
+            <div class="ei" onclick="doPrint('all')"><b>🖨 Tout le projet</b><small>Toutes les fiches A4</small></div>
+            <div style="padding:4px 12px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid #1f2937;border-top:1px solid #1f2937">Excel (CSV)</div>
+            <div class="ei" onclick="doExcel('sel')"><b>📊 Sélection</b><small>Pièces sélectionnées</small></div>
+            <div class="ei" onclick="doExcel('all')"><b>📊 Tout le projet</b><small>Toutes les pièces</small></div>
           </div>
         </div>
       </div>
@@ -800,27 +801,25 @@ function focus3D(){
   R3.c.near=Math.max(.05,d/2000);R3.c.far=d*500;R3.c.updateProjectionMatrix();R3.oc.update();
 }
 
-/* Recolor 3D — high-contrast shading on selection */
+/* Recolor 3D — semi-transparent ghost effect on selection */
 function recolor3D(){
   if(!R3.ready)return;
   const hasSel=selIds.size>0;
   Object.entries(R3.meshes).forEach(([id,mesh])=>{
     const room=allRooms.find(r=>r.RevitId===id);if(!mesh||!room)return;
     const v=isVis(room),s=selIds.has(id);
-    /* depthWrite off when transparent to avoid z-fight */
     if(!v){
-      mesh.material.color.setHex(0x040810);mesh.material.opacity=.03;
-      mesh.material.depthWrite=false;
+      /* filtered-out: nearly invisible */
+      mesh.material.color.setHex(0x1e3a5f);mesh.material.opacity=.04;mesh.material.depthWrite=false;
     } else if(s){
-      mesh.material.color.setHex(0x38bdf8);mesh.material.opacity=1;
-      mesh.material.depthWrite=true;
+      /* selected: bright cyan, solid */
+      mesh.material.color.setHex(0x38bdf8);mesh.material.opacity=.95;mesh.material.depthWrite=true;
     } else if(hasSel){
-      /* shaded: almost invisible dark blue */
-      mesh.material.color.setHex(0x060c1e);mesh.material.opacity=.06;
-      mesh.material.depthWrite=false;
+      /* others when something selected: semi-transparent blue ghost — still visible */
+      mesh.material.color.setHex(0x3b82f6);mesh.material.opacity=.22;mesh.material.depthWrite=false;
     } else {
-      mesh.material.color.setHex(0x3b82f6);mesh.material.opacity=.78;
-      mesh.material.depthWrite=true;
+      /* no selection: normal blue */
+      mesh.material.color.setHex(0x3b82f6);mesh.material.opacity=.78;mesh.material.depthWrite=true;
     }
   });
 }
@@ -930,71 +929,62 @@ $('btnCP').onclick=async()=>{
   }catch(e){alert('Erreur: '+e.message);}
 };
 
-/* ════ PRINT ════ */
-$('btnPrint').onclick=()=>{if(!selIds.size){alert('Sélectionnez une pièce.');return;}window.print();};
-
-/* ════ EXPORT DROPDOWN ════ */
+/* ════ DROPDOWN ════ */
 $('edBtn').onclick=e=>{e.stopPropagation();$('edWrap').classList.toggle('open');};
 document.addEventListener('click',()=>$('edWrap').classList.remove('open'));
 
-/* ════ EXPORT CSV (instant, no library) ════ */
-function exportCSV(allMode){
-  const rooms=allMode?allRooms:allVis();
-  if(!rooms.length){alert('Aucune pièce à exporter.');return;}
-  setSt('Génération CSV…','load');
-
-  /* Collect all unique param keys */
-  const allPK=new Set();rooms.forEach(r=>Object.keys(r.Parameters||{}).forEach(k=>allPK.add(k)));
-  const schFields=SCHEMA.flatMap(s=>s.f);
-  /* Schema cols first, then remaining */
-  const extraKeys=[...allPK].filter(k=>!schFields.some(f=>f.k.some(sk=>k.toLowerCase().includes(sk.toLowerCase())))).sort();
-
-  const header=['N°','Nom','Niveau','Phase','Usage',...schFields.map(f=>f.l),...extraKeys];
-  const rows=rooms.map(r=>[
-    r.Number||'', r.Name||'', r._lv||r.LevelName||'',
-    findP(r,'phase'), findP(r,'usage','occupation','type','fonction','function'),
-    ...schFields.map(f=>schV(r,f)),
-    ...extraKeys.map(k=>String((r.Parameters||{})[k]||''))
-  ]);
-
-  const csv='﻿'+[header,...rows].map(row=>row.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n');
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=`BIMFlow_Fiches_${allMode?'Tout':'Filtre'}_${new Date().toISOString().slice(0,10)}.csv`;
-  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);
-  setSt(`${rooms.length} pièces exportées`,'ok');
-}
-
-/* ════ EXPORT PDF — non-blocking, print-all mode ════ */
-/* _today declared before ficheH — see above */
-
-function exportPDF(allMode){
-  const rooms=allMode?allRooms:allVis();
-  if(!rooms.length){alert('Aucune pièce à exporter.');return;}
+/* ════ IMPRIMER (PDF via window.print) ════ */
+function doPrint(mode){
+  let rooms;
+  if(mode==='sel'){
+    rooms=allRooms.filter(r=>selIds.has(r.RevitId));
+    if(!rooms.length){alert('Sélectionnez des pièces d\'abord.');return;}
+  } else {
+    rooms=allRooms;
+    if(!rooms.length){alert('Aucune pièce.');return;}
+  }
   $('edWrap').classList.remove('open');
-  setSt(`PDF : génération ${rooms.length} fiches…`,'load');
-
-  /* Build HTML in chunks via setTimeout to stay non-blocking */
+  if(rooms.length===1&&mode==='sel'){window.print();return;}
+  setSt(`Impression : ${rooms.length} fiches…`,'load');
   const CHUNK=20;let i=0;const parts=[];
-  function nextChunk(){
+  function next(){
     const end=Math.min(i+CHUNK,rooms.length);
     for(;i<end;i++)parts.push(ficheH(rooms[i]));
-    setSt(`PDF : ${i}/${rooms.length}…`,'load');
-    if(i<rooms.length){setTimeout(nextChunk,0);}
+    if(i<rooms.length){setTimeout(next,0);}
     else{
       $('printAll').innerHTML=parts.join('');
       document.body.setAttribute('data-pa','1');
       requestAnimationFrame(()=>requestAnimationFrame(()=>{
         window.print();
-        setTimeout(()=>{
-          document.body.removeAttribute('data-pa');
-          $('printAll').innerHTML='';
-          setSt(`${rooms.length} fiches imprimées`,'ok');
-        },800);
+        setTimeout(()=>{document.body.removeAttribute('data-pa');$('printAll').innerHTML='';setSt(`${rooms.length} fiches imprimées`,'ok');},800);
       }));
     }
   }
-  nextChunk();
+  next();
+}
+
+/* ════ EXCEL / CSV ════ */
+function doExcel(mode){
+  const rooms=mode==='sel'?allRooms.filter(r=>selIds.has(r.RevitId)):allRooms;
+  if(!rooms.length){alert(mode==='sel'?'Sélectionnez des pièces d\'abord.':'Aucune pièce.');return;}
+  $('edWrap').classList.remove('open');
+  setSt('Génération Excel…','load');
+  const schFields=SCHEMA.flatMap(s=>s.f);
+  const allPK=new Set();rooms.forEach(r=>Object.keys(r.Parameters||{}).forEach(k=>allPK.add(k)));
+  const extra=[...allPK].filter(k=>!schFields.some(f=>f.k.some(sk=>k.toLowerCase().includes(sk.toLowerCase())))).sort();
+  const hdr=['N°','Nom','Niveau','Phase','Usage',...schFields.map(f=>f.l),...extra];
+  const rows=rooms.map(r=>[
+    r.Number||'',r.Name||'',r._lv||r.LevelName||'',
+    findP(r,'phase'),findP(r,'usage','occupation','type','fonction','function'),
+    ...schFields.map(f=>schV(r,f)),
+    ...extra.map(k=>String((r.Parameters||{})[k]||''))
+  ]);
+  const csv='﻿'+[hdr,...rows].map(row=>row.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`BIMFlow_${mode==='sel'?'Selection':'Projet'}_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);
+  setSt(`${rooms.length} pièces exportées`,'ok');
 }
 
 /* ════ LANG + THEME ════ */
