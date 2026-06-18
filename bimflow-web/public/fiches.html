@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BIMFlow — Fiches de Pièces</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;background:#111827;border-bottom:1px solid #1f2937;flex-shrink:0;height:48px}
+.logo{padding:0 16px;font-size:16px;font-weight:800;color:#38bdf8;letter-spacing:-.5px;white-space:nowrap;border-right:1px solid #1f2937;height:100%;display:flex;align-items:center}
+.logo span{color:#7dd3fc}
+.nav{display:flex;height:100%}
+.nav a{display:flex;align-items:center;padding:0 16px;font-size:13px;font-weight:600;color:#64748b;text-decoration:none;border-right:1px solid #1f2937}
+.nav a:hover{background:#1f2937;color:#e2e8f0}
+.nav a.active{color:#38bdf8;background:#0c1a2e;box-shadow:inset 0 -2px 0 #38bdf8}
+.topbar-right{display:flex;align-items:center;gap:8px;padding:0 16px;margin-left:auto}
+.tbtn{background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:6px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer}
+.tbtn:hover{background:#374151;color:#fff}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#334155;flex-shrink:0}
+.status-dot.ok{background:#22c55e}.status-dot.err{background:#ef4444}.status-dot.loading{background:#f59e0b;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.status-txt{font-size:12px;color:#64748b}
+
+/* ── MAIN LAYOUT ── */
+#appMain{display:flex;flex:1;overflow:hidden;min-height:0}
+
+/* ── LEFT SIDEBAR ── */
+.left-panel{width:272px;flex-shrink:0;background:#0d1526;border-right:1px solid #1f2937;display:flex;flex-direction:column;overflow:hidden}
+.lp-sec{border-bottom:1px solid #1f2937;flex-shrink:0}
+.lp-hd{padding:7px 12px;font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em}
+.lp-body{padding:6px 10px;display:flex;flex-direction:column;gap:6px}
+.lp-row{display:flex;flex-direction:column;gap:3px}
+.lp-lbl{font-size:10px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.06em}
+.lp-sel{background:#0f172a;color:#e2e8f0;border:1px solid #1f2937;border-radius:5px;padding:5px 8px;font-size:12px;cursor:pointer;outline:none;width:100%}
+.lp-sel:focus{border-color:#3b82f6}
+
+/* ── PALETTE ── */
+.pal-search{padding:6px 10px;flex-shrink:0;border-bottom:1px solid #1f2937}
+.pal-search input{width:100%;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:5px 8px;font-size:12px;outline:none}
+.pal-search input:focus{border-color:#3b82f6}
+.palette-wrap{flex:1;overflow-y:auto}
+.pal-param{border-bottom:1px solid #111c30}
+.pal-param-hd{display:flex;align-items:center;gap:6px;padding:7px 10px;cursor:pointer;user-select:none}
+.pal-param-hd:hover{background:#111c30}
+.pal-chev{font-size:9px;color:#475569;transition:transform .15s;flex-shrink:0}
+.pal-param.open .pal-chev{transform:rotate(90deg)}
+.pal-pname{flex:1;font-size:12px;font-weight:600;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pal-param.open .pal-pname{color:#e2e8f0}
+.pal-pcnt{font-size:10px;color:#475569;flex-shrink:0}
+.pal-values{display:none;padding:2px 0 4px}
+.pal-param.open .pal-values{display:block}
+.pal-val{display:flex;align-items:center;gap:6px;padding:4px 10px 4px 24px;cursor:pointer}
+.pal-val:hover{background:#111c30}
+.pal-val.active{background:#0c1a2e}
+.pal-vname{flex:1;font-size:11px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pal-val:hover .pal-vname{color:#cbd5e1}
+.pal-val.active .pal-vname{color:#38bdf8;font-weight:600}
+.pal-vcnt{font-size:10px;background:#1f2937;border-radius:10px;padding:1px 6px;color:#475569;flex-shrink:0}
+.pal-val.active .pal-vcnt{background:#1d4ed8;color:#e0f2fe}
+
+/* ── SELECTION FOOTER ── */
+.sel-footer{padding:8px 10px;border-top:1px solid #1f2937;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.sel-info{flex:1;font-size:11px;color:#64748b}
+.sel-info strong{color:#38bdf8}
+.sel-clear{background:transparent;border:1px solid #374151;color:#64748b;border-radius:4px;padding:3px 8px;font-size:10px;font-weight:600;cursor:pointer}
+.sel-clear:hover{border-color:#ef4444;color:#ef4444}
+
+/* ── CENTER COLUMN ── */
+#centerCol{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* ── VIEWER ROW ── */
+#viewerRow{flex:1;display:flex;overflow:hidden;min-height:0;position:relative}
+.viewer-split{flex:1;display:flex;min-height:0;overflow:hidden}
+.viewer-wrap{flex:1;position:relative;overflow:hidden;background:#060e1f;cursor:grab;min-width:0}
+.viewer-wrap:active{cursor:grabbing}
+#mainSvg{position:absolute;will-change:transform}
+
+/* ── ROOMS SVG STATES ── */
+.bimflow-room{cursor:pointer;fill:rgba(56,189,248,.06);stroke:rgba(56,189,248,.4);stroke-width:1.5;stroke-linejoin:round;transition:fill .12s,stroke .12s,opacity .18s}
+.bimflow-room:hover{fill:rgba(56,189,248,.2);stroke:#38bdf8;stroke-width:2.5}
+/* Selected: bright highlight */
+.bimflow-room.selected{fill:rgba(56,189,248,.55)!important;stroke:#38bdf8!important;stroke-width:3!important;opacity:1!important}
+/* Shaded: same level, not selected, but something IS selected */
+.bimflow-room.shaded{fill:rgba(5,10,25,.68)!important;stroke:rgba(56,189,248,.06)!important;stroke-width:1!important;opacity:.7!important;cursor:pointer}
+/* Filtered-out: doesn't match current phase/type filter */
+.bimflow-room.filtered-out{fill:rgba(5,10,25,.82)!important;stroke:rgba(56,189,248,.04)!important;opacity:.35!important;cursor:not-allowed!important}
+
+#mainSvg > image{filter:invert(1)}
+
+/* ── 3D PANE ── */
+.pane3d{flex:1;position:relative;background:#060e1f;border-left:1px solid #1f2937;overflow:hidden;min-width:0}
+.pane3d canvas{display:block;width:100%;height:100%}
+.viewer-split.m2d .pane3d{display:none}
+.viewer-split.m3d .viewer-wrap{display:none}
+.viewer-split.m3d .pane3d{border-left:none}
+.pane3d-hint{position:absolute;left:12px;bottom:12px;font-size:11px;color:#475569;background:rgba(13,21,38,.7);padding:4px 8px;border-radius:5px;pointer-events:none}
+
+/* ── CONTROLS ── */
+.view-modes{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:20;display:flex;background:rgba(15,23,42,.92);border:1px solid #1f2937;border-radius:7px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+.view-modes button{background:transparent;border:none;color:#94a3b8;font-size:12px;font-weight:600;padding:6px 12px;cursor:pointer;border-right:1px solid #1f2937}
+.view-modes button:last-child{border-right:none}
+.view-modes button:hover{color:#e2e8f0}
+.view-modes button.active{background:#1d4ed8;color:#fff}
+.mode3d-btns{position:absolute;top:10px;right:12px;z-index:20;display:flex;background:rgba(15,23,42,.92);border:1px solid #1f2937;border-radius:7px;overflow:hidden}
+.mode3d-btns button{background:transparent;border:none;color:#94a3b8;font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;border-right:1px solid #1f2937}
+.mode3d-btns button:last-child{border-right:none}
+.mode3d-btns button.active{background:#1d4ed8;color:#fff}
+.zoom-wrap{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:3px;z-index:10}
+.zbtn{width:28px;height:28px;background:#1f2937;border:1px solid #374151;color:#d1d5db;border-radius:5px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.zbtn:hover{background:#374151}
+
+/* ── MINIMAP ── */
+#minimap{position:absolute;bottom:12px;left:12px;z-index:10;border:1px solid #1f2937;border-radius:6px;overflow:hidden;background:#0f172a;box-shadow:0 4px 16px rgba(0,0,0,.6);width:130px;display:none}
+#minimap-lbl{padding:2px 8px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;border-bottom:1px solid #1f2937}
+#minimapSvg{display:block}
+.mini-room{fill:rgba(56,189,248,.05);stroke:rgba(56,189,248,.2);stroke-width:.8;stroke-linejoin:round}
+.mini-room.selected{fill:rgba(56,189,248,.5)!important;stroke:#38bdf8!important;stroke-width:1.5}
+.mini-room.shaded{fill:rgba(5,10,25,.5)!important;stroke:rgba(56,189,248,.04)!important}
+.mini-room.filtered-out{fill:rgba(5,10,25,.7)!important;stroke:rgba(56,189,248,.02)!important;opacity:.3}
+#mini-vp{fill:rgba(255,255,255,.04);stroke:rgba(255,255,255,.5);stroke-width:.7}
+
+/* ── EMPTY STATE (viewer) ── */
+.viewer-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#374151;pointer-events:none}
+.viewer-empty h2{font-size:14px;color:#4b5563}
+.viewer-empty p{font-size:12px;text-align:center;max-width:220px;line-height:1.7}
+
+/* ── SPLIT HANDLE ── */
+.split-h{height:6px;flex-shrink:0;cursor:row-resize;background:#0a1222;border-top:1px solid #1f2937;position:relative}
+.split-h:hover,.split-h.dragging{background:#1f2937}
+.split-h::after{content:"";position:absolute;top:2px;left:50%;transform:translateX(-50%);height:2px;width:40px;background:#374151;border-radius:2px}
+
+/* ── DATA SHEET PANEL ── */
+#sheetPanel{height:290px;flex-shrink:0;background:#0d1526;display:flex;flex-direction:column;overflow:hidden}
+.sheet-bar{display:flex;align-items:center;gap:10px;padding:7px 14px;border-bottom:1px solid #1f2937;flex-shrink:0}
+.sheet-title{font-size:13px;font-weight:700;color:#f1f5f9}
+.sheet-sub{font-size:11px;color:#38bdf8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.sheet-actions{display:flex;gap:6px;flex-shrink:0}
+.sheet-btn{display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #334155;background:transparent;color:#cbd5e1}
+.sheet-btn:hover{background:#1f2937;color:#fff}
+.sheet-body{flex:1;overflow:auto}
+
+/* ── SHEET EMPTY ── */
+.sheet-empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#374151}
+.sheet-empty p{font-size:12px;text-align:center;line-height:1.6;max-width:260px}
+
+/* ── SINGLE ROOM FICHE ── */
+.fiche{padding:14px 16px}
+.fiche-hd{display:flex;align-items:baseline;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #1f2937}
+.fiche-num{font-size:11px;font-weight:700;color:#38bdf8;background:#0c1a2e;border:1px solid #1e3a58;border-radius:4px;padding:2px 8px;flex-shrink:0}
+.fiche-name{font-size:17px;font-weight:700;color:#f1f5f9;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fiche-badges{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.fiche-badge{font-size:11px;color:#94a3b8;background:#111827;border:1px solid #1f2937;border-radius:4px;padding:2px 8px}
+.fiche-badge.area{color:#34d399;border-color:#1a3a2e}
+.fiche-badge.phase{color:#f59e0b;border-color:#2a1f00}
+.fiche-badge.usage{color:#a78bfa;border-color:#1e1340}
+.params-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:5px}
+.param-cell{background:#111827;border:1px solid #1a2640;border-radius:4px;padding:7px 10px;min-width:0}
+.param-cell.core{border-color:#1e3a58}
+.param-key{font-size:10px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.param-cell.core .param-key{color:#3b82f6}
+.param-val{font-size:13px;color:#e2e8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.param-cell.core .param-val{font-weight:600}
+
+/* ── MULTI SHEET ── */
+.multi-sheet{padding:12px 14px}
+.multi-hd{display:flex;align-items:center;gap:14px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #1f2937;flex-wrap:wrap}
+.multi-count{font-size:18px;font-weight:700;color:#38bdf8}
+.multi-area{font-size:13px;color:#34d399;font-weight:600}
+.multi-scroll{overflow:auto;max-height:180px}
+table.multi-tbl{width:100%;border-collapse:collapse;font-size:11px}
+table.multi-tbl th{position:sticky;top:0;background:#111c33;color:#64748b;font-weight:600;text-align:left;padding:4px 8px;border-bottom:1px solid #1e2b45;white-space:nowrap;font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+table.multi-tbl td{padding:4px 8px;border-bottom:1px solid #16233f;color:#cbd5e1;white-space:nowrap}
+table.multi-tbl tr:hover td{background:#111c30;cursor:pointer}
+
+/* ── LIGHT THEME ── */
+[data-theme=light] body{background:#eef1f6;color:#1e2733}
+[data-theme=light] .topbar{background:#fff;border-bottom-color:#dde2ec}
+[data-theme=light] .nav a{color:#64748b;border-right-color:#dde2ec}
+[data-theme=light] .nav a:hover{background:#eef2f8;color:#111}
+[data-theme=light] .nav a.active{background:#e7f3fc;color:#0284c7;box-shadow:inset 0 -2px 0 #0284c7}
+[data-theme=light] .left-panel{background:#f6f8fb;border-right-color:#dde2ec}
+[data-theme=light] .lp-sec{border-bottom-color:#dde2ec}
+[data-theme=light] .lp-sel{background:#fff;color:#1e2733;border-color:#d4dae6}
+[data-theme=light] .pal-search input{background:#fff;color:#1e2733;border-color:#d4dae6}
+[data-theme=light] .pal-param{border-bottom-color:#e6e9f0}
+[data-theme=light] .pal-param-hd:hover{background:#eef2f8}
+[data-theme=light] .pal-pname{color:#475569}
+[data-theme=light] .pal-param.open .pal-pname{color:#0f172a}
+[data-theme=light] .pal-val:hover{background:#eef2f8}
+[data-theme=light] .pal-val.active{background:#e7f3fc}
+[data-theme=light] .pal-vname{color:#64748b}
+[data-theme=light] .pal-val:hover .pal-vname{color:#0f172a}
+[data-theme=light] .pal-val.active .pal-vname{color:#0284c7}
+[data-theme=light] .pal-vcnt{background:#eef2f8;color:#64748b}
+[data-theme=light] .sel-footer{border-top-color:#dde2ec}
+[data-theme=light] .sel-info{color:#64748b}
+[data-theme=light] .sel-clear{border-color:#d4dae6;color:#64748b}
+[data-theme=light] .viewer-wrap,[data-theme=light] .pane3d{background:#eef1f6}
+[data-theme=light] .pane3d{border-left-color:#dde2ec}
+[data-theme=light] #mainSvg > image{filter:none}
+[data-theme=light] .bimflow-room{fill:rgba(2,132,199,.06);stroke:rgba(2,132,199,.4)}
+[data-theme=light] .bimflow-room:hover{fill:rgba(2,132,199,.2);stroke:#0284c7}
+[data-theme=light] .bimflow-room.selected{fill:rgba(2,132,199,.45)!important;stroke:#0284c7!important}
+[data-theme=light] .bimflow-room.shaded{fill:rgba(220,228,240,.82)!important;stroke:rgba(2,132,199,.08)!important}
+[data-theme=light] .bimflow-room.filtered-out{fill:rgba(220,228,240,.92)!important}
+[data-theme=light] #minimap{background:#fff;border-color:#dde2ec}
+[data-theme=light] .split-h{background:#e6e9f0;border-top-color:#dde2ec}
+[data-theme=light] #sheetPanel{background:#f6f8fb;border-top-color:#dde2ec}
+[data-theme=light] .sheet-bar{border-bottom-color:#dde2ec}
+[data-theme=light] .sheet-title{color:#0f172a}
+[data-theme=light] .sheet-btn{border-color:#cdd5e3;color:#334155}
+[data-theme=light] .sheet-btn:hover{background:#eef2f8;color:#0f172a}
+[data-theme=light] .fiche-hd{border-bottom-color:#dde2ec}
+[data-theme=light] .fiche-name{color:#0f172a}
+[data-theme=light] .fiche-num{background:#e7f3fc;border-color:#bfdbfe;color:#0284c7}
+[data-theme=light] .fiche-badge{background:#eef2f8;border-color:#dde2ec;color:#475569}
+[data-theme=light] .fiche-badge.area{color:#047857;border-color:#d1fae5;background:#f0fdf4}
+[data-theme=light] .fiche-badge.phase{color:#b45309;border-color:#fde68a;background:#fffbeb}
+[data-theme=light] .fiche-badge.usage{color:#6d28d9;border-color:#ddd6fe;background:#f5f3ff}
+[data-theme=light] .param-cell{background:#fff;border-color:#e6e9f0}
+[data-theme=light] .param-cell.core{border-color:#bfdbfe}
+[data-theme=light] .param-key{color:#64748b}
+[data-theme=light] .param-cell.core .param-key{color:#0284c7}
+[data-theme=light] .param-val{color:#1e2733}
+[data-theme=light] table.multi-tbl th{background:#eef2f8;color:#475569}
+[data-theme=light] table.multi-tbl td{border-bottom-color:#e6e9f0;color:#334155}
+[data-theme=light] table.multi-tbl tr:hover td{background:#eef2f8}
+[data-theme=light] .tbtn{background:#eef2f8;border-color:#d4dae6;color:#334155}
+[data-theme=light] .zbtn{background:#eef2f8;border-color:#d4dae6;color:#334155}
+[data-theme=light] .view-modes,.mode3d-btns{background:rgba(255,255,255,.95);border-color:#dde2ec}
+[data-theme=light] .view-modes button,[data-theme=light] .mode3d-btns button{color:#475569;border-right-color:#dde2ec}
+[data-theme=light] .view-modes button:hover,[data-theme=light] .mode3d-btns button:hover{color:#0f172a}
+
+/* ── PRINT ── */
+@media print{
+  .topbar,.left-panel,.split-h,#viewerRow,.sheet-actions,.status-dot,.status-txt{display:none!important}
+  #sheetPanel{height:auto!important;border:none}
+  body{overflow:auto;height:auto}
+  #appMain{display:block}
+  #centerCol{display:block}
+  .fiche{padding:20px}
+  .params-grid{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">BIM<span>Flow</span></div>
+  <div class="nav">
+    <a href="/" data-en="🗺 Plans">🗺 Plans</a>
+    <a href="/analyse.html" data-en="📊 Analysis">📊 Analyse</a>
+    <a href="/parametres.html" data-en="🔧 Parameters">🔧 Paramètres</a>
+    <a href="/fiches.html" class="active" data-en="📋 Sheets">📋 Fiches</a>
+  </div>
+  <div class="topbar-right">
+    <button class="tbtn" id="langBtn">EN</button>
+    <button class="tbtn" id="themeBtn">☾</button>
+    <div class="status-dot loading" id="statusDot"></div>
+    <div class="status-txt" id="statusTxt">Chargement…</div>
+  </div>
+</div>
+
+<div id="appMain">
+
+  <!-- ══ LEFT PANEL ══ -->
+  <div class="left-panel">
+
+    <!-- Filters -->
+    <div class="lp-sec">
+      <div class="lp-hd" data-en="Filters">Filtres</div>
+      <div class="lp-body">
+        <div class="lp-row">
+          <label class="lp-lbl" data-en="Level">Niveau</label>
+          <select class="lp-sel" id="filterLevel"><option value="">— Tous les niveaux —</option></select>
+        </div>
+        <div class="lp-row">
+          <label class="lp-lbl" data-en="Phase">Phase</label>
+          <select class="lp-sel" id="filterPhase"><option value="">— Toutes les phases —</option></select>
+        </div>
+        <div class="lp-row">
+          <label class="lp-lbl" data-en="Usage / Type">Usage / Type</label>
+          <select class="lp-sel" id="filterType"><option value="">— Tous les types —</option></select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Palette header + search -->
+    <div class="lp-sec">
+      <div class="lp-hd" data-en="Select by parameter">Sélectionner par paramètre</div>
+      <div class="pal-search">
+        <input type="text" id="palSearch" placeholder="Rechercher un paramètre…" data-en-ph="Search parameter…"/>
+      </div>
+    </div>
+
+    <!-- Parameter accordion -->
+    <div class="palette-wrap" id="paletteList"></div>
+
+    <!-- Selection summary -->
+    <div class="sel-footer">
+      <div class="sel-info" id="selInfo"><span data-en="No room selected">Aucune pièce sélectionnée</span></div>
+      <button class="sel-clear" id="selClear" data-en="Clear">Effacer</button>
+    </div>
+  </div>
+
+  <!-- ══ CENTER ══ -->
+  <div id="centerCol">
+
+    <!-- Viewer row -->
+    <div id="viewerRow">
+      <div class="viewer-split mboth" id="viewerSplit">
+
+        <!-- View mode buttons -->
+        <div class="view-modes" id="viewModes">
+          <button data-m="m2d">🗺 2D</button>
+          <button data-m="mboth" class="active">⊞ 2D+3D</button>
+          <button data-m="m3d">🧊 3D</button>
+        </div>
+
+        <!-- 2D viewer -->
+        <div class="viewer-wrap" id="viewerWrap">
+          <div id="viewerEmpty" class="viewer-empty">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            <h2>BIMFlow</h2>
+            <p data-en="Send a plan from Revit via &quot;Send to BIMFlow&quot;">Envoyez un plan depuis Revit via &laquo; Envoyer vers BIMFlow &raquo;</p>
+          </div>
+          <div id="minimap"><div id="minimap-lbl">Vue d'ensemble</div><svg id="minimapSvg"></svg></div>
+          <div class="zoom-wrap">
+            <button class="zbtn" id="zIn">+</button>
+            <button class="zbtn" id="zOut">−</button>
+            <button class="zbtn" id="zReset" title="Recadrer">⌖</button>
+          </div>
+        </div>
+
+        <!-- 3D pane -->
+        <div class="pane3d" id="pane3d">
+          <canvas id="canvas3d"></canvas>
+          <div class="mode3d-btns" id="mode3dBtns">
+            <button data-v="level" class="active" data-en="Level">Niveau</button>
+            <button data-v="project" data-en="Project">Projet</button>
+          </div>
+          <div class="pane3d-hint" id="hint3d" data-en="Drag to rotate · Scroll to zoom">Glissez pour pivoter · Molette pour zoomer</div>
+          <div class="zoom-wrap"><button class="zbtn" id="fit3d" title="Recadrer 3D">⌖</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resizable split -->
+    <div class="split-h" id="splitH"></div>
+
+    <!-- Data sheet panel -->
+    <div id="sheetPanel">
+      <div class="sheet-bar">
+        <span class="sheet-title" data-en="Room Data Sheet">Fiche de pièce</span>
+        <span class="sheet-sub" id="sheetSub"></span>
+        <div class="sheet-actions">
+          <button class="sheet-btn" id="btnPrint" data-en="🖨 Print">🖨 Imprimer</button>
+        </div>
+      </div>
+      <div class="sheet-body" id="sheetBody">
+        <div class="sheet-empty">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 12h6M9 16h6M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M9 4h6v4H9z"/></svg>
+          <p data-en="Click a room on the plan or select via the palette">Cliquez une pièce sur le plan ou sélectionnez via la palette</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /centerCol -->
+</div><!-- /appMain -->
+
+<script>
+const $=id=>document.getElementById(id);
+
+/* ══ STATE ══ */
+let allPlans=[], allRooms=[];
+let plan=null, currentPlanKey='';
+let selIds=new Set();
+let filterLevel='', filterPhase='', filterType='';
+let activePalKey='', activePalVal='';
+let zoom=1, panX=0, panY=0, W=0, H=0;
+let isPan=false, panStart={x:0,y:0};
+const planCache={};
+
+const CORE=['nom','name','numéro','numero','number','surface','area','aire','niveau','level',
+  'département','department','occupation','occupancy','usage','phase','commentaires','comments'];
+const isCore=k=>CORE.some(c=>k.toLowerCase().includes(c)||c.includes(k.toLowerCase()));
+
+/* ══ HELPERS ══ */
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function setStatus(msg,t){ $('statusTxt').textContent=msg; $('statusDot').className='status-dot'+(t?' '+t:''); }
+async function api(url){ const r=await fetch(url); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }
+
+/* Case-insensitive param lookup */
+function getParam(room,...keys){
+  const P=room.Parameters||{};
+  for(const k of keys){
+    const match=Object.keys(P).find(pk=>pk.toLowerCase().includes(k.toLowerCase()));
+    if(match&&P[match]) return P[match];
+  }
+  return '';
+}
+
+/* ══ LOAD ALL PLANS ══ */
+async function loadAll(){
+  try{
+    setStatus('Chargement…','loading');
+    allPlans=await api('/api/plans');
+    if(!allPlans.length){ setStatus('Aucun plan — envoyez depuis Revit',''); buildPalette(); return; }
+    const results=await Promise.all(allPlans.map(p=>getPlanData(p.key)));
+    allRooms=[];
+    results.forEach(p=>(p.Rooms||[]).forEach(r=>allRooms.push({
+      ...r, _levelName:p.LevelName, _planKey:p.key
+    })));
+    buildFilters();
+    buildPalette();
+    await loadPlan(allPlans[allPlans.length-1].key);
+    setStatus(`${allRooms.length} pièces · ${allPlans.length} niveau(x)`,'ok');
+  }catch(e){ setStatus('Erreur: '+e.message,'err'); }
+}
+
+async function getPlanData(key){
+  if(planCache[key]) return planCache[key];
+  const p=await api('/api/plans?key='+encodeURIComponent(key));
+  planCache[key]=p; return p;
+}
+
+async function loadPlan(key){
+  if(!key||key===currentPlanKey) return;
+  plan=await getPlanData(key); currentPlanKey=key;
+  W=plan.ImageWidth; H=plan.ImageHeight;
+  renderPlan(); setupMinimap(); resetView(); update3D();
+}
+
+/* ══ FILTERS ══ */
+function buildFilters(){
+  // Level
+  const levels=[...new Set(allRooms.map(r=>r._levelName||'').filter(Boolean))].sort();
+  const lvSel=$('filterLevel'); lvSel.innerHTML='<option value="">— Tous les niveaux —</option>';
+  levels.forEach(l=>lvSel.appendChild(new Option(l,l)));
+
+  // Phase
+  const phases=new Set(); allRooms.forEach(r=>{ const v=getParam(r,'phase'); if(v) phases.add(v); });
+  const phSel=$('filterPhase'); phSel.innerHTML='<option value="">— Toutes les phases —</option>';
+  [...phases].sort().forEach(v=>phSel.appendChild(new Option(v,v)));
+
+  // Usage / Type
+  const types=new Set(); allRooms.forEach(r=>{ const v=getParam(r,'usage','occupation','type','fonction','use'); if(v) types.add(v); });
+  const tySel=$('filterType'); tySel.innerHTML='<option value="">— Tous les types —</option>';
+  [...types].sort().forEach(v=>tySel.appendChild(new Option(v,v)));
+
+  $('filterLevel').onchange=function(){ filterLevel=this.value;
+    if(filterLevel){ const p=allPlans.find(pl=>pl.level===filterLevel); if(p) loadPlan(p.key); }
+    onFilterChange(); };
+  $('filterPhase').onchange=function(){ filterPhase=this.value; onFilterChange(); };
+  $('filterType').onchange=function(){ filterType=this.value; onFilterChange(); };
+}
+
+/* Rooms that pass current filters */
+function visibleRooms(){
+  return allRooms.filter(r=>{
+    if(filterLevel&&(r._levelName||'')!==filterLevel) return false;
+    if(filterPhase&&getParam(r,'phase')!==filterPhase) return false;
+    if(filterType&&getParam(r,'usage','occupation','type','fonction','use')!==filterType) return false;
+    return true;
+  });
+}
+
+function isRoomVisible(r){
+  if(filterLevel&&(r._levelName||r.LevelName||'')!==filterLevel) return false;
+  if(filterPhase&&getParam(r,'phase')!==filterPhase) return false;
+  if(filterType&&getParam(r,'usage','occupation','type','fonction','use')!==filterType) return false;
+  return true;
+}
+
+function onFilterChange(){
+  activePalKey=''; activePalVal='';
+  selIds.clear();
+  buildPalette(); paintRooms(); renderSheet(); updateSelInfo();
+}
+
+/* ══ PARAMETER PALETTE ══ */
+function buildPalette(){
+  const vis=visibleRooms();
+  const list=$('paletteList'); list.innerHTML='';
+  if(!vis.length){
+    list.innerHTML='<div style="padding:18px;text-align:center;font-size:12px;color:#475569">Aucune pièce</div>';
+    return;
+  }
+
+  /* Build param → value → count map */
+  const paramMap={};
+  vis.forEach(r=>{
+    Object.entries(r.Parameters||{}).forEach(([k,v])=>{
+      if(!v&&v!==0) return;
+      if(!paramMap[k]) paramMap[k]={};
+      const sv=String(v);
+      paramMap[k][sv]=(paramMap[k][sv]||0)+1;
+    });
+  });
+
+  const q=($('palSearch').value||'').toLowerCase();
+  const keys=Object.keys(paramMap)
+    .filter(k=>!q||k.toLowerCase().includes(q))
+    .sort((a,b)=>{ const ca=isCore(a),cb=isCore(b); if(ca!==cb)return ca?-1:1; return a.localeCompare(b); });
+
+  if(!keys.length){
+    list.innerHTML='<div style="padding:14px;text-align:center;font-size:12px;color:#475569">Aucun paramètre</div>';
+    return;
+  }
+
+  keys.forEach(k=>{
+    const vals=paramMap[k];
+    const total=Object.values(vals).reduce((s,n)=>s+n,0);
+    const isOpen=k===activePalKey;
+
+    const pd=document.createElement('div'); pd.className='pal-param'+(isOpen?' open':'');
+
+    const hd=document.createElement('div'); hd.className='pal-param-hd';
+    hd.innerHTML=`<span class="pal-chev">▶</span><span class="pal-pname" title="${esc(k)}">${esc(k)}</span><span class="pal-pcnt">${total}</span>`;
+    hd.onclick=()=>pd.classList.toggle('open');
+    pd.appendChild(hd);
+
+    const vd=document.createElement('div'); vd.className='pal-values';
+    Object.entries(vals)
+      .sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))
+      .forEach(([v,cnt])=>{
+        const active=activePalKey===k&&activePalVal===v;
+        const row=document.createElement('div'); row.className='pal-val'+(active?' active':'');
+        row.innerHTML=`<span class="pal-vname" title="${esc(v)}">${esc(v)}</span><span class="pal-vcnt">${cnt}</span>`;
+        row.onclick=e=>{ e.stopPropagation(); palSelect(k,v); };
+        vd.appendChild(row);
+      });
+    pd.appendChild(vd);
+    list.appendChild(pd);
+  });
+}
+
+function palSelect(key,val){
+  /* Toggle off if same */
+  if(activePalKey===key&&activePalVal===val){
+    activePalKey=''; activePalVal=''; selIds.clear();
+  } else {
+    activePalKey=key; activePalVal=val;
+    selIds.clear();
+    /* Auto-select all visible rooms matching this param value */
+    visibleRooms().forEach(r=>{
+      const v=String((r.Parameters||{})[key]||'');
+      if(v===val) selIds.add(r.RevitId);
+    });
+    /* Switch to level where most selected rooms are */
+    const keys=[...new Set(visibleRooms().filter(r=>selIds.has(r.RevitId)).map(r=>r._planKey))];
+    if(keys.length===1&&keys[0]&&keys[0]!==currentPlanKey) loadPlan(keys[0]);
+  }
+  buildPalette(); paintRooms(); renderSheet(); updateSelInfo();
+  if(R3.ready) recolor3D();
+}
+
+$('palSearch').oninput=()=>buildPalette();
+$('selClear').onclick=()=>{ selIds.clear(); activePalKey=''; activePalVal=''; buildPalette(); paintRooms(); renderSheet(); updateSelInfo(); if(R3.ready)recolor3D(); };
+
+function updateSelInfo(){
+  const n=selIds.size;
+  if(!n){ $('selInfo').innerHTML='<span data-en="No room selected">Aucune pièce sélectionnée</span>'; applyLangEl($('selInfo')); return; }
+  const rooms=allRooms.filter(r=>selIds.has(r.RevitId));
+  let area=0; rooms.forEach(r=>{ const v=parseFloat(getParam(r,'surface','area','aire')); if(!isNaN(v))area+=v; });
+  $('selInfo').innerHTML=`<strong>${n}</strong> pièce${n>1?'s':''}${area>0?` · <strong>${area.toFixed(1)} m²</strong>`:''}`;
+}
+
+/* ══ RENDER SVG PLAN ══ */
+function renderPlan(){
+  $('viewerEmpty').style.display='none';
+  const old=$('mainSvg'); if(old) old.remove();
+  const ns='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(ns,'svg'); svg.id='mainSvg';
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.style.width=W+'px'; svg.style.height=H+'px';
+  const img=document.createElementNS(ns,'image');
+  img.setAttribute('href','data:image/png;base64,'+plan.ImageBase64);
+  img.setAttribute('x','0'); img.setAttribute('y','0'); img.setAttribute('width',W); img.setAttribute('height',H);
+  svg.appendChild(img);
+  (plan.Rooms||[]).forEach(room=>{
+    if(!room.SvgPolygon) return;
+    const poly=document.createElementNS(ns,'polygon');
+    poly.id='poly-'+room.RevitId; poly.setAttribute('class','bimflow-room'); poly.setAttribute('points',room.SvgPolygon);
+    poly.onclick=e=>{ e.stopPropagation(); roomClick(room.RevitId, e.ctrlKey||e.metaKey||e.shiftKey); };
+    svg.appendChild(poly);
+  });
+  $('viewerWrap').appendChild(svg);
+  setupPanZoom(svg);
+  paintRooms();
+}
+
+/* ══ PAINT ROOMS (shading logic) ══ */
+function paintRooms(){
+  if(!plan) return;
+  const hasSel=selIds.size>0;
+  (plan.Rooms||[]).forEach(r=>{
+    const poly=$('poly-'+r.RevitId);
+    const mini=$('mp-'+r.RevitId);
+    if(!poly) return;
+    poly.classList.remove('selected','shaded','filtered-out');
+    if(mini) mini.classList.remove('selected','shaded','filtered-out');
+    const vis=isRoomVisible({...r, _levelName:plan.LevelName});
+    const sel=selIds.has(r.RevitId);
+    if(!vis){
+      poly.classList.add('filtered-out');
+      if(mini) mini.classList.add('filtered-out');
+    } else if(sel){
+      poly.classList.add('selected');
+      if(mini) mini.classList.add('selected');
+    } else if(hasSel){
+      poly.classList.add('shaded');
+      if(mini) mini.classList.add('shaded');
+    }
+  });
+  updateMinimap();
+}
+
+/* ══ ROOM CLICK ══ */
+function roomClick(id, additive){
+  const roomObj=(plan.Rooms||[]).find(r=>r.RevitId===id); if(!roomObj) return;
+  if(!isRoomVisible({...roomObj,_levelName:plan.LevelName})) return;
+  activePalKey=''; activePalVal='';
+  if(additive){ if(selIds.has(id)) selIds.delete(id); else selIds.add(id); }
+  else { selIds.clear(); selIds.add(id); }
+  /* Pan to room */
+  if(!additive&&roomObj.CentroidX){
+    const w=$('viewerWrap');
+    panX=w.clientWidth/2-roomObj.CentroidX*zoom;
+    panY=w.clientHeight/2-roomObj.CentroidY*zoom;
+    applyTx($('mainSvg'));
+  }
+  buildPalette(); paintRooms(); renderSheet(); updateSelInfo();
+  if(R3.ready) recolor3D();
+}
+
+$('viewerWrap').onclick=()=>{ if(selIds.size){ selIds.clear(); activePalKey=''; activePalVal=''; buildPalette(); paintRooms(); renderSheet(); updateSelInfo(); if(R3.ready)recolor3D(); } };
+
+/* ══ DATA SHEET ══ */
+function renderSheet(){
+  const sel=allRooms.filter(r=>selIds.has(r.RevitId));
+  const sub=$('sheetSub'), body=$('sheetBody');
+  if(!sel.length){
+    sub.textContent='';
+    body.innerHTML=`<div class="sheet-empty"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 12h6M9 16h6M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M9 4h6v4H9z"/></svg><p data-en="Click a room on the plan or select via the palette">Cliquez une pièce sur le plan ou sélectionnez via la palette</p></div>`;
+    applyLangEl(body); return;
+  }
+  if(sel.length===1){ renderSingle(sel[0]); return; }
+  renderMulti(sel);
+}
+
+function renderSingle(room){
+  const P=room.Parameters||{};
+  const num=room.Number||'', name=room.Name||'—';
+  const lvl=room._levelName||room.LevelName||'';
+  const areaRaw=getParam(room,'surface','area','aire');
+  const area=parseFloat(areaRaw); const areaStr=!isNaN(area)?area.toFixed(2)+' m²':'';
+  const phase=getParam(room,'phase');
+  const usage=getParam(room,'usage','occupation','type','fonction');
+  $('sheetSub').textContent=(num?num+' · ':'')+name;
+  const cols=Object.keys(P).sort((a,b)=>{ const ca=isCore(a),cb=isCore(b); if(ca!==cb)return ca?-1:1; return a.localeCompare(b); });
+  $('sheetBody').innerHTML=`<div class="fiche">
+    <div class="fiche-hd">
+      ${num?`<span class="fiche-num">${esc(num)}</span>`:''}
+      <div class="fiche-name">${esc(name)}</div>
+      <div class="fiche-badges">
+        ${lvl?`<span class="fiche-badge">${esc(lvl)}</span>`:''}
+        ${areaStr?`<span class="fiche-badge area">${esc(areaStr)}</span>`:''}
+        ${phase?`<span class="fiche-badge phase">Phase: ${esc(phase)}</span>`:''}
+        ${usage?`<span class="fiche-badge usage">${esc(usage)}</span>`:''}
+      </div>
+    </div>
+    <div class="params-grid">
+      ${cols.map(k=>`<div class="param-cell${isCore(k)?' core':''}"><div class="param-key">${esc(k)}</div><div class="param-val" title="${esc(P[k]||'')}">${esc(P[k]||'—')}</div></div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderMulti(rooms){
+  const n=rooms.length;
+  let totalArea=0; rooms.forEach(r=>{ const v=parseFloat(getParam(r,'surface','area','aire')); if(!isNaN(v))totalArea+=v; });
+  $('sheetSub').textContent=`${n} pièces sélectionnées`;
+  const anyPhase=rooms.some(r=>getParam(r,'phase'));
+  const anyUsage=rooms.some(r=>getParam(r,'usage','occupation','type'));
+  const rows=rooms.map(r=>{
+    const area=parseFloat(getParam(r,'surface','area','aire'));
+    const phase=anyPhase?`<td>${esc(getParam(r,'phase')||'—')}</td>`:'';
+    const usage=anyUsage?`<td>${esc(getParam(r,'usage','occupation','type')||'—')}</td>`:'';
+    return `<tr onclick="jumpToRoom('${r.RevitId}')"><td>${esc(r.Number||'')}</td><td>${esc(r.Name||'—')}</td><td>${esc(r._levelName||r.LevelName||'')}</td><td>${isNaN(area)?'—':area.toFixed(2)+' m²'}</td>${phase}${usage}</tr>`;
+  }).join('');
+  $('sheetBody').innerHTML=`<div class="multi-sheet">
+    <div class="multi-hd">
+      <span class="multi-count">${n} pièce${n>1?'s':''}</span>
+      ${totalArea>0?`<span class="multi-area">Σ ${totalArea.toFixed(2)} m²</span>`:''}
+    </div>
+    <div class="multi-scroll"><table class="multi-tbl">
+      <thead><tr><th>N°</th><th>Nom</th><th>Niveau</th><th>Surface</th>${anyPhase?'<th>Phase</th>':''}${anyUsage?'<th>Usage</th>':''}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+  </div>`;
+}
+
+function jumpToRoom(id){
+  selIds.clear(); selIds.add(id);
+  const room=allRooms.find(r=>r.RevitId===id);
+  if(room&&room._planKey&&room._planKey!==currentPlanKey) loadPlan(room._planKey).then(()=>{ buildPalette(); paintRooms(); renderSheet(); updateSelInfo(); if(R3.ready)recolor3D(); });
+  else { buildPalette(); paintRooms(); renderSheet(); updateSelInfo(); if(R3.ready)recolor3D(); }
+}
+
+/* ══ PAN / ZOOM ══ */
+function resetView(){
+  const svg=$('mainSvg'); if(!svg)return;
+  const w=$('viewerWrap');
+  zoom=Math.min((w.clientWidth-40)/W,(w.clientHeight-40)/H);
+  panX=w.clientWidth/2-W/2*zoom; panY=w.clientHeight/2-H/2*zoom;
+  applyTx(svg);
+}
+function applyTx(svg){ if(!svg)return; svg.style.left='0'; svg.style.top='0'; svg.style.transformOrigin='0 0'; svg.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`; updateMinimap(); }
+function zoomAt(f){ const w=$('viewerWrap').getBoundingClientRect(); const cx=w.width/2,cy=w.height/2; const nz=Math.min(Math.max(zoom*f,.07),30); panX=cx-(cx-panX)*(nz/zoom); panY=cy-(cy-panY)*(nz/zoom); zoom=nz; applyTx($('mainSvg')); }
+function setupPanZoom(svg){
+  const wr=$('viewerWrap');
+  wr.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.deltaY<0?1.13:1/1.13);},{passive:false});
+  wr.addEventListener('mousedown',e=>{ if(e.button===1||e.button===2){isPan=true;panStart={x:e.clientX-panX,y:e.clientY-panY};wr.style.cursor='grabbing';e.preventDefault();} });
+  wr.addEventListener('contextmenu',e=>e.preventDefault());
+  window.addEventListener('mouseup',e=>{ if(e.button===1||e.button===2){isPan=false;wr.style.cursor='';} });
+  window.addEventListener('mousemove',e=>{ if(!isPan)return; panX=e.clientX-panStart.x; panY=e.clientY-panStart.y; applyTx($('mainSvg')); });
+  $('zIn').onclick=()=>zoomAt(1.2); $('zOut').onclick=()=>zoomAt(1/1.2); $('zReset').onclick=()=>resetView();
+}
+
+/* ══ MINIMAP ══ */
+const MINI_W=128;
+function setupMinimap(){
+  if(!plan) return;
+  const ns='http://www.w3.org/2000/svg'; const miniH=Math.round(H*MINI_W/W);
+  const svg=$('minimapSvg'); svg.setAttribute('width',MINI_W); svg.setAttribute('height',miniH); svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.innerHTML='';
+  const img=document.createElementNS(ns,'image'); img.setAttribute('href','data:image/png;base64,'+plan.ImageBase64);
+  img.setAttribute('x','0');img.setAttribute('y','0');img.setAttribute('width',W);img.setAttribute('height',H); svg.appendChild(img);
+  (plan.Rooms||[]).forEach(r=>{ if(!r.SvgPolygon)return; const p=document.createElementNS(ns,'polygon'); p.id='mp-'+r.RevitId; p.setAttribute('class','mini-room'); p.setAttribute('points',r.SvgPolygon); svg.appendChild(p); });
+  const rect=document.createElementNS(ns,'rect'); rect.id='mini-vp'; svg.appendChild(rect);
+  $('minimap').style.display='';
+}
+function updateMinimap(){
+  if(!plan) return;
+  const wr=$('viewerWrap'); const wW=wr.clientWidth,wH=wr.clientHeight;
+  const x1=Math.max(0,(0-panX)/zoom),y1=Math.max(0,(0-panY)/zoom);
+  const x2=Math.min(W,(wW-panX)/zoom),y2=Math.min(H,(wH-panY)/zoom);
+  const r=$('mini-vp'); if(r){r.setAttribute('x',x1);r.setAttribute('y',y1);r.setAttribute('width',Math.max(0,x2-x1));r.setAttribute('height',Math.max(0,y2-y1));}
+}
+
+/* ══ VIEW MODE SWITCH ══ */
+$('viewModes').onclick=e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  const vs=$('viewerSplit'); vs.classList.remove('m2d','m3d','mboth'); vs.classList.add(b.dataset.m);
+  [...$('viewModes').children].forEach(x=>x.classList.toggle('active',x===b));
+  setTimeout(()=>{ resetView(); resize3D(); update3D(); },30);
+};
+$('fit3d').onclick=fit3D;
+
+/* ══ RESIZABLE SPLIT ══ */
+(()=>{
+  const bar=$('splitH'), el=$('sheetPanel');
+  bar.onmousedown=ev=>{
+    ev.preventDefault(); bar.classList.add('dragging');
+    const s0=ev.clientY, h0=el.getBoundingClientRect().height;
+    const mv=e=>{ el.style.height=Math.max(80,h0-(e.clientY-s0))+'px'; el.style.flex='none'; };
+    const up=()=>{ bar.classList.remove('dragging'); document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); };
+    document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+  };
+})();
+
+window.onresize=()=>{ resetView(); resize3D(); };
+
+/* ══ 3D VIEWER ══ */
+let _threeP=null;
+function loadThree(){
+  if(window.THREE&&THREE.OrbitControls) return Promise.resolve();
+  if(_threeP) return _threeP;
+  _threeP=new Promise((res,rej)=>{
+    const s1=document.createElement('script'); s1.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+    s1.onload=()=>{ const s2=document.createElement('script'); s2.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
+      s2.onload=res; s2.onerror=()=>rej(new Error('OrbitControls')); document.head.appendChild(s2); };
+    s1.onerror=()=>rej(new Error('Three.js')); document.head.appendChild(s1);
+  });
+  return _threeP;
+}
+const R3={ready:false};
+function init3D(){
+  const cv=$('canvas3d');
+  R3.renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+  R3.renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));
+  R3.scene=new THREE.Scene();
+  R3.camera=new THREE.PerspectiveCamera(45,1,.1,1e6);
+  R3.controls=new THREE.OrbitControls(R3.camera,cv); R3.controls.enableDamping=true; R3.controls.dampingFactor=.08;
+  R3.scene.add(new THREE.AmbientLight(0xffffff,.78));
+  const dl=new THREE.DirectionalLight(0xffffff,.55); dl.position.set(1,2,1.2); R3.scene.add(dl);
+  R3.group=new THREE.Group(); R3.group.rotation.x=-Math.PI/2; R3.scene.add(R3.group);
+  R3.meshes={}; R3.ready=true; resize3D();
+  (function loop(){ requestAnimationFrame(loop); R3.controls.update(); R3.renderer.render(R3.scene,R3.camera); })();
+  const ray=new THREE.Raycaster(),v2=new THREE.Vector2();
+  cv.onclick=e=>{ const rc=cv.getBoundingClientRect(); v2.x=((e.clientX-rc.left)/rc.width)*2-1; v2.y=-((e.clientY-rc.top)/rc.height)*2+1;
+    ray.setFromCamera(v2,R3.camera); const hit=ray.intersectObjects(R3.group.children,true)[0];
+    let o=hit&&hit.object; while(o&&!o.userData.id)o=o.parent; if(o&&o.userData.id)roomClick(o.userData.id,false); };
+}
+function resize3D(){ if(!R3.ready)return; const p=$('pane3d'); R3.renderer.setSize(p.clientWidth||1,p.clientHeight||1,false); R3.camera.aspect=(p.clientWidth||1)/(p.clientHeight||1); R3.camera.updateProjectionMatrix(); }
+function build3D(){
+  if(!R3.ready) return;
+  while(R3.group.children.length){ const c=R3.group.children.pop(); c.traverse(o=>{ if(o.geometry)o.geometry.dispose(); if(o.material)o.material.dispose(); }); }
+  R3.meshes={}; let any=false;
+  (plan?.Rooms||[]).forEach(r=>{
+    const fp=r.Footprint; if(!fp||fp.length<3)return;
+    const shape=new THREE.Shape(); shape.moveTo(fp[0][0],fp[0][1]); for(let i=1;i<fp.length;i++)shape.lineTo(fp[i][0],fp[i][1]); shape.closePath();
+    const h=Math.max(0.3,r.Height||2.8);
+    const geo=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:false}); geo.translate(0,0,r.BaseZ||0);
+    const mesh=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:0x3b82f6,transparent:true,opacity:.85}));
+    mesh.userData.id=r.RevitId;
+    mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:0x0b1424})));
+    R3.group.add(mesh); R3.meshes[r.RevitId]=mesh; any=true;
+  });
+  if(any) fit3D();
+  recolor3D();
+}
+function fit3D(){
+  if(!R3.ready)return; const box=new THREE.Box3().setFromObject(R3.group); if(box.isEmpty())return;
+  const c=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3()); const d=Math.max(s.x,s.y,s.z,5);
+  R3.controls.target.copy(c); R3.camera.position.set(c.x+d*.75,c.y+d*.9,c.z+d*.75);
+  R3.camera.near=Math.max(.05,d/2000); R3.camera.far=d*200; R3.camera.updateProjectionMatrix(); R3.controls.update();
+}
+function recolor3D(){
+  if(!R3.ready||!plan) return;
+  const hasSel=selIds.size>0;
+  (plan.Rooms||[]).forEach(r=>{
+    const mesh=R3.meshes[r.RevitId]; if(!mesh) return;
+    const vis=isRoomVisible({...r,_levelName:plan.LevelName});
+    const sel=selIds.has(r.RevitId);
+    if(!vis)      { mesh.material.color.setHex(0x0a1222); mesh.material.opacity=.12; }
+    else if(sel)  { mesh.material.color.setHex(0x38bdf8); mesh.material.opacity=.92; }
+    else if(hasSel){ mesh.material.color.setHex(0x0d1a2e); mesh.material.opacity=.22; }
+    else           { mesh.material.color.setHex(0x3b82f6); mesh.material.opacity=.82; }
+  });
+}
+async function update3D(){
+  if($('viewerSplit').classList.contains('m2d')) return;
+  try{ await loadThree(); }catch(e){ $('hint3d').textContent='3D indisponible: '+e.message; return; }
+  if(!R3.ready) init3D();
+  resize3D(); build3D();
+}
+$('mode3dBtns').onclick=e=>{ const b=e.target.closest('button'); if(!b)return; [...$('mode3dBtns').children].forEach(x=>x.classList.toggle('active',x===b)); update3D(); };
+
+/* ══ PRINT ══ */
+$('btnPrint').onclick=()=>{
+  if(!selIds.size){ alert('Sélectionnez une ou plusieurs pièces.'); return; }
+  window.print();
+};
+
+/* ══ LANG + THEME ══ */
+const langBtn=$('langBtn'), themeBtn=$('themeBtn');
+function applyLangEl(root){
+  (root||document).querySelectorAll('[data-en]').forEach(el=>{ if(el._fr===undefined)el._fr=el.innerHTML; el.innerHTML=(document.documentElement.lang==='en')?el.getAttribute('data-en'):el._fr; });
+  (root||document).querySelectorAll('[data-en-ph]').forEach(el=>{ if(el._frph===undefined)el._frph=el.getAttribute('placeholder')||''; el.setAttribute('placeholder',(document.documentElement.lang==='en')?el.getAttribute('data-en-ph'):el._frph); });
+}
+function applyLang(l){ document.documentElement.lang=l; applyLangEl(); langBtn.textContent=(l==='en')?'FR':'EN'; try{localStorage.setItem('bimflow_lang',l);}catch(e){} }
+function applyTheme(t){ document.documentElement.setAttribute('data-theme',t); themeBtn.textContent=(t==='dark')?'☀':'☾'; try{localStorage.setItem('bimflow_theme',t);}catch(e){} }
+langBtn.onclick=()=>applyLang(document.documentElement.lang==='en'?'fr':'en');
+themeBtn.onclick=()=>applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');
+(()=>{ let l='fr',t='dark'; try{l=localStorage.getItem('bimflow_lang')||'fr'; t=localStorage.getItem('bimflow_theme')||'dark';}catch(e){} applyTheme(t); if(l==='en')applyLang('en'); else langBtn.textContent='EN'; })();
+
+/* ══ INIT ══ */
+loadAll();
+</script>
+</body>
+</html>
