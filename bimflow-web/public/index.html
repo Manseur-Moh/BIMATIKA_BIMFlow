@@ -368,8 +368,6 @@
           <div id="legend" class="legend"></div>
           <div id="minimap"><div id="minimap-lbl">Vue d'ensemble</div><svg id="minimapSvg"></svg></div>
           <div class="zoom-wrap">
-            <button class="zbtn" id="zIn">+</button>
-            <button class="zbtn" id="zOut">−</button>
             <button class="zbtn" id="zReset" title="Ajuster">⌖</button>
           </div>
           <div style="position:absolute;left:12px;bottom:12px;font-size:11px;color:#475569;background:rgba(13,21,38,.7);padding:4px 8px;border-radius:5px;pointer-events:none">Clic molette / clic droit + glisser · Molette pour zoomer</div>
@@ -623,7 +621,7 @@ function setupPanZoom(svg){
     if(!isPan)return;
     panX=e.clientX-panStart.x; panY=e.clientY-panStart.y; applyTx($('mainSvg'));
   });
-  $('zIn').onclick=()=>zoomAt(1.2); $('zOut').onclick=()=>zoomAt(1/1.2); $('zReset').onclick=()=>resetView(null);
+  $('zReset').onclick=()=>resetView(null);
 }
 
 /* ═══ SELECTION (multi) ═══ */
@@ -1325,6 +1323,7 @@ function applyLang(l){
   document.querySelectorAll('[data-en]').forEach(el=>{ if(el._fr===undefined) el._fr=el.innerHTML; el.innerHTML=(l==='en')?el.getAttribute('data-en'):el._fr; });
   document.querySelectorAll('[data-en-ph]').forEach(el=>{ if(el._frph===undefined) el._frph=el.getAttribute('placeholder')||''; el.setAttribute('placeholder',(l==='en')?el.getAttribute('data-en-ph'):el._frph); });
   langBtn.textContent=(l==='en')?'FR':'EN';
+  document.title=l==='en'?'BIMFlow — Plan Viewer':'BIMFlow — Visionneuse de Plans';
   try{ localStorage.setItem('bimflow_lang',l); }catch(e){}
 }
 function applyTheme(t){

@@ -541,7 +541,7 @@ $('rSrch').oninput=buildRList;
 function roomClick(id,add,pk){
   palV='';
   if(pk&&pk!==currentPlanKey){
-    loadPlan(pk).then(()=>{if(!add)selIds.clear();selIds.add(id);afterSel(id);});
+    loadPlan(pk).then(()=>{if(!add)selIds.clear();selIds.add(id);afterSel(id,!add);});
     return;
   }
   if(add){if(selIds.has(id))selIds.delete(id);else selIds.add(id);}
@@ -1015,7 +1015,7 @@ async function doExcel(mode){
 }
 
 /* ════ LANG + THEME ════ */
-function applyLang(l){document.documentElement.lang=l;$('langBtn').textContent=(l==='en')?'FR':'EN';try{localStorage.setItem('bfl',l);}catch(e){}}
+function applyLang(l){document.documentElement.lang=l;$('langBtn').textContent=(l==='en')?'FR':'EN';document.title=l==='en'?'BIMFlow — Room Data Sheets':'BIMFlow — Fiches de Locaux';try{localStorage.setItem('bfl',l);}catch(e){}}
 function applyTheme(t){document.documentElement.setAttribute('data-theme',t);$('themeBtn').textContent=(t==='dark')?'☀':'☾';try{localStorage.setItem('bft',t);}catch(e){}}
 $('langBtn').onclick=()=>applyLang(document.documentElement.lang==='en'?'fr':'en');
 $('themeBtn').onclick=()=>applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');

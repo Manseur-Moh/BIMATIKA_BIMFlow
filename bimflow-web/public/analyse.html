@@ -283,8 +283,6 @@ table.boq tfoot tr:last-child td{font-weight:600;color:var(--c-text3)}
       <div class="grad-lbls"><span id="legMin">0</span><span id="legMax">0</span></div>
     </div>
     <div class="zoom-wrap">
-      <button class="zbtn" id="zIn">+</button>
-      <button class="zbtn" id="zOut">−</button>
       <button class="zbtn" id="zReset" title="Ajuster">⌖</button>
     </div>
   </div>
@@ -890,7 +888,7 @@ function setupPanZoom(){
   window.addEventListener('mouseup',()=>isPan=false);
   window.addEventListener('mousemove',e=>{if(!isPan)return;panX=e.clientX-pStart.x;panY=e.clientY-pStart.y;applyTx();});
 }
-$('zIn').onclick=()=>zoomAt(1.2);$('zOut').onclick=()=>zoomAt(1/1.2);$('zReset').onclick=resetView;
+$('zReset').onclick=resetView;
 
 /* ════════ PANEL COLLAPSE + RESIZE ════════ */
 function setupPanels(){
@@ -1106,6 +1104,7 @@ function applyLang(l){
   document.documentElement.lang=l;
   document.querySelectorAll('[data-en]').forEach(el=>{if(el._fr===undefined)el._fr=el.innerHTML;el.innerHTML=(l==='en')?el.getAttribute('data-en'):el._fr;});
   $('langBtn').textContent=(l==='en')?'FR':'EN';
+  document.title=l==='en'?'BIMFlow — Analysis & Costs':'BIMFlow — Analyse & Coûts';
   try{localStorage.setItem('bimflow_lang',l);}catch(e){}
 }
 function applyTheme(t){
