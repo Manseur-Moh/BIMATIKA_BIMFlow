@@ -995,13 +995,19 @@ async function exportXLSX(){
       if(dashFinFilter>=0&&dashFinFilter!==fi)return;
       const qtyByVal={},costByVal={};
       let finTotal=0,finQty=0;
+      const ign=f.ignored||[];
       computed.forEach(x=>{
         const fc=x.c.fin[fi];if(!fc)return;
-        const val=f.param?String((x.room.Parameters||{})[f.param]||'(vide)'):'';
+        const rawVal=f.param?String((x.room.Parameters||{})[f.param]||''):'';
+        // Skip empty param values and explicitly ignored values
+        if(f.param&&(rawVal===''||ign.includes(rawVal)))return;
+        const val=rawVal||'';
         qtyByVal[val]=(qtyByVal[val]||0)+fc.qty;
         costByVal[val]=(costByVal[val]||0)+fc.cost;
         finTotal+=fc.cost;finQty+=fc.qty;
       });
+      // Skip entire section if total is 0
+      if(finTotal===0)return;
       grandTotal+=finTotal;
       const bg=FIN_BG[fi%FIN_BG.length],lt=FIN_LT[fi%FIN_LT.length];
 
@@ -1014,15 +1020,18 @@ async function exportXLSX(){
       sr.getCell(2).alignment={horizontal:'left'};
       sr.getCell(7).alignment={horizontal:'right'};sr.getCell(7).numFmt='#,##0';
 
-      // Detail rows
-      const entries=Object.entries(qtyByVal);
-      entries.forEach(([val,qty],vi)=>{
+      // Detail rows — skip zero-cost entries
+      const entries=Object.entries(qtyByVal).filter(([,qty])=>costByVal[qty]!==undefined||true);
+      let rowNum=0;
+      entries.forEach(([val,qty])=>{
         const cost=costByVal[val]||0;
+        if(cost===0)return; // skip 0-cost rows
+        rowNum++;
         const prices=f.prices||{};
         const pu=prices[val]!=null?prices[val]:(prices['']||0);
         const unit=f.formula==='area'?'m²':(f.formula.includes('perim')?'m²':'—');
-        const label=f.param&&val&&val!=='(vide)'?val:(entries.length===1?'Forfait':val||'(vide)');
-        const dr=ws.addRow([vi+1,f.name,label,+qty.toFixed(2),unit,+pu.toFixed(2),+cost.toFixed(0)]);
+        const label=f.param&&val?val:(entries.length===1?'Forfait':'Global');
+        const dr=ws.addRow([rowNum,f.name,label,+qty.toFixed(2),unit,+pu.toFixed(2),+cost.toFixed(0)]);
         dr.height=16;
         dr.eachCell({includeEmpty:true},c=>{c.fill=solidFill(lt);c.border={bottom:{style:'thin',color:{argb:'FFCBD5E1'}}};});
         dr.getCell(2).alignment={horizontal:'left'};dr.getCell(3).alignment={horizontal:'left'};
@@ -1074,11 +1083,15 @@ async function exportXLSX(){
     const hdr2=ws2.addRow(col2.map(c=>c.header));
     hdr2.height=18;hdr2.eachCell(c=>{c.font={bold:true,color:{argb:'FFFFFFFF'}};c.fill=solidFill(BLUE);c.alignment={horizontal:'center'};});
     hdr2.getCell(1).alignment={horizontal:'left'};hdr2.getCell(3).alignment={horizontal:'left'};
-    computed.forEach((x,xi)=>{
+    let altRow=0;
+    computed.forEach(x=>{
+      // Skip rooms with zero total cost (all finishes ignored/empty for this room)
+      if(x.c.total===0)return;
       const lvl=plans[x.planKey]?.LevelName||'';
       const dr=ws2.addRow([lvl,x.room.Number||'',x.room.Name||'',+x.c.area.toFixed(1),
-        ...x.c.fin.map(f=>+f.cost.toFixed(0)),+x.c.total.toFixed(0)]);
-      if(xi%2===0)dr.eachCell({includeEmpty:true},c=>c.fill=solidFill('FFF8FAFC'));
+        ...x.c.fin.map(f=>f.cost>0?+f.cost.toFixed(0):''),+x.c.total.toFixed(0)]);
+      if(altRow%2===0)dr.eachCell({includeEmpty:true},c=>c.fill=solidFill('FFF8FAFC'));
+      altRow++;
       dr.getCell(4).numFmt='#,##0.0';
       for(let ci=5;ci<=4+finishes.length+1;ci++){dr.getCell(ci).numFmt='#,##0';dr.getCell(ci).alignment={horizontal:'right'};}
     });
@@ -1110,7 +1123,7 @@ $('curSel2').addEventListener('change',recompute);
 $('convRate').addEventListener('input',recompute);
 $('btnExport').addEventListener('click',exportXLSX);
 $('btnReset').addEventListener('click',()=>{
-  finishes=DEFAULT_FINISHES.map(f=>({...f,prices:{...f.prices}}));
+  finishes=DEFAULT_FINISHES.map(f=>({...f,prices:{...f.prices},ignored:[...f.ignored]}));
   activeFinIdx=0;activeFilterVal='';dashFinFilter=-1;wallH.value=2.8;
   buildFinishEditor();buildFinTabs();buildFilterChips();buildDashFinBtns();recompute();
 });
