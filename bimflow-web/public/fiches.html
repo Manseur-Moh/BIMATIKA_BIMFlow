@@ -472,7 +472,9 @@ function vis(){
     return true;
   });
 }
-/* Filtered but across all levels (palette + room list + export) */
+/* All rooms matching ALL 3 filters (for export "filtered") */
+function allVis(){return allRooms.filter(r=>isVis(r));}
+/* Filtered but across all levels (palette + room list) */
 function allF(){
   return allRooms.filter(r=>{
     if(fPh&&findP(r,'phase')!==fPh)return false;
@@ -569,11 +571,28 @@ function afterSel(id,panTo){
 /* Click outside rooms → deselect + auto-center */
 $('v2d').addEventListener('click',e=>{
   if(e.target.classList.contains('bfr'))return;
-  if(selIds.size){selIds.clear();palV='';buildVL();buildRList();paintRooms();renderFiche();updSel();if(R3.ready)recolor3D();autoCenter();}
+  if(selIds.size){selIds.clear();palV='';buildVL();buildRList();paintRooms();renderFiche();updSel();if(R3.ready){recolor3D();fitToCurrentView();}autoCenter();}
 });
-$('selClr').onclick=()=>{selIds.clear();palV='';palP='';$('palP').value='';buildVL();buildRList();paintRooms();renderFiche();updSel();if(R3.ready)recolor3D();autoCenter();};
+$('selClr').onclick=()=>{selIds.clear();palV='';palP='';$('palP').value='';buildVL();buildRList();paintRooms();renderFiche();updSel();if(R3.ready){recolor3D();fitToCurrentView();}autoCenter();};
 
-function autoCenter(){resetView();if(R3.ready)fit3D();}
+function autoCenter(){resetView();if(R3.ready)fitToCurrentView();}
+
+/* Fit 3D to the current view mode: level or all project */
+function fitToCurrentView(){
+  if(!R3.ready)return;
+  const lvlBtn=document.querySelector('.m3btn.on');
+  if(lvlBtn&&lvlBtn.dataset.v==='level')fitToLevel();else fit3D();
+}
+function fitToLevel(){
+  if(!R3.ready||!plan)return;
+  const lvIds=new Set((plan.Rooms||[]).map(r=>r.RevitId));
+  const box=new THREE.Box3();
+  Object.entries(R3.meshes).forEach(([id,mesh])=>{if(lvIds.has(id))box.expandByObject(mesh);});
+  if(box.isEmpty()){fit3D();return;}
+  const c=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3());const d=Math.max(s.x,s.y,s.z,5);
+  R3.oc.target.copy(c);R3.c.position.set(c.x+d*.8,c.y+d*1.0,c.z+d*.8);
+  R3.c.near=Math.max(.05,d/2000);R3.c.far=d*200;R3.c.updateProjectionMatrix();R3.oc.update();
+}
 
 function updSel(){
   const n=selIds.size;
@@ -729,7 +748,7 @@ function init3D(){
     const hits=ray.intersectObjects(R3.g.children,true);
     let o=hits[0]&&hits[0].object;while(o&&!o.userData.id)o=o.parent;
     if(o&&o.userData.id){roomClick(o.userData.id,false,o.userData.pk);}
-    else{if(selIds.size){selIds.clear();palV='';buildVL();buildRList();paintRooms();renderFiche();updSel();fit3D();}}
+    else{if(selIds.size){selIds.clear();palV='';buildVL();buildRList();paintRooms();renderFiche();updSel();recolor3D();fitToCurrentView();}}
   };
 }
 
@@ -781,23 +800,35 @@ function focus3D(){
   R3.c.near=Math.max(.05,d/2000);R3.c.far=d*500;R3.c.updateProjectionMatrix();R3.oc.update();
 }
 
-/* Recolor 3D based on selection/filter */
+/* Recolor 3D — high-contrast shading on selection */
 function recolor3D(){
   if(!R3.ready)return;
   const hasSel=selIds.size>0;
   Object.entries(R3.meshes).forEach(([id,mesh])=>{
     const room=allRooms.find(r=>r.RevitId===id);if(!mesh||!room)return;
     const v=isVis(room),s=selIds.has(id);
-    if(!v){mesh.material.color.setHex(0x0c1526);mesh.material.opacity=.04;}
-    else if(s){mesh.material.color.setHex(0x38bdf8);mesh.material.opacity=.9;}
-    else if(hasSel){mesh.material.color.setHex(0x0f1e36);mesh.material.opacity=.12;}
-    else{mesh.material.color.setHex(0x3b82f6);mesh.material.opacity=.75;}
+    /* depthWrite off when transparent to avoid z-fight */
+    if(!v){
+      mesh.material.color.setHex(0x040810);mesh.material.opacity=.03;
+      mesh.material.depthWrite=false;
+    } else if(s){
+      mesh.material.color.setHex(0x38bdf8);mesh.material.opacity=1;
+      mesh.material.depthWrite=true;
+    } else if(hasSel){
+      /* shaded: almost invisible dark blue */
+      mesh.material.color.setHex(0x060c1e);mesh.material.opacity=.06;
+      mesh.material.depthWrite=false;
+    } else {
+      mesh.material.color.setHex(0x3b82f6);mesh.material.opacity=.78;
+      mesh.material.depthWrite=true;
+    }
   });
 }
 
-$('fit3Btn').onclick=()=>{if(selIds.size)focus3D();else fit3D();};
+$('fit3Btn').onclick=()=>{if(selIds.size)focus3D();else fitToCurrentView();};
 $('m3bar').onclick=e=>{const b=e.target.closest('.m3btn');if(!b)return;[...$('m3bar').children].forEach(x=>x.classList.toggle('on',x===b));buildAll3D();};
 
+const _today=new Date().toLocaleDateString('fr-FR');
 /* ════ FICHE HTML (pure function) ════ */
 function ficheH(room){
   const num=room.Number||'',name=room.Name||'—';
@@ -828,7 +859,7 @@ function ficheH(room){
     </div>
     <div class="fa-id">${num?`<div class="fa-num">${esc(num)}</div>`:''}<div class="fa-name">${esc(name)}</div>${!isNaN(area)?`<div class="fa-area">${area.toFixed(2)}<span> m²</span></div>`:''}</div>
     ${secs}
-    <div class="fa-foot"><span>BIMFlow · bimatika-bimplan.pages.dev</span><span>${new Date().toLocaleDateString('fr-FR')}</span></div>
+    <div class="fa-foot"><span>BIMFlow · bimatika-bimplan.pages.dev</span><span>${_today}</span></div>
   </div>`;
 }
 
@@ -882,7 +913,7 @@ function renderMulti(rooms){
         <td style="padding:5px 8px;text-align:right">${ta.toFixed(2)} m²</td>
       </tr></tfoot>
     </table>
-    <div class="fa-foot"><span>Cliquez une ligne → fiche individuelle</span><span>${new Date().toLocaleDateString('fr-FR')}</span></div>
+    <div class="fa-foot"><span>Cliquez une ligne → fiche individuelle</span><span>${_today}</span></div>
   </div>`;
 }
 
@@ -908,7 +939,7 @@ document.addEventListener('click',()=>$('edWrap').classList.remove('open'));
 
 /* ════ EXPORT CSV (instant, no library) ════ */
 function exportCSV(allMode){
-  const rooms=allMode?allRooms:allF();
+  const rooms=allMode?allRooms:allVis();
   if(!rooms.length){alert('Aucune pièce à exporter.');return;}
   setSt('Génération CSV…','load');
 
@@ -934,20 +965,36 @@ function exportCSV(allMode){
   setSt(`${rooms.length} pièces exportées`,'ok');
 }
 
-/* ════ EXPORT PDF — print all in hidden div ════ */
+/* ════ EXPORT PDF — non-blocking, print-all mode ════ */
+/* _today declared before ficheH — see above */
+
 function exportPDF(allMode){
-  const rooms=allMode?allRooms:allF();
+  const rooms=allMode?allRooms:allVis();
   if(!rooms.length){alert('Aucune pièce à exporter.');return;}
-  setSt('Préparation PDF…','load');
-  $('printAll').innerHTML=rooms.map(r=>ficheH(r)).join('');
-  document.body.setAttribute('data-pa','1');
-  window.print();
-  /* Restore after print dialog closes */
-  setTimeout(()=>{
-    document.body.removeAttribute('data-pa');
-    $('printAll').innerHTML='';
-    setSt(`${rooms.length} fiches imprimées`,'ok');
-  },500);
+  $('edWrap').classList.remove('open');
+  setSt(`PDF : génération ${rooms.length} fiches…`,'load');
+
+  /* Build HTML in chunks via setTimeout to stay non-blocking */
+  const CHUNK=20;let i=0;const parts=[];
+  function nextChunk(){
+    const end=Math.min(i+CHUNK,rooms.length);
+    for(;i<end;i++)parts.push(ficheH(rooms[i]));
+    setSt(`PDF : ${i}/${rooms.length}…`,'load');
+    if(i<rooms.length){setTimeout(nextChunk,0);}
+    else{
+      $('printAll').innerHTML=parts.join('');
+      document.body.setAttribute('data-pa','1');
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        window.print();
+        setTimeout(()=>{
+          document.body.removeAttribute('data-pa');
+          $('printAll').innerHTML='';
+          setSt(`${rooms.length} fiches imprimées`,'ok');
+        },800);
+      }));
+    }
+  }
+  nextChunk();
 }
 
 /* ════ LANG + THEME ════ */
