@@ -104,7 +104,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
 /* 3D */
 #v3d{flex-shrink:0;position:relative;background:#060e1f;overflow:hidden;min-height:60px}
 #c3d{display:block;width:100%;height:100%}
-.zbx3{position:absolute;top:8px;left:10px;z-index:10}
+.zbx3{position:absolute;top:10px;right:10px;z-index:10}
 .h3d{position:absolute;left:10px;bottom:8px;font-size:10px;color:#475569;background:rgba(13,21,38,.7);padding:3px 7px;border-radius:4px;pointer-events:none}
 /* View modes: hide/show 2D or 3D — vmBar stays always visible */
 .vm2 #v3d,.vm2 .hspl{display:none}
@@ -293,8 +293,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
         <p>Envoyez un plan depuis Revit</p>
       </div>
       <div class="zbx">
-        <button class="zb" id="zIn">+</button>
-        <button class="zb" id="zOut">−</button>
         <button class="zb" id="zFit">⌖</button>
       </div>
     </div>
@@ -321,7 +319,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
             <div style="padding:4px 12px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid #1f2937">Imprimer (PDF)</div>
             <div class="ei" onclick="doPrint('sel')"><b>🖨 Sélection</b><small>Fiches des pièces sélectionnées</small></div>
             <div class="ei" onclick="doPrint('all')"><b>🖨 Tout le projet</b><small>Toutes les fiches A4</small></div>
-            <div style="padding:4px 12px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid #1f2937;border-top:1px solid #1f2937">Excel (CSV)</div>
+            <div style="padding:4px 12px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid #1f2937;border-top:1px solid #1f2937">Excel</div>
             <div class="ei" onclick="doExcel('sel')"><b>📊 Sélection</b><small>Pièces sélectionnées</small></div>
             <div class="ei" onclick="doExcel('all')"><b>📊 Tout le projet</b><small>Toutes les pièces</small></div>
           </div>
@@ -638,7 +636,7 @@ function setupPZ(svg){
   wr.addEventListener('contextmenu',e=>e.preventDefault());
   window.addEventListener('mouseup',()=>{if(panning){panning=false;$('v2d').style.cursor='';}});
   window.addEventListener('mousemove',e=>{if(!panning)return;panX=e.clientX-panStart.x;panY=e.clientY-panStart.y;applyTx($('mainSvg'));});
-  $('zIn').onclick=()=>zoomAt(1.2);$('zOut').onclick=()=>zoomAt(1/1.2);$('zFit').onclick=resetView;
+  $('zFit').onclick=resetView;
 }
 
 /* ════ VIEW MODE TOGGLE ════ */
@@ -937,7 +935,7 @@ function doPrint(mode){
   next();
 }
 
-/* ════ EXCEL — une fiche par onglet, format A4 ════ */
+/* ════ EXCEL — une feuille, fiches empilées avec fusions de cellules ════ */
 let _xlP=null;
 function loadXLSX(){
   if(window.XLSX)return Promise.resolve();
@@ -959,38 +957,59 @@ async function doExcel(mode){
   try{await loadXLSX();}catch(e){alert('Bibliothèque Excel indisponible (vérifiez la connexion).');setSt('Erreur','err');return;}
   setSt(`Excel : ${rooms.length} fiches…`,'load');
 
-  const wb=XLSX.utils.book_new();
-  rooms.forEach((r,idx)=>{
-    const rows=[];
-    /* En-tête fiche */
-    rows.push(['FICHE DE LOCAL','','','']);
-    rows.push(['BIMFlow — bimatika-bimplan.pages.dev','','Date :',_today]);
-    rows.push(['','','','']);
-    /* Identification rapide */
-    rows.push(['Numéro',r.Number||'—','Nom',r.Name||'—']);
-    rows.push(['Niveau',r._lv||r.LevelName||'—','Projet',r._proj||'—']);
-    rows.push(['Phase',findP(r,'phase')||'—','Usage',findP(r,'usage','occupation','type','fonction','function')||'—']);
-    rows.push(['','','','']);
-    /* Sections schema */
+  const aoa=[],mg=[],pb=[];
+  let ri=0;
+  /* push row, return row index before push */
+  const row=(...cells)=>{aoa.push(cells);return ri++;};
+  /* add merge: current ri → columns c1:c2 */
+  const mrg=(c1,c2)=>mg.push({s:{r:ri,c:c1},e:{r:ri,c:c2}});
+
+  rooms.forEach((rm,idx)=>{
+    if(idx>0)pb.push(ri); /* page break before this room */
+
+    const num=rm.Number||'—', name=rm.Name||'—';
+    const lvl=rm._lv||rm.LevelName||'—', proj=rm._proj||'—';
+    const phase=findP(rm,'phase')||'—';
+    const usage=findP(rm,'usage','occupation','type','fonction','function')||'—';
+    const area=parseFloat(findP(rm,'surface','area','aire'));
+
+    /* ─ Titre (A:D fusionné) ─ */
+    mrg(0,3); row('FICHE DE LOCAL','','','');
+    /* ─ Marque + date (A:B fusionné) ─ */
+    mrg(0,1); row('BIMATIKA — BIMFlow Platform','','Date :',_today);
+    row('','','','');
+
+    /* ─ Identification ─ */
+    row('Numéro',num,'Nom',name);
+    row('Niveau',lvl,'Projet',proj);
+    row('Phase',phase,'Usage',usage);
+    if(!isNaN(area)) row('Surface nette',area.toFixed(2)+' m²','','');
+    row('','','','');
+
+    /* ─ Sections du schéma ─ */
     SCHEMA.forEach(sec=>{
-      rows.push([sec.g,'','','']);
+      mrg(0,3); row(sec.g,'','',''); /* en-tête section A:D fusionné */
       sec.f.forEach(field=>{
-        const v=schV(r,field);
-        rows.push(['',field.l,v||'—',field.u||'']);
+        const v=schV(rm,field)||'—';
+        row('',field.l,v,field.u||'');
       });
-      rows.push(['','','','']);
+      row('','','','');
     });
 
-    const ws=XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols']=[{wch:4},{wch:26},{wch:28},{wch:12}];
-    /* A4 portrait pour impression directe depuis Excel */
-    ws['!pageSetup']={paperSize:9,orientation:'portrait',fitToPage:true,fitToWidth:1,fitToHeight:0};
-    ws['!margins']={left:.5,right:.5,top:.75,bottom:.75,header:.3,footer:.3};
-
-    const nm=`${r.Number||''}${r.Number&&r.Name?' ':''}${r.Name||'Local'}`.replace(/[:\\\/\?\*\[\]]/g,'').substring(0,31).trim()||`Local-${idx+1}`;
-    XLSX.utils.book_append_sheet(wb,ws,nm);
+    /* ─ Pied de fiche ─ */
+    mrg(0,2); row('BIMFlow · bimatika-bimplan.pages.dev','','',_today);
+    row('','','','');
+    row('','','','');
   });
 
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!merges']=mg;
+  ws['!cols']=[{wch:18},{wch:24},{wch:26},{wch:10}];
+  ws['!pageSetup']={paperSize:9,orientation:'portrait',fitToPage:true,fitToWidth:1,fitToHeight:0};
+  ws['!margins']={left:.5,right:.5,top:.75,bottom:.75,header:.3,footer:.3};
+  if(pb.length)ws['!rowBreaks']=pb;
+  XLSX.utils.book_append_sheet(wb,ws,'Fiches');
   XLSX.writeFile(wb,`BIMFlow_Fiches_${mode==='sel'?'Selection':'Projet'}_${new Date().toISOString().slice(0,10)}.xlsx`);
   setSt(`${rooms.length} fiches exportées`,'ok');
 }
