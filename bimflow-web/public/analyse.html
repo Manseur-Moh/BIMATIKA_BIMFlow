@@ -44,19 +44,26 @@
   .btn:hover{background:#2563eb}
   .btn.ghost{background:transparent;border:1px solid #334155;color:#94a3b8}
   .btn.ghost:hover{background:#1f2937;color:#e2e8f0}
-  /* finish editor */
-  .fin-block{border:1px solid #1f2937;border-radius:6px;padding:6px;margin-bottom:7px;background:#0f172a}
-  .fin-top{display:flex;align-items:center;gap:5px;margin-bottom:4px}
-  .fin-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
-  .fin-name{flex:1;background:#0b1424;color:#e2e8f0;border:1px solid #374151;border-radius:4px;padding:3px 6px;font-size:12px;font-weight:600;outline:none;min-width:0}
-  .fin-name:focus{border-color:#3b82f6}
-  .fin-row{display:flex;align-items:center;gap:5px;margin-top:3px}
-  .fin-row label{font-size:10px;color:#64748b;width:46px;flex-shrink:0}
-  .fin-formula{flex:1;background:#0b1424;color:#7dd3fc;border:1px solid #374151;border-radius:4px;padding:3px 6px;font-size:11px;font-family:ui-monospace,Menlo,Consolas,monospace;outline:none;min-width:0}
+  /* ── finish cards (new param-based editor) ── */
+  .fin-card{border:1px solid #1e2b45;border-radius:8px;margin-bottom:10px;overflow:hidden;background:#0b1322}
+  .fin-header{display:flex;align-items:center;gap:7px;padding:7px 9px;background:#111c33;border-bottom:1px solid #1e2b45}
+  .fin-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+  .fin-name{flex:1;background:transparent;color:#f1f5f9;border:none;font-size:13px;font-weight:700;outline:none;min-width:0}
+  .fin-name:focus{color:#38bdf8}
+  .fin-fields{padding:8px;display:flex;flex-direction:column;gap:6px}
+  .fin-field-row{display:flex;flex-direction:column;gap:3px}
+  .fin-field-row > label{font-size:10px;color:#475569;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  .fin-formula{width:100%;background:#0b1424;color:#7dd3fc;border:1px solid #374151;border-radius:4px;padding:4px 7px;font-size:11px;font-family:ui-monospace,Menlo,Consolas,monospace;outline:none}
   .fin-formula:focus{border-color:#3b82f6}
   .fin-formula.bad{border-color:#ef4444;color:#fca5a5}
-  .fin-price{width:64px;flex-shrink:0;background:#0b1424;color:#e2e8f0;border:1px solid #374151;border-radius:4px;padding:3px 6px;font-size:11px;text-align:right;outline:none}
-  .fin-price:focus{border-color:#3b82f6}
+  .fin-prices-box{background:#0d1526;border-radius:5px;padding:6px;border:1px solid #1e2b45}
+  .fin-prices-hd{font-size:10px;color:#475569;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+  .fin-val-row{display:flex;align-items:center;gap:5px;margin-bottom:4px}
+  .fin-val-tag{flex:1;font-size:11px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 6px;background:#111827;border-radius:3px;border:1px solid #1f2937;min-width:0}
+  .fin-val-tag.empty{color:#475569;font-style:italic}
+  .fin-val-price{width:60px;flex-shrink:0;background:#0b1424;color:#e2e8f0;border:1px solid #374151;border-radius:4px;padding:3px 5px;font-size:11px;text-align:right;outline:none}
+  .fin-val-price:focus{border-color:#3b82f6}
+  .fin-unit{font-size:10px;color:#475569;flex-shrink:0;width:28px}
 
   /* SYNOPTIC */
   .synoptic{flex:1;position:relative;overflow:hidden;background:#060e1f;cursor:grab;min-width:280px}
@@ -136,6 +143,7 @@
   <div class="nav">
     <a href="/">🗺 Plans</a>
     <a href="/analyse.html" class="active">📊 Analyse</a>
+    <a href="/parametres.html">🔧 Paramètres</a>
   </div>
   <div class="tb-ctrl">
     <label>Niveau</label>
@@ -158,9 +166,9 @@
   <!-- SETTINGS -->
   <div class="settings">
     <div class="set-group">
-      <div class="set-hd">🧱 Finitions — formules</div>
+      <div class="set-hd">🧱 Finitions</div>
       <div id="finishEditor"></div>
-      <div class="set-row"><span class="unit">Variables : <b>area</b> (m²), <b>perim</b> (m), <b>height</b> (m). Le total = quantité × P.U.</span></div>
+      <div class="set-row" style="margin-top:4px"><span class="unit">Formules : <b>area</b> m², <b>perim</b> m, <b>height</b> m — Choisissez un paramètre Revit pour des prix par valeur</span></div>
     </div>
 
     <div class="set-group">
@@ -291,14 +299,20 @@ let sortKey='total', sortDir=-1, selRoomId=null;
 
 const FIN_COLORS=['#3b82f6','#a855f7','#f59e0b','#10b981','#ef4444'];
 const DEFAULT_FINISHES=[
-  {name:'Sol',     formula:'area',           price:45},
-  {name:'Plafond', formula:'area',           price:30},
-  {name:'Murs',    formula:'perim * height', price:25},
+  {name:'Sol',     formula:'area',           param:'', prices:{'':45}},
+  {name:'Plafond', formula:'area',           param:'', prices:{'':30}},
+  {name:'Murs',    formula:'perim * height', param:'', prices:{'':25}},
 ];
 let finishes = loadFinishes();
 function loadFinishes(){
-  try{ const a=JSON.parse(localStorage.getItem('bimflow_finishes')); if(Array.isArray(a)&&a.length) return a; }catch(e){}
-  return DEFAULT_FINISHES.map(f=>({...f}));
+  try{
+    const a=JSON.parse(localStorage.getItem('bimflow_finishes'));
+    if(Array.isArray(a)&&a.length) return a.map(f=>({
+      name:f.name||'', formula:f.formula||'area', param:f.param||'',
+      prices: f.prices || {'': +(f.price)||0}
+    }));
+  }catch(e){}
+  return DEFAULT_FINISHES.map(f=>({...f, prices:{...f.prices}}));
 }
 function saveRates(){
   localStorage.setItem('bimflow_finishes',JSON.stringify(finishes));
@@ -314,6 +328,20 @@ function applySavedRates(){
 const curSel=$('curSel'), wallH=$('wallH');
 function finColor(i){ return FIN_COLORS[i%FIN_COLORS.length]; }
 
+/* ── helpers : all parameter names / distinct values from loaded plans ── */
+function allParamNames(){
+  const s=new Set();
+  Object.values(plans).forEach(pl=>(pl.Rooms||[]).forEach(r=>Object.keys(r.Parameters||{}).forEach(k=>s.add(k))));
+  return [...s].sort((a,b)=>a.localeCompare(b));
+}
+function getParamValues(paramName){
+  const s=new Set();
+  Object.values(plans).forEach(pl=>(pl.Rooms||[]).forEach(r=>{
+    const v=(r.Parameters||{})[paramName]; s.add(v!=null&&v!==''?String(v):'');
+  }));
+  return [...s].sort((a,b)=>{ if(!a)return 1; if(!b)return -1; return a.localeCompare(b); });
+}
+
 /* ── formula evaluator — variables: area, perim, height ── */
 function evalFormula(expr,vars){
   if(!/^[0-9a-zA-Z_+\-*/().,\s]*$/.test(expr||'')) return NaN;
@@ -324,23 +352,88 @@ function evalFormula(expr,vars){
   }catch(e){ return NaN; }
 }
 
-/* ── finish editor (name + quantity formula + unit price, all editable) ── */
+/* ── finish editor : param selector + per-value price grid ── */
 function buildFinishEditor(){
   const box=$('finishEditor'); box.innerHTML='';
+  const params=allParamNames();
+
   finishes.forEach((f,i)=>{
-    const b=document.createElement('div'); b.className='fin-block';
-    b.innerHTML=
-      `<div class="fin-top"><span class="fin-dot" style="background:${finColor(i)}"></span>`+
-      `<input class="fin-name" data-i="${i}" data-f="name" value="${(f.name||'').replace(/"/g,'&quot;')}"/></div>`+
-      `<div class="fin-row"><label>Quantité</label><input class="fin-formula" data-i="${i}" data-f="formula" value="${(f.formula||'').replace(/"/g,'&quot;')}"/></div>`+
-      `<div class="fin-row"><label>P.U.</label><input class="fin-price" type="number" min="0" step="0.01" data-i="${i}" data-f="price" value="${f.price}"/></div>`;
-    box.appendChild(b);
+    const card=document.createElement('div'); card.className='fin-card';
+
+    // param options
+    const paramOpts='<option value="">— Prix fixe —</option>'+
+      params.map(n=>`<option value="${n}"${n===f.param?' selected':''}>${n}</option>`).join('');
+
+    // price rows
+    let priceRows='';
+    if(f.param){
+      const vals=getParamValues(f.param);
+      priceRows=vals.map(v=>{
+        const p=(f.prices||{})[v]!=null?(f.prices||{})[v]:((f.prices||{})['']||0);
+        const lbl=v||'(non défini)';
+        return `<div class="fin-val-row">`+
+          `<span class="fin-val-tag${v?'':' empty'}" title="${v}">${lbl}</span>`+
+          `<input class="fin-val-price" type="number" min="0" step="0.01" data-i="${i}" data-v="${v.replace(/"/g,'&quot;')}" value="${p}"/>`+
+          `<span class="fin-unit">${curSel.value}/m²</span>`+
+          `</div>`;
+      }).join('');
+    } else {
+      const p=(f.prices||{})['']||0;
+      priceRows=`<div class="fin-val-row">`+
+        `<span class="fin-val-tag">Prix unitaire</span>`+
+        `<input class="fin-val-price" type="number" min="0" step="0.01" data-i="${i}" data-v="" value="${p}"/>`+
+        `<span class="fin-unit">${curSel.value}/m²</span>`+
+        `</div>`;
+    }
+
+    card.innerHTML=
+      `<div class="fin-header">`+
+        `<span class="fin-dot" style="background:${finColor(i)}"></span>`+
+        `<input class="fin-name" data-i="${i}" value="${(f.name||'').replace(/"/g,'&quot;')}"/>`+
+      `</div>`+
+      `<div class="fin-fields">`+
+        `<div class="fin-field-row">`+
+          `<label>Paramètre Revit</label>`+
+          `<select class="set-select fin-param-sel" style="font-size:11px" data-i="${i}">${paramOpts}</select>`+
+        `</div>`+
+        `<div class="fin-field-row">`+
+          `<label>Formule quantité</label>`+
+          `<input class="fin-formula" data-i="${i}" value="${(f.formula||'').replace(/"/g,'&quot;')}" placeholder="area, perim*height…"/>`+
+        `</div>`+
+        `<div class="fin-prices-box">`+
+          `<div class="fin-prices-hd">`+
+            `<span class="fin-dot" style="background:${finColor(i)};width:8px;height:8px"></span>`+
+            `${f.param?`Valeurs de « ${f.param} »`:'Prix'}`+
+          `</div>`+
+          priceRows+
+        `</div>`+
+      `</div>`;
+
+    box.appendChild(card);
   });
-  box.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{
-    const i=+inp.getAttribute('data-i'), fld=inp.getAttribute('data-f');
-    finishes[i][fld] = fld==='price' ? (+inp.value||0) : inp.value;
-    if(fld==='formula'){ const ok=isFinite(evalFormula(inp.value,{area:1,perim:1,height:1})); inp.classList.toggle('bad',!ok); }
+
+  // ── events ──
+  box.querySelectorAll('.fin-name').forEach(inp=>inp.addEventListener('input',()=>{
+    finishes[+inp.getAttribute('data-i')].name=inp.value;
     buildMetricOptions(); recompute();
+  }));
+  box.querySelectorAll('.fin-formula').forEach(inp=>inp.addEventListener('input',()=>{
+    const i=+inp.getAttribute('data-i'); finishes[i].formula=inp.value;
+    inp.classList.toggle('bad',!isFinite(evalFormula(inp.value,{area:1,perim:1,height:1})));
+    recompute();
+  }));
+  box.querySelectorAll('.fin-param-sel').forEach(sel=>sel.addEventListener('change',()=>{
+    const i=+sel.getAttribute('data-i'); finishes[i].param=sel.value;
+    // seed any new values with the fallback price
+    if(sel.value){ const fb=(finishes[i].prices||{})['']||0;
+      getParamValues(sel.value).forEach(v=>{ if(finishes[i].prices[v]==null) finishes[i].prices[v]=fb; }); }
+    buildFinishEditor(); recompute();
+  }));
+  box.querySelectorAll('.fin-val-price').forEach(inp=>inp.addEventListener('input',()=>{
+    const i=+inp.getAttribute('data-i'), v=inp.getAttribute('data-v');
+    if(!finishes[i].prices) finishes[i].prices={};
+    finishes[i].prices[v]=+inp.value||0;
+    recompute();
   }));
 }
 
@@ -433,7 +526,11 @@ function computeRoom(r){
   const fin=finishes.map(f=>{
     const q=evalFormula(f.formula,{area,perim,height});
     const qty=isFinite(q)?q:0;
-    return {name:f.name,qty,price:+f.price||0,cost:qty*(+f.price||0)};
+    // resolve price: param value → prices map → fallback ''
+    const paramVal=f.param?String((r.Parameters||{})[f.param]||''):'';
+    const prices=f.prices||{};
+    const price = prices[paramVal]!=null ? prices[paramVal] : (prices['']!=null ? prices[''] : 0);
+    return {name:f.name, qty, price, cost:qty*price, paramVal};
   });
   const total=fin.reduce((s,f)=>s+f.cost,0);
   return {area,perim,height,fin,total,perm2:area>0?total/area:0};
@@ -501,9 +598,13 @@ function renderBoQ(computed,total){
   const qtySum=finishes.map(()=>0), costSum=finishes.map(()=>0);
   computed.forEach(x=>x.c.fin.forEach((f,i)=>{ qtySum[i]+=f.qty; costSum[i]+=f.cost; }));
   $('boqScope').textContent=$('scopeSel').value==='all'?'tous niveaux':(curPlan?.LevelName||'');
-  $('boqBody').innerHTML=finishes.map((f,i)=>
-    `<tr data-fin="${i}" style="cursor:pointer"><td><span class="boq-sw" style="background:${finColor(i)}"></span>${f.name||('Finition '+(i+1))}</td>`+
-    `<td>${nf(qtySum[i],1)}</td><td>${nf(f.price)}</td><td>${nf(costSum[i])}</td></tr>`).join('');
+  $('boqBody').innerHTML=finishes.map((f,i)=>{
+    // weighted average P.U. = totalCost / totalQty
+    const pu = qtySum[i]>0 ? costSum[i]/qtySum[i] : ((f.prices&&f.prices[''])||0);
+    const puLabel = f.param ? `~${nf(pu)}` : nf((f.prices||{})['']||0);
+    return `<tr data-fin="${i}" style="cursor:pointer"><td><span class="boq-sw" style="background:${finColor(i)}"></span>${f.name||('Finition '+(i+1))}</td>`+
+      `<td>${nf(qtySum[i],1)}</td><td>${puLabel}</td><td>${nf(costSum[i])}</td></tr>`;
+  }).join('');
   $('boqTotal').textContent=money(total);
   const c2=$('curSel2').value;
   if(c2){ $('boqConvRow').style.display=''; $('boqConvLbl').textContent='≈ en '+c2+' (taux '+nf(+$('convRate').value,2)+')'; $('boqConv').textContent=moneyConv(total); }
@@ -664,12 +765,15 @@ function focusRoom(id){
 /* ════════ TOOLTIP ════════ */
 function showTip(e,r){
   const c=computeRoom(r), tip=$('synTip');
-  tip.innerHTML=`<div class="t-name">${r.Name||r.Number||r.RevitId}</div>`+
+  const finRows=c.fin.map(f=>{
+    const val=f.paramVal?` <span style="color:#38bdf8;font-style:italic">${f.paramVal}</span>`:'';
+    return `<div class="t-row">${f.name}${val} <b>${money(f.cost)}</b></div>`;
+  }).join('');
+  tip.innerHTML=
+    `<div class="t-name">${r.Name||r.Number||r.RevitId}</div>`+
     `<div class="t-row">Surface <b>${nf(c.area,1)} m²</b></div>`+
     `<div class="t-row">Périmètre <b>${nf(c.perim,1)} m</b></div>`+
-    `<div class="t-row">Sol <b>${money(c.floor)}</b></div>`+
-    `<div class="t-row">Plafond <b>${money(c.ceiling)}</b></div>`+
-    `<div class="t-row">Murs <b>${money(c.wall)}</b></div>`+
+    finRows+
     `<div class="t-row" style="margin-top:3px;border-top:1px solid #1f2937;padding-top:3px">Total <b style="color:#7dd3fc">${money(c.total)}</b></div>`;
   tip.style.display='block';
   let x=e.clientX+14, y=e.clientY+14;
