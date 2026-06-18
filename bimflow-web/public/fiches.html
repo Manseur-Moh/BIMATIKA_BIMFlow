@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>BIMFlow — Fiches de Local</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -16,634 +16,576 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
 .nav a{display:flex;align-items:center;padding:0 16px;font-size:13px;font-weight:600;color:#64748b;text-decoration:none;border-right:1px solid #1f2937}
 .nav a:hover{background:#1f2937;color:#e2e8f0}
 .nav a.active{color:#38bdf8;background:#0c1a2e;box-shadow:inset 0 -2px 0 #38bdf8}
-.topbar-right{display:flex;align-items:center;gap:8px;padding:0 16px;margin-left:auto}
-.tbtn{background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:6px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer}
+.tbr{display:flex;align-items:center;gap:8px;padding:0 14px;margin-left:auto}
+.tbtn{background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer}
 .tbtn:hover{background:#374151;color:#fff}
-.status-dot{width:7px;height:7px;border-radius:50%;background:#334155;flex-shrink:0}
-.status-dot.ok{background:#22c55e}.status-dot.err{background:#ef4444}.status-dot.loading{background:#f59e0b;animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.status-txt{font-size:12px;color:#64748b}
+.sdot{width:7px;height:7px;border-radius:50%;background:#334155}
+.sdot.ok{background:#22c55e}.sdot.err{background:#ef4444}.sdot.load{background:#f59e0b;animation:pl 1s infinite}
+@keyframes pl{0%,100%{opacity:1}50%{opacity:.3}}
+.stxt{font-size:12px;color:#64748b}
 
-/* ── APP LAYOUT ── */
+/* ── 3-COLUMN LAYOUT ── */
 #app{display:flex;flex:1;overflow:hidden;min-height:0}
 
-/* ── RESIZE HANDLES (column) ── */
-.rh{width:4px;flex-shrink:0;background:transparent;cursor:col-resize;position:relative;z-index:20;transition:background .15s}
+/* ── RESIZE HANDLES ── */
+.rh{width:5px;flex-shrink:0;cursor:col-resize;background:#111827;border-left:1px solid #1f2937;transition:background .12s}
 .rh:hover,.rh.drag{background:#3b82f6}
 
-/* ════ LEFT PANEL ════ */
-.left{min-width:160px;max-width:500px;flex-shrink:0;background:#0d1526;border-right:none;display:flex;flex-direction:column;overflow:hidden;position:relative}
+/* ════ LEFT — Filters + Palette ════ */
+#leftCol{flex:1;min-width:180px;max-width:520px;background:#0d1526;display:flex;flex-direction:column;overflow:hidden}
 .lsec{border-bottom:1px solid #1f2937;flex-shrink:0}
-.lsec-hd{padding:6px 12px;font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em}
-.lsec-body{padding:6px 10px;display:flex;flex-direction:column;gap:5px}
+.lhd{padding:6px 12px;font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em}
+.lbody{padding:6px 10px;display:flex;flex-direction:column;gap:5px}
 .lrow{display:flex;flex-direction:column;gap:2px}
-.llbl{font-size:10px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.05em}
-.lsel{background:#0f172a;color:#e2e8f0;border:1px solid #1f2937;border-radius:4px;padding:4px 7px;font-size:12px;cursor:pointer;outline:none;width:100%}
-.lsel:focus{border-color:#3b82f6}
-.param-sel-wrap{padding:6px 10px 4px;flex-shrink:0}
-.param-sel-lbl{font-size:10px;font-weight:700;color:#38bdf8;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
-.psel{background:#0f172a;color:#e2e8f0;border:1px solid #1f2937;border-radius:4px;padding:4px 7px;font-size:12px;cursor:pointer;outline:none;width:100%}
-.psel:focus{border-color:#3b82f6}
-/* Flat value list */
+.llbl{font-size:10px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.04em}
+.lsel,.psel{background:#0f172a;color:#e2e8f0;border:1px solid #1f2937;border-radius:4px;padding:4px 7px;font-size:12px;cursor:pointer;outline:none;width:100%}
+.lsel:focus,.psel:focus{border-color:#3b82f6}
+/* Palette */
+.psec{padding:6px 10px 4px;flex-shrink:0;border-bottom:1px solid #1f2937}
+.plbl{font-size:10px;font-weight:700;color:#38bdf8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
 .val-list{flex:1;overflow-y:auto;min-height:60px}
-.val-empty{padding:14px 12px;font-size:11px;color:#475569;text-align:center}
-.val-item{display:flex;align-items:center;gap:6px;padding:5px 10px;cursor:pointer;border-bottom:1px solid #0f1928}
-.val-item:hover{background:#111c30}
-.val-item.active{background:#0c1a2e}
-.val-dot{width:8px;height:8px;border-radius:50%;background:#374151;flex-shrink:0}
-.val-item.active .val-dot{background:#38bdf8}
-.val-name{flex:1;font-size:12px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.val-item:hover .val-name{color:#e2e8f0}
-.val-item.active .val-name{color:#38bdf8;font-weight:600}
-.val-cnt{font-size:10px;color:#475569;background:#111827;border-radius:8px;padding:1px 6px;flex-shrink:0}
-.val-item.active .val-cnt{background:#1d4ed8;color:#e0f2fe}
+.val-e{padding:14px 12px;font-size:11px;color:#475569;text-align:center}
+.vi{display:flex;align-items:center;gap:6px;padding:5px 10px;cursor:pointer;border-bottom:1px solid #0a1222}
+.vi:hover{background:#111c30}
+.vi.on{background:#0c1a2e}
+.vdot{width:8px;height:8px;border-radius:50%;background:#374151;flex-shrink:0}
+.vi.on .vdot{background:#38bdf8}
+.vn{flex:1;font-size:12px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vi:hover .vn{color:#e2e8f0}.vi.on .vn{color:#38bdf8;font-weight:600}
+.vc{font-size:10px;color:#475569;background:#111827;border-radius:8px;padding:1px 6px;flex-shrink:0}
+.vi.on .vc{background:#1d4ed8;color:#e0f2fe}
 /* Room list */
-.room-search-wrap{padding:5px 10px;border-top:1px solid #1f2937;flex-shrink:0}
-.room-search{width:100%;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:4px;padding:4px 7px;font-size:11px;outline:none}
-.room-search:focus{border-color:#3b82f6}
-.room-list{height:130px;overflow-y:auto;border-top:1px solid #0f1928;flex-shrink:0}
-.room-row{display:flex;align-items:center;gap:5px;padding:4px 10px;cursor:pointer;border-bottom:1px solid #0f1928}
-.room-row:hover{background:#111c30}
-.room-row.active{background:#0c1a2e;border-left:2px solid #38bdf8}
-.room-num{font-size:10px;color:#475569;flex-shrink:0;min-width:26px}
-.room-row.active .room-num{color:#7dd3fc}
-.room-name{flex:1;font-size:11px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.room-row.active .room-name{color:#e2e8f0;font-weight:600}
-.room-lvl{font-size:9px;color:#334155;flex-shrink:0;background:#111827;border-radius:3px;padding:1px 4px}
-.room-row.active .room-lvl{background:#1e3a58;color:#7dd3fc}
-.room-empty{padding:10px;font-size:11px;color:#475569;text-align:center}
-/* Selection footer */
-.sel-foot{padding:6px 10px;border-top:1px solid #1f2937;display:flex;align-items:center;gap:6px;flex-shrink:0}
-.sel-info{flex:1;font-size:11px;color:#64748b}
-.sel-info strong{color:#38bdf8}
-.sel-clr{background:transparent;border:1px solid #374151;color:#64748b;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;cursor:pointer}
-.sel-clr:hover{border-color:#ef4444;color:#ef4444}
+.rsw{padding:5px 10px;border-top:1px solid #1f2937;flex-shrink:0}
+.rs{width:100%;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:4px;padding:4px 7px;font-size:11px;outline:none}
+.rs:focus{border-color:#3b82f6}
+.rlist{height:120px;overflow-y:auto;flex-shrink:0;border-top:1px solid #0a1222}
+.rrow{display:flex;align-items:center;gap:5px;padding:4px 10px;cursor:pointer;border-bottom:1px solid #0a1222}
+.rrow:hover{background:#111c30}
+.rrow.on{background:#0c1a2e;border-left:2px solid #38bdf8}
+.rnum{font-size:10px;color:#475569;flex-shrink:0;min-width:24px}
+.rrow.on .rnum{color:#7dd3fc}
+.rname{flex:1;font-size:11px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rrow.on .rname{color:#e2e8f0;font-weight:600}
+.rlvl{font-size:9px;color:#334155;background:#111827;border-radius:3px;padding:1px 4px;flex-shrink:0}
+.rrow.on .rlvl{background:#1e3a58;color:#7dd3fc}
+.re{padding:10px;font-size:11px;color:#475569;text-align:center}
+/* Sel footer */
+.sfoot{padding:6px 10px;border-top:1px solid #1f2937;display:flex;align-items:center;gap:6px;flex-shrink:0}
+.si{flex:1;font-size:11px;color:#64748b}
+.si strong{color:#38bdf8}
+.sclr{background:transparent;border:1px solid #374151;color:#64748b;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;cursor:pointer}
+.sclr:hover{border-color:#ef4444;color:#ef4444}
 
-/* ════ CENTER — 2D top + 3D bottom ════ */
-#center{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-#viewer2d{flex:1;position:relative;overflow:hidden;background:#060e1f;cursor:grab;min-height:60px}
-#viewer2d:active{cursor:grabbing}
+/* ════ CENTER — 2D + 3D ════ */
+#centerCol{flex:1;min-width:180px;display:flex;flex-direction:column;overflow:hidden}
+#v2d{flex:1;position:relative;overflow:hidden;background:#060e1f;min-height:60px;cursor:grab}
+#v2d:active{cursor:grabbing}
 #mainSvg{position:absolute;will-change:transform}
-#mainSvg > image{filter:invert(1)}
-
-/* Room polygon states */
-.bfr{cursor:pointer;fill:rgba(56,189,248,.06);stroke:rgba(56,189,248,.35);stroke-width:1.5;stroke-linejoin:round;transition:fill .1s,stroke .1s,opacity .15s}
+#mainSvg>image{filter:invert(1)}
+.bfr{cursor:pointer;fill:rgba(56,189,248,.06);stroke:rgba(56,189,248,.33);stroke-width:1.5;stroke-linejoin:round;transition:fill .1s,stroke .1s,opacity .15s}
 .bfr:hover{fill:rgba(56,189,248,.2);stroke:#38bdf8;stroke-width:2.5}
-.bfr.selected{fill:rgba(56,189,248,.52)!important;stroke:#38bdf8!important;stroke-width:3!important;opacity:1!important}
-.bfr.shaded{fill:rgba(4,8,22,.74)!important;stroke:rgba(56,189,248,.04)!important;opacity:.6!important}
-.bfr.filtered-out{fill:rgba(4,8,22,.9)!important;stroke:rgba(56,189,248,.02)!important;opacity:.28!important;cursor:not-allowed!important}
-
-/* View mode bar */
-.vm-bar{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:20;display:flex;background:rgba(15,23,42,.92);border:1px solid #1f2937;border-radius:7px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.5)}
-.vm-btn{background:transparent;border:none;color:#94a3b8;font-size:12px;font-weight:600;padding:6px 11px;cursor:pointer;border-right:1px solid #1f2937}
-.vm-btn:last-child{border-right:none}
-.vm-btn:hover{color:#e2e8f0}
-.vm-btn.active{background:#1d4ed8;color:#fff}
-/* Zoom */
+.bfr.sel{fill:rgba(56,189,248,.52)!important;stroke:#38bdf8!important;stroke-width:3!important;opacity:1!important}
+.bfr.shd{fill:rgba(4,8,22,.74)!important;stroke:rgba(56,189,248,.04)!important;opacity:.55!important}
+.bfr.fout{fill:rgba(4,8,22,.9)!important;stroke:rgba(56,189,248,.02)!important;opacity:.25!important;cursor:not-allowed!important}
+/* 2D overlays */
+.vmbar{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:20;display:flex;background:rgba(15,23,42,.92);border:1px solid #1f2937;border-radius:7px;overflow:hidden}
+.vmbtn{background:transparent;border:none;color:#94a3b8;font-size:12px;font-weight:600;padding:6px 10px;cursor:pointer;border-right:1px solid #1f2937}
+.vmbtn:last-child{border-right:none}
+.vmbtn:hover{color:#e2e8f0}.vmbtn.on{background:#1d4ed8;color:#fff}
 .zbx{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:3px;z-index:10}
-.zbtn{width:26px;height:26px;background:#1f2937;border:1px solid #374151;color:#d1d5db;border-radius:4px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.zbtn:hover{background:#374151}
-
-/* H splitter between 2D and 3D */
-.sph{height:5px;flex-shrink:0;cursor:row-resize;background:#0a1222;border-top:1px solid #1f2937;position:relative}
-.sph:hover,.sph.drag{background:#1f2937}
-.sph::after{content:"";position:absolute;top:1.5px;left:50%;transform:translateX(-50%);height:2px;width:40px;background:#374151;border-radius:2px}
-
-/* 3D pane */
-#viewer3d{flex-shrink:0;position:relative;background:#060e1f;overflow:hidden;min-height:60px}
-#canvas3d{display:block;width:100%;height:100%}
-.hint3d{position:absolute;left:10px;bottom:8px;font-size:10px;color:#475569;background:rgba(13,21,38,.7);padding:3px 7px;border-radius:4px;pointer-events:none}
-.m3d-bar{position:absolute;top:8px;right:10px;z-index:20;display:flex;background:rgba(15,23,42,.92);border:1px solid #1f2937;border-radius:6px;overflow:hidden}
-.m3d-btn{background:transparent;border:none;color:#94a3b8;font-size:11px;font-weight:600;padding:4px 9px;cursor:pointer;border-right:1px solid #1f2937}
-.m3d-btn:last-child{border-right:none}
-.m3d-btn.active{background:#1d4ed8;color:#fff}
+.zb{width:26px;height:26px;background:#1f2937;border:1px solid #374151;color:#d1d5db;border-radius:4px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.zb:hover{background:#374151}
+.vempty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#374151;pointer-events:none}
+.vempty p{font-size:12px;text-align:center;max-width:200px}
+/* H-splitter */
+.hspl{height:5px;flex-shrink:0;cursor:row-resize;background:#0a1222;border-top:1px solid #1f2937;position:relative}
+.hspl:hover,.hspl.drag{background:#1f2937}
+.hspl::after{content:"";position:absolute;top:1.5px;left:50%;transform:translateX(-50%);width:40px;height:2px;background:#374151;border-radius:2px}
+/* 3D */
+#v3d{flex-shrink:0;position:relative;background:#060e1f;overflow:hidden;min-height:60px}
+#c3d{display:block;width:100%;height:100%}
+.m3bar{position:absolute;top:8px;right:10px;z-index:10;display:flex;background:rgba(15,23,42,.92);border:1px solid #1f2937;border-radius:6px;overflow:hidden}
+.m3btn{background:transparent;border:none;color:#94a3b8;font-size:11px;font-weight:600;padding:4px 9px;cursor:pointer;border-right:1px solid #1f2937}
+.m3btn:last-child{border-right:none}
+.m3btn.on{background:#1d4ed8;color:#fff}
 .zbx3{position:absolute;top:8px;left:10px;z-index:10}
+.h3d{position:absolute;left:10px;bottom:8px;font-size:10px;color:#475569;background:rgba(13,21,38,.7);padding:3px 7px;border-radius:4px;pointer-events:none}
+/* View modes: hide/show 2D or 3D */
+.vm2 #v3d,.vm2 .hspl{display:none}
+.vm3 #v2d,.vm3 .hspl{display:none}
+.vm2 #v2d{flex:1}
+.vm3 #v3d{flex:1}
 
-/* view mode toggle */
-.v-m2d #viewer3d,.v-m2d .sph{display:none}
-.v-m3d #viewer2d,.v-m3d .sph{display:none}
-.v-m3d #viewer3d{flex:1}
-.v-m2d #viewer2d{flex:1}
-
-/* Empty states */
-.v-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#374151;pointer-events:none}
-.v-empty p{font-size:12px;text-align:center;max-width:200px}
-
-/* ════ RIGHT FICHE PANEL ════ */
-#fiche-col{min-width:300px;max-width:700px;flex-shrink:0;background:#0b1221;border-left:none;display:flex;flex-direction:column;overflow:hidden}
-.fiche-bar{display:flex;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid #1f2937;flex-shrink:0;background:#0d1526}
-.fiche-bar-title{font-size:12px;font-weight:700;color:#f1f5f9;white-space:nowrap}
-.fiche-bar-sub{font-size:11px;color:#38bdf8;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.fiche-btns{display:flex;gap:4px;flex-shrink:0}
-.fb{display:flex;align-items:center;gap:3px;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #334155;background:transparent;color:#cbd5e1;white-space:nowrap}
+/* ════ RIGHT — A4 FICHE ════ */
+#ficheCol{flex:1;min-width:260px;max-width:700px;background:#0b1221;display:flex;flex-direction:column;overflow:hidden}
+.fbar{display:flex;align-items:center;gap:5px;padding:6px 10px;border-bottom:1px solid #1f2937;flex-shrink:0;background:#0d1526}
+.ftitle{font-size:12px;font-weight:700;color:#f1f5f9;white-space:nowrap}
+.fsub{font-size:11px;color:#38bdf8;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.fbtns{display:flex;gap:3px;flex-shrink:0;align-items:center}
+.fb{padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #334155;background:transparent;color:#cbd5e1;white-space:nowrap}
 .fb:hover{background:#1f2937;color:#fff}
 .fb.warn{border-color:#b45309;color:#fbbf24}
 .fb.warn:hover{background:#451a03}
-.fb.primary{background:#1d4ed8;border-color:#1d4ed8;color:#e0f2fe}
-.fb.primary:hover{background:#2563eb}
-
 /* Export dropdown */
-.exp-wrap{position:relative}
-.exp-drop{display:none;position:absolute;right:0;top:calc(100% + 4px);background:#111827;border:1px solid #334155;border-radius:6px;min-width:210px;z-index:100;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.6)}
-.exp-wrap.open .exp-drop{display:block}
-.exp-item{display:flex;align-items:center;gap:8px;padding:9px 13px;cursor:pointer;font-size:12px;color:#e2e8f0;border-bottom:1px solid #1f2937}
-.exp-item:last-child{border-bottom:none}
-.exp-item:hover{background:#1f2937}
-.exp-item-sub{font-size:10px;color:#475569;margin-top:1px}
+.edrop-wrap{position:relative}
+.edrop-btn{background:#1d4ed8;border:1px solid #1d4ed8;color:#e0f2fe;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
+.edrop-btn:hover{background:#2563eb}
+.edrop{display:none;position:absolute;right:0;top:calc(100% + 4px);background:#111827;border:1px solid #334155;border-radius:6px;min-width:220px;z-index:200;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.7)}
+.edrop-wrap.open .edrop{display:block}
+.ei{padding:9px 12px;cursor:pointer;font-size:11px;color:#e2e8f0;border-bottom:1px solid #1f2937}
+.ei:last-child{border-bottom:none}
+.ei:hover{background:#1f2937}
+.ei b{display:block;font-size:12px;margin-bottom:2px}
+.ei small{color:#64748b;font-size:10px}
+/* Fiche scroll */
+.fscroll{flex:1;overflow-y:auto;overflow-x:hidden}
+.fempty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;text-align:center;color:#374151}
+.fempty p{font-size:12px;line-height:1.7;color:#475569}
 
-.fiche-scroll{flex:1;overflow-y:auto;overflow-x:hidden}
+/* ════ A4 FICHE CARD ════ */
+.fa{background:#fff;color:#111;margin:10px;border:1px solid #2d3a50;border-radius:3px;font-family:'Segoe UI',Arial,sans-serif;font-size:11px;line-height:1.4}
+.fa-hdr{display:grid;grid-template-columns:1fr auto;background:#1d4ed8;color:#fff;padding:9px 13px;gap:6px}
+.fa-brand{font-size:14px;font-weight:800}
+.fa-brand span{opacity:.65;font-weight:400}
+.fa-title{font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;text-align:right;line-height:1}
+.fa-sub{font-size:9px;opacity:.75;letter-spacing:.1em;text-transform:uppercase;text-align:right;margin-top:1px}
+.fa-proj{display:grid;grid-template-columns:1fr 1fr;background:#f1f5f9;border-bottom:1px solid #e2e8f0;padding:4px 12px;gap:3px;font-size:10px}
+.fa-pi{display:flex;gap:4px;overflow:hidden}
+.fa-pl{font-weight:700;color:#64748b;white-space:nowrap;flex-shrink:0}
+.fa-pv{color:#0f172a;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fa-id{display:flex;align-items:center;gap:7px;padding:7px 12px;border-bottom:2px solid #1d4ed8}
+.fa-num{background:#1d4ed8;color:#fff;font-weight:800;font-size:14px;padding:3px 10px;border-radius:3px;flex-shrink:0}
+.fa-name{font-size:14px;font-weight:700;color:#0f172a;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fa-area{font-size:18px;font-weight:800;color:#0f172a;white-space:nowrap;flex-shrink:0}
+.fa-area span{font-size:9px;font-weight:400;color:#64748b}
+.fa-sec{border-bottom:1px solid #e2e8f0}
+.fa-sh{background:#1e293b;color:#fff;padding:3px 12px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em}
+.g2{display:grid;grid-template-columns:1fr 1fr}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr}
+.ff{padding:5px 9px;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;min-width:0;overflow:hidden}
+.ff:last-child{border-right:none}
+.ffl{font-size:8px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ffv{font-size:11.5px;color:#0f172a;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ffv.mt{color:#94a3b8;font-style:italic}
+.fa-notes{padding:7px 12px;min-height:42px;font-size:11px;color:#374151;line-height:1.6}
+.fa-notes.mt{color:#94a3b8;font-style:italic}
+.fa-foot{display:flex;justify-content:space-between;padding:4px 12px;background:#f8fafc;border-top:1px solid #e2e8f0;font-size:9px;color:#94a3b8}
 
-/* Empty fiche */
-.fiche-empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#374151;padding:20px;text-align:center}
-.fiche-empty p{font-size:12px;line-height:1.7;color:#475569}
+/* Print-all container */
+#printAll{display:none}
 
-/* ════ A4 FICHE BODY ════ */
-.fiche-a4{background:#fff;color:#111;margin:12px;border:1px solid #2d3a50;border-radius:3px;font-family:'Segoe UI',Arial,sans-serif;font-size:11px;line-height:1.4}
-/* Header */
-.fa4-hdr{display:grid;grid-template-columns:1fr auto;background:#1d4ed8;color:#fff;padding:10px 14px;gap:8px}
-.fa4-brand{font-size:14px;font-weight:800}
-.fa4-brand span{opacity:.65;font-weight:400}
-.fa4-title{font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;text-align:right;line-height:1}
-.fa4-subtitle{font-size:9px;opacity:.75;letter-spacing:.1em;text-transform:uppercase;text-align:right;margin-top:2px}
-/* Project strip */
-.fa4-proj{display:grid;grid-template-columns:1fr 1fr;background:#f1f5f9;border-bottom:1px solid #e2e8f0;padding:5px 12px;gap:4px;font-size:10px}
-.fa4-pi{display:flex;gap:5px;align-items:baseline;overflow:hidden}
-.fa4-pl{font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;flex-shrink:0}
-.fa4-pv{color:#0f172a;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-/* ID strip */
-.fa4-id{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:2px solid #1d4ed8}
-.fa4-num{background:#1d4ed8;color:#fff;font-weight:800;font-size:15px;padding:3px 11px;border-radius:3px;flex-shrink:0}
-.fa4-name{font-size:15px;font-weight:700;color:#0f172a;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fa4-area{font-size:19px;font-weight:800;color:#0f172a;white-space:nowrap;flex-shrink:0}
-.fa4-area span{font-size:10px;font-weight:400;color:#64748b}
-/* Sections */
-.fa4-sec{border-bottom:1px solid #e2e8f0}
-.fa4-sec-hd{background:#1e293b;color:#fff;padding:3px 12px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.12em}
-.fa4-g2{display:grid;grid-template-columns:1fr 1fr}
-.fa4-g3{display:grid;grid-template-columns:1fr 1fr 1fr}
-.fa4-g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr}
-.fa4-f{padding:6px 10px;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;min-width:0}
-.fa4-f:last-child{border-right:none}
-.fa4-fl{font-size:8px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fa4-fv{font-size:12px;color:#0f172a;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fa4-fv.empty{color:#94a3b8;font-style:italic}
-.fa4-fv.has{color:#0f172a}
-.fa4-notes{padding:8px 12px;min-height:44px;font-size:11px;color:#374151;line-height:1.6}
-.fa4-notes.empty{color:#94a3b8;font-style:italic}
-/* Footer */
-.fa4-footer{display:flex;align-items:center;justify-content:space-between;padding:4px 12px;background:#f8fafc;border-top:1px solid #e2e8f0;font-size:9px;color:#94a3b8}
-
-/* ════ LIGHT THEME ════ */
+/* ── LIGHT THEME ── */
 [data-theme=light] body{background:#eef1f6;color:#1e2733}
 [data-theme=light] .topbar{background:#fff;border-bottom-color:#dde2ec}
 [data-theme=light] .nav a{color:#64748b;border-right-color:#dde2ec}
 [data-theme=light] .nav a:hover{background:#eef2f8;color:#111}
 [data-theme=light] .nav a.active{background:#e7f3fc;color:#0284c7;box-shadow:inset 0 -2px 0 #0284c7}
-[data-theme=light] .left{background:#f6f8fb}
-[data-theme=light] .lsec{border-bottom-color:#dde2ec}
-[data-theme=light] .lsel,[data-theme=light] .psel{background:#fff;color:#1e2733;border-color:#d4dae6}
-[data-theme=light] .val-item{border-bottom-color:#eef2f8}
-[data-theme=light] .val-item:hover,[data-theme=light] .room-row:hover{background:#eef2f8}
-[data-theme=light] .val-item.active,[data-theme=light] .room-row.active{background:#e7f3fc}
-[data-theme=light] .val-name{color:#475569}
-[data-theme=light] .val-item.active .val-name{color:#0284c7}
-[data-theme=light] .val-cnt{background:#eef2f8;color:#64748b}
-[data-theme=light] .room-search{background:#fff;color:#1e2733;border-color:#d4dae6}
-[data-theme=light] .room-row{border-bottom-color:#eef2f8}
-[data-theme=light] .room-row.active .room-name{color:#0f172a}
-[data-theme=light] .sel-foot{border-top-color:#dde2ec}
-[data-theme=light] #viewer2d,[data-theme=light] #viewer3d{background:#eef1f6}
-[data-theme=light] #mainSvg > image{filter:none}
-[data-theme=light] .bfr{fill:rgba(2,132,199,.06);stroke:rgba(2,132,199,.35)}
-[data-theme=light] .bfr:hover{fill:rgba(2,132,199,.18);stroke:#0284c7}
-[data-theme=light] .bfr.selected{fill:rgba(2,132,199,.45)!important;stroke:#0284c7!important}
-[data-theme=light] .bfr.shaded{fill:rgba(218,225,235,.85)!important;stroke:rgba(2,132,199,.05)!important}
-[data-theme=light] .bfr.filtered-out{fill:rgba(218,225,235,.94)!important}
-[data-theme=light] .sph{background:#e6e9f0;border-top-color:#dde2ec}
-[data-theme=light] #fiche-col{background:#f0f4f8}
-[data-theme=light] .fiche-bar{background:#f6f8fb;border-bottom-color:#dde2ec}
-[data-theme=light] .tbtn,.zbtn,[data-theme=light] .fb{border-color:#d4dae6}
-[data-theme=light] .tbtn,[data-theme=light] .zbtn{background:#eef2f8;color:#334155}
-[data-theme=light] .exp-drop{background:#fff;border-color:#dde2ec;box-shadow:0 8px 24px rgba(0,0,0,.12)}
-[data-theme=light] .exp-item{color:#1e2733;border-bottom-color:#eef2f8}
-[data-theme=light] .exp-item:hover{background:#eef2f8}
-[data-theme=light] .fiche-a4{border-color:#dde2ec}
+[data-theme=light] #leftCol{background:#f6f8fb}
+[data-theme=light] .lsec,.lhd{border-color:#dde2ec}
+[data-theme=light] .lsel,[data-theme=light] .psel,[data-theme=light] .rs{background:#fff;color:#1e2733;border-color:#d4dae6}
+[data-theme=light] .vi{border-bottom-color:#eef2f8}
+[data-theme=light] .vi:hover{background:#eef2f8}
+[data-theme=light] .vi.on{background:#e7f3fc}
+[data-theme=light] .vn{color:#475569}
+[data-theme=light] .vi.on .vn{color:#0284c7}
+[data-theme=light] .vc{background:#eef2f8;color:#64748b}
+[data-theme=light] .rrow{border-bottom-color:#eef2f8}
+[data-theme=light] .rrow:hover{background:#eef2f8}
+[data-theme=light] .rrow.on{background:#e7f3fc;border-left-color:#0284c7}
+[data-theme=light] .rname{color:#475569}
+[data-theme=light] #v2d,[data-theme=light] #v3d{background:#eef1f6}
+[data-theme=light] #mainSvg>image{filter:none}
+[data-theme=light] .bfr{fill:rgba(2,132,199,.05);stroke:rgba(2,132,199,.3)}
+[data-theme=light] .bfr:hover{fill:rgba(2,132,199,.15);stroke:#0284c7}
+[data-theme=light] .bfr.sel{fill:rgba(2,132,199,.42)!important;stroke:#0284c7!important}
+[data-theme=light] .bfr.shd{fill:rgba(218,225,235,.88)!important;stroke:rgba(2,132,199,.04)!important}
+[data-theme=light] .bfr.fout{fill:rgba(218,225,235,.95)!important}
+[data-theme=light] .hspl{background:#e6e9f0;border-top-color:#dde2ec}
+[data-theme=light] #ficheCol{background:#f0f4f8}
+[data-theme=light] .fbar{background:#f6f8fb;border-bottom-color:#dde2ec}
+[data-theme=light] .tbtn,.zb{background:#eef2f8;border-color:#d4dae6;color:#334155}
+[data-theme=light] .edrop{background:#fff;border-color:#dde2ec;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+[data-theme=light] .ei{color:#1e2733;border-bottom-color:#eef2f8}
+[data-theme=light] .ei:hover{background:#eef2f8}
+[data-theme=light] .fa{border-color:#dde2ec}
+[data-theme=light] .rh{background:#e6e9f0;border-left-color:#dde2ec}
 
-/* ════ PRINT ════ */
+/* ── PRINT (single fiche) ── */
 @media print{
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .topbar,.left,.rh,#center,.fiche-bar,.fiche-btns,.exp-wrap{display:none!important}
-  body,#app,#fiche-col{display:block!important;height:auto;overflow:visible;width:100%}
-  #fiche-col{border:none;background:#fff;max-width:100%}
-  .fiche-scroll{overflow:visible}
-  .fiche-a4{margin:0;border:none}
-  .fiche-a4+.fiche-a4{page-break-before:always}
+  /* Normal print: only fiche panel */
+  body:not([data-pa]) .topbar,
+  body:not([data-pa]) #leftCol,
+  body:not([data-pa]) .rh,
+  body:not([data-pa]) #centerCol,
+  body:not([data-pa]) .fbar,
+  body:not([data-pa]) .fbtns{display:none!important}
+  body:not([data-pa]) #app,body:not([data-pa]) #ficheCol{display:block!important;height:auto!important;overflow:visible!important;max-width:100%!important;width:100%!important;background:#fff!important;border:none!important}
+  body:not([data-pa]) .fscroll{overflow:visible}
+  body:not([data-pa]) .fa{margin:0;border:none;border-radius:0}
+  /* Print-all mode */
+  body[data-pa]{display:block!important;height:auto!important;overflow:visible!important}
+  body[data-pa] .topbar,body[data-pa] #app{display:none!important}
+  body[data-pa] #printAll{display:block!important}
+  .fa+.fa{page-break-before:always}
   @page{size:A4;margin:10mm}
 }
 </style>
 </head>
 <body>
 
-<!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BIM<span>Flow</span></div>
   <div class="nav">
-    <a href="/" data-en="🗺 Plans">🗺 Plans</a>
-    <a href="/analyse.html" data-en="📊 Analysis">📊 Analyse</a>
-    <a href="/parametres.html" data-en="🔧 Parameters">🔧 Paramètres</a>
-    <a href="/fiches.html" class="active" data-en="📋 Sheets">📋 Fiches</a>
+    <a href="/">🗺 Plans</a>
+    <a href="/analyse.html">📊 Analyse</a>
+    <a href="/parametres.html">🔧 Paramètres</a>
+    <a href="/fiches.html" class="active">📋 Fiches</a>
   </div>
-  <div class="topbar-right">
+  <div class="tbr">
     <button class="tbtn" id="langBtn">EN</button>
     <button class="tbtn" id="themeBtn">☾</button>
-    <div class="status-dot loading" id="statusDot"></div>
-    <div class="status-txt" id="statusTxt">Chargement…</div>
+    <div class="sdot load" id="sdot"></div>
+    <div class="stxt" id="stxt">Chargement…</div>
   </div>
 </div>
 
 <div id="app">
 
-  <!-- ══ LEFT — Filters + Selection ══ -->
-  <div class="left" id="leftPanel" style="width:240px">
-
-    <!-- Filters -->
+  <!-- ══ LEFT — Filters + Palette ══ -->
+  <div id="leftCol">
     <div class="lsec">
-      <div class="lsec-hd" data-en="Filters">Filtres</div>
-      <div class="lsec-body">
-        <div class="lrow"><label class="llbl" data-en="Level">Niveau</label>
-          <select class="lsel" id="fLevel"><option value="">Tous les niveaux</option></select></div>
+      <div class="lhd">Filtres</div>
+      <div class="lbody">
+        <div class="lrow"><label class="llbl">Niveau</label>
+          <select class="lsel" id="fLvl"><option value="">Tous les niveaux</option></select></div>
         <div class="lrow"><label class="llbl">Phase</label>
-          <select class="lsel" id="fPhase"><option value="">Toutes les phases</option></select></div>
-        <div class="lrow"><label class="llbl" data-en="Usage">Usage</label>
-          <select class="lsel" id="fType"><option value="">Tous les usages</option></select></div>
+          <select class="lsel" id="fPh"><option value="">Toutes les phases</option></select></div>
+        <div class="lrow"><label class="llbl">Usage</label>
+          <select class="lsel" id="fTy"><option value="">Tous les usages</option></select></div>
       </div>
     </div>
 
-    <!-- Param selector (searches ALL levels) -->
-    <div class="lsec" style="flex-shrink:0">
-      <div class="param-sel-wrap">
-        <div class="param-sel-lbl" data-en="Select by parameter (all levels)">Paramètre → sélectionner (tous niveaux)</div>
-        <select class="psel" id="palParam"><option value="">— Choisir un paramètre —</option></select>
-      </div>
+    <div class="psec">
+      <div class="plbl">Sélectionner par paramètre — tous niveaux</div>
+      <select class="psel" id="palP"><option value="">— Choisir un paramètre —</option></select>
     </div>
-    <div class="val-list" id="valList"><div class="val-empty">Choisissez un paramètre</div></div>
+    <div class="val-list" id="valList"><div class="val-e">Choisissez un paramètre</div></div>
 
-    <!-- Room search (all levels) -->
-    <div class="room-search-wrap">
-      <input class="room-search" id="roomSearch" type="text" placeholder="Rechercher une pièce (tous niveaux)…" data-en-ph="Search room (all levels)…"/>
+    <div class="rsw">
+      <input class="rs" id="rSrch" type="text" placeholder="Rechercher une pièce (tous niveaux)…"/>
     </div>
-    <div class="room-list" id="roomList"><div class="room-empty">Aucune pièce</div></div>
+    <div class="rlist" id="rList"><div class="re">Aucune pièce</div></div>
 
-    <!-- Footer -->
-    <div class="sel-foot">
-      <div class="sel-info" id="selInfo"><span>Aucune sélection</span></div>
-      <button class="sel-clr" id="selClr" data-en="Clear">Effacer</button>
+    <div class="sfoot">
+      <div class="si" id="selInfo">Aucune sélection</div>
+      <button class="sclr" id="selClr">Effacer</button>
     </div>
   </div>
 
-  <!-- ══ LEFT RESIZE HANDLE ══ -->
-  <div class="rh" id="rhLeft"></div>
+  <div class="rh" id="rhL"></div>
 
-  <!-- ══ CENTER — 2D top / 3D bottom ══ -->
-  <div id="center" class="v-mboth">
-
-    <!-- 2D plan -->
-    <div id="viewer2d">
-      <div class="v-empty" id="v2dEmpty">
-        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-        <p data-en="Send a plan from Revit via &quot;Send to BIMFlow&quot;">Envoyez un plan depuis Revit</p>
+  <!-- ══ CENTER — 2D top + 3D bottom ══ -->
+  <div id="centerCol" class="vmb">
+    <div id="v2d">
+      <div class="vempty" id="v2dE">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        <p>Envoyez un plan depuis Revit</p>
       </div>
-      <div class="vm-bar" id="vmBar">
-        <button class="vm-btn" data-m="v-m2d">🗺 2D</button>
-        <button class="vm-btn active" data-m="v-mboth">⊞ 2D+3D</button>
-        <button class="vm-btn" data-m="v-m3d">🧊 3D</button>
+      <div class="vmbar" id="vmBar">
+        <button class="vmbtn" data-m="vm2">🗺 2D</button>
+        <button class="vmbtn on" data-m="vmb">⊞ 2D+3D</button>
+        <button class="vmbtn" data-m="vm3">🧊 3D</button>
       </div>
       <div class="zbx">
-        <button class="zbtn" id="zIn">+</button>
-        <button class="zbtn" id="zOut">−</button>
-        <button class="zbtn" id="zFit">⌖</button>
+        <button class="zb" id="zIn">+</button>
+        <button class="zb" id="zOut">−</button>
+        <button class="zb" id="zFit">⌖</button>
       </div>
     </div>
-
-    <!-- H splitter -->
-    <div class="sph" id="sph"></div>
-
-    <!-- 3D -->
-    <div id="viewer3d">
-      <canvas id="canvas3d"></canvas>
-      <div class="m3d-bar" id="m3dBar">
-        <button class="m3d-btn active" data-v="level" data-en="Level">Niveau</button>
-        <button class="m3d-btn" data-v="project" data-en="Project">Projet</button>
+    <div class="hspl" id="hspl"></div>
+    <div id="v3d">
+      <canvas id="c3d"></canvas>
+      <div class="m3bar" id="m3bar">
+        <button class="m3btn on" data-v="level">Niveau</button>
+        <button class="m3btn" data-v="all">Tous</button>
       </div>
-      <div class="zbx3"><button class="zbtn" id="fit3dBtn">⌖</button></div>
-      <div class="hint3d" id="hint3d" data-en="Drag · Scroll to zoom">Glissez · Molette = zoom</div>
+      <div class="zbx3"><button class="zb" id="fit3Btn">⌖</button></div>
+      <div class="h3d">Glissez · Molette = zoom · Cliquez une pièce</div>
     </div>
   </div>
 
-  <!-- ══ RIGHT RESIZE HANDLE ══ -->
-  <div class="rh" id="rhRight"></div>
+  <div class="rh" id="rhR"></div>
 
-  <!-- ══ RIGHT — A4 Fiche de Local ══ -->
-  <div id="fiche-col" style="width:430px">
-    <div class="fiche-bar">
-      <span class="fiche-bar-title" data-en="Room Data Sheet">Fiche de Local</span>
-      <span class="fiche-bar-sub" id="ficheTopSub"></span>
-      <div class="fiche-btns">
-        <button class="fb warn" id="btnCreateParams" style="display:none" data-en="⚠ Create params">⚠ Créer params</button>
-        <button class="fb" id="btnPrint" data-en="🖨 Print">🖨 Imprimer</button>
-        <!-- Export dropdown -->
-        <div class="exp-wrap" id="expWrap">
-          <button class="fb primary" id="btnExpToggle" data-en="⬇ Export ▾">⬇ Exporter ▾</button>
-          <div class="exp-drop" id="expDrop">
-            <div class="exp-item" id="expXlsxVis" onclick="exportExcel(false)">
-              <div>📊 <b>Excel</b> — pièces visibles<div class="exp-item-sub">Filtre actuel, tous niveaux</div></div>
-            </div>
-            <div class="exp-item" id="expXlsxAll" onclick="exportExcel(true)">
-              <div>📊 <b>Excel</b> — toutes les pièces<div class="exp-item-sub">Projet complet</div></div>
-            </div>
-            <div class="exp-item" onclick="exportPDF(false)">
-              <div>📄 <b>PDF / Impression</b> — pièces visibles<div class="exp-item-sub">Toutes les fiches A4</div></div>
-            </div>
-            <div class="exp-item" onclick="exportPDF(true)">
-              <div>📄 <b>PDF / Impression</b> — toutes les pièces<div class="exp-item-sub">Projet complet</div></div>
-            </div>
+  <!-- ══ RIGHT — Fiche A4 ══ -->
+  <div id="ficheCol">
+    <div class="fbar">
+      <span class="ftitle">Fiche de Local</span>
+      <span class="fsub" id="ftopSub"></span>
+      <div class="fbtns">
+        <button class="fb warn" id="btnCP" style="display:none">⚠ Créer params</button>
+        <button class="fb" id="btnPrint">🖨 Imprimer</button>
+        <div class="edrop-wrap" id="edWrap">
+          <button class="edrop-btn" id="edBtn">⬇ Exporter ▾</button>
+          <div class="edrop" id="edDrop">
+            <div class="ei" onclick="exportCSV(false)"><b>📊 CSV — pièces filtrées</b><small>Phase/Usage actuels, tous niveaux</small></div>
+            <div class="ei" onclick="exportCSV(true)"><b>📊 CSV — tout le projet</b><small>Toutes les pièces, tous niveaux</small></div>
+            <div class="ei" onclick="exportPDF(false)"><b>📄 PDF — pièces filtrées</b><small>Toutes les fiches A4 (impression)</small></div>
+            <div class="ei" onclick="exportPDF(true)"><b>📄 PDF — tout le projet</b><small>Toutes les fiches A4 (impression)</small></div>
           </div>
         </div>
       </div>
     </div>
-    <div class="fiche-scroll" id="ficheScroll">
-      <div class="fiche-empty">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 12h6M9 16h6M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M9 4h6v4H9z"/></svg>
-        <p data-en="Select a room on the plan or via the parameter palette.">Sélectionnez une pièce sur le plan ou via la palette.</p>
+    <div class="fscroll" id="fScroll">
+      <div class="fempty">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 12h6M9 16h6M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M9 4h6v4H9z"/></svg>
+        <p>Sélectionnez une pièce sur le plan ou via la palette de paramètres.</p>
       </div>
     </div>
   </div>
 
-</div><!-- /app -->
+</div>
+
+<!-- Hidden print-all container -->
+<div id="printAll"></div>
 
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
 
-/* ════ FICHE SCHEMA ════ */
+/* ════ SCHEMA FICHE DE LOCAL ════ */
 const SCHEMA=[
-  {group:'IDENTIFICATION',grid:'fa4-g2',fields:[
-    {lbl:'Fonction / Usage',keys:['fonction','function','usage','occupation','type','use'],create:'Fonction'},
-    {lbl:'Phase',keys:['phase'],create:'Phase'},
-    {lbl:'Département / Zone',keys:['département','department','zone','dept'],create:'Département'},
-    {lbl:'Code local',keys:['code local','code','local code'],create:'Code local'},
+  {g:'IDENTIFICATION',cls:'g2',f:[
+    {l:'Fonction / Usage',k:['fonction','function','usage','occupation','type','use'],c:'Fonction'},
+    {l:'Phase',k:['phase'],c:'Phase'},
+    {l:'Département / Zone',k:['département','department','zone','dept'],c:'Département'},
+    {l:'Code local',k:['code local','local code'],c:'Code local'},
   ]},
-  {group:'SURFACES & DIMENSIONS',grid:'fa4-g3',fields:[
-    {lbl:'Surface utile (SU)',keys:['surface','area','aire','su'],unit:'m²'},
-    {lbl:'Volume',keys:['volume'],unit:'m³'},
-    {lbl:'Périmètre',keys:['périmètre','perimeter'],unit:'m'},
-    {lbl:'Hauteur libre',keys:['hauteur libre','hauteur','height','ht libre','unbounded height'],unit:'m',create:'Hauteur libre'},
-    {lbl:'Hauteur sous-plafond',keys:['hauteur sous-plafond','ht plafond','ceiling height'],unit:'m',create:'Hauteur sous-plafond'},
-    {lbl:'Surface de vitrage',keys:['vitrage','glazing','fenêtres'],unit:'m²',create:'Surface de vitrage'},
+  {g:'SURFACES & DIMENSIONS',cls:'g3',f:[
+    {l:'Surface utile (SU)',k:['surface','area','aire','su'],u:'m²'},
+    {l:'Volume',k:['volume'],u:'m³'},
+    {l:'Périmètre',k:['périmètre','perimeter'],u:'m'},
+    {l:'Hauteur libre',k:['hauteur libre','hauteur','height','ht libre'],u:'m',c:'Hauteur libre'},
+    {l:'Haut. sous-plafond',k:['hauteur sous-plafond','ht plafond','ceiling height'],u:'m',c:'Hauteur sous-plafond'},
+    {l:'Surface vitrage',k:['vitrage','glazing'],u:'m²',c:'Surface de vitrage'},
   ]},
-  {group:'FINITIONS',grid:'fa4-g3',fields:[
-    {lbl:'Revêtement de sol',keys:['revêtement de sol','revêtement sol','sol','floor','finition sol'],create:'Revêtement de sol'},
-    {lbl:'Revêtement mural',keys:['revêtement mural','revêtement mur','mur','wall','finition mur'],create:'Revêtement mural'},
-    {lbl:'Revêtement plafond',keys:['revêtement plafond','plafond','ceiling','finition plafond'],create:'Revêtement plafond'},
-    {lbl:'Plinthe',keys:['plinthe','baseboard'],create:'Plinthe'},
+  {g:'FINITIONS',cls:'g3',f:[
+    {l:'Revêt. de sol',k:['revêtement de sol','revêtement sol','sol','floor','finition sol'],c:'Revêtement de sol'},
+    {l:'Revêt. mural',k:['revêtement mural','revêtement mur','mur','wall','finition mur'],c:'Revêtement mural'},
+    {l:'Revêt. plafond',k:['revêtement plafond','plafond','ceiling','finition plafond'],c:'Revêtement plafond'},
+    {l:'Plinthe',k:['plinthe','baseboard'],c:'Plinthe'},
   ]},
-  {group:'TECHNIQUE',grid:'fa4-g2',fields:[
-    {lbl:'Ventilation / VMC',keys:['ventilation','vmc','air neuf','hvac'],create:'Ventilation'},
-    {lbl:'Éclairage',keys:['éclairage','eclairage','lighting','lux','lumière'],create:'Éclairage'},
-    {lbl:'Chauffage / CVC',keys:['chauffage','cvc','hvac','heating','climatisation'],create:'Chauffage / CVC'},
-    {lbl:'Électricité / Prises',keys:['électricité','electricite','electrical','prises'],create:'Électricité'},
+  {g:'TECHNIQUE',cls:'g2',f:[
+    {l:'Ventilation / VMC',k:['ventilation','vmc','air neuf','hvac'],c:'Ventilation'},
+    {l:'Éclairage',k:['éclairage','eclairage','lighting','lux'],c:'Éclairage'},
+    {l:'Chauffage / CVC',k:['chauffage','cvc','heating','climatisation'],c:'Chauffage / CVC'},
+    {l:'Électricité / Prises',k:['électricité','electricite','electrical','prises'],c:'Électricité'},
   ]},
-  {group:'ACCESSIBILITÉ',grid:'fa4-g2',fields:[
-    {lbl:'PMR',keys:['pmr','accessible','accessibilité','accessibilite','handicap'],create:'PMR'},
-    {lbl:'Revêt. antidérapant',keys:['antidérapant','antiderapant','non-slip','glissance'],create:'Revêt. antidérapant'},
+  {g:'ACCESSIBILITÉ',cls:'g2',f:[
+    {l:'PMR',k:['pmr','accessible','accessibilité'],c:'PMR'},
+    {l:'Revêt. antidérapant',k:['antidérapant','non-slip','glissance'],c:'Revêt. antidérapant'},
   ]},
-  {group:'NOTES / COMMENTAIRES',grid:'',fields:[
-    {lbl:'Commentaires',keys:['commentaires','comments','notes','remarques','observations'],create:'Commentaires',full:true},
-  ]},
+  {g:'NOTES',cls:'',f:[{l:'Commentaires',k:['commentaires','comments','notes','remarques'],c:'Commentaires',notes:true}]},
 ];
 
 /* ════ STATE ════ */
-let allPlans=[], allRooms=[];
-let plan=null, currentPlanKey='';
+let allPlans=[],allRooms=[];
+let plan=null,currentPlanKey='';
 let selIds=new Set();
-let fLevel='', fPhase='', fType='';
-let palParam='', palVal='';
-let zoom=1, panX=0, panY=0, W=0, H=0;
-let isPan=false, panStart={x:0,y:0};
+let fLvl='',fPh='',fTy='';
+let palP='',palV='';
+let zoom=1,panX=0,panY=0,W=0,H=0;
+let panning=false,panStart={x:0,y:0};
 const planCache={};
 
 /* ════ UTILS ════ */
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-function setStatus(m,t){$('statusTxt').textContent=m;$('statusDot').className='status-dot'+(t?' '+t:'');}
-async function api(url,opts){const r=await fetch(url,opts);if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
+function setSt(m,t){$('stxt').textContent=m;$('sdot').className='sdot'+(t?' '+t:'');}
+async function apiFetch(url,opts){const r=await fetch(url,opts);if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
 
-/* find first matching param key */
-function findParam(room,...keys){
+function findP(room,...keys){
   const P=room.Parameters||{};
   for(const k of keys){
     const mk=Object.keys(P).find(pk=>pk.toLowerCase().includes(k.toLowerCase())||k.toLowerCase().includes(pk.toLowerCase()));
-    if(mk!=null&&P[mk]!==undefined&&P[mk]!=='')return{key:mk,val:P[mk]};
+    if(mk!=null&&P[mk]!==undefined&&P[mk]!=='')return String(P[mk]);
   }
-  return null;
+  return '';
 }
-function getVal(room,...keys){const r=findParam(room,...keys);return r?String(r.val):'';}
-function schemaVal(room,field){return getVal(room,...field.keys);}
+function schV(room,field){return findP(room,...field.k);}
+const CORE=['nom','name','numéro','numero','number','surface','area','niveau','level','phase','usage','occupation'];
+const isCore=k=>CORE.some(c=>k.toLowerCase().includes(c)||c.includes(k.toLowerCase()));
 
-const CORE_K=['nom','name','numéro','numero','number','surface','area','niveau','level','occupation','usage','phase','département'];
-const isCore=k=>CORE_K.some(c=>k.toLowerCase().includes(c)||c.includes(k.toLowerCase()));
-
-/* ════ LOAD ════ */
+/* ════ LOAD ALL PLANS ════ */
 async function loadAll(){
   try{
-    setStatus('Chargement…','loading');
-    allPlans=await api('/api/plans');
-    if(!allPlans.length){setStatus('Aucun plan — envoyez depuis Revit','');return;}
-    const res=await Promise.all(allPlans.map(p=>getPlanData(p.key)));
+    setSt('Chargement…','load');
+    allPlans=await apiFetch('/api/plans');
+    if(!allPlans.length){setSt('Aucun plan — envoyez depuis Revit','');return;}
+    const res=await Promise.all(allPlans.map(p=>getPD(p.key)));
     allRooms=[];
-    res.forEach(p=>(p.Rooms||[]).forEach(r=>allRooms.push({...r,_levelName:p.LevelName,_planKey:p.key,_projectName:p.ProjectName||''})));
-    buildFilters();
-    buildParamSelect();
+    res.forEach(p=>(p.Rooms||[]).forEach(r=>allRooms.push({...r,_lv:p.LevelName,_pk:p.key,_proj:p.ProjectName||''})));
+    buildFilters();buildPS();buildRList();
     await loadPlan(allPlans[allPlans.length-1].key);
-    buildRoomList();
-    initCenterSplit();
-    setStatus(`${allRooms.length} pièces · ${allPlans.length} niveau(x)`,'ok');
-  }catch(e){setStatus('Erreur: '+e.message,'err');}
+    initSplit();
+    setSt(`${allRooms.length} pièces · ${allPlans.length} niveaux`,'ok');
+    /* Build 3D after plans loaded */
+    if(!$('centerCol').classList.contains('vm2'))setTimeout(()=>initAndBuild3D(),200);
+  }catch(e){setSt('Erreur: '+e.message,'err');}
 }
-async function getPlanData(key){
+async function getPD(key){
   if(planCache[key])return planCache[key];
-  const p=await api('/api/plans?key='+encodeURIComponent(key));planCache[key]=p;return p;
+  const p=await apiFetch('/api/plans?key='+encodeURIComponent(key));planCache[key]=p;return p;
 }
 async function loadPlan(key){
   if(!key||key===currentPlanKey)return;
-  plan=await getPlanData(key);currentPlanKey=key;
+  plan=await getPD(key);currentPlanKey=key;
   W=plan.ImageWidth;H=plan.ImageHeight;
-  renderSVG();resetView();update3D();
-}
-
-/* ════ FILTERS (affect current plan view) ════ */
-function buildFilters(){
-  const levels=[...new Set(allRooms.map(r=>r._levelName||'').filter(Boolean))].sort();
-  const phases=new Set(),types=new Set();
-  allRooms.forEach(r=>{
-    const ph=getVal(r,'phase');if(ph)phases.add(ph);
-    const ty=getVal(r,'usage','occupation','type','fonction','function','use');if(ty)types.add(ty);
-  });
-  const lv=$('fLevel');lv.innerHTML='<option value="">Tous les niveaux</option>';
-  levels.forEach(l=>lv.appendChild(new Option(l,l)));
-  const ph=$('fPhase');ph.innerHTML='<option value="">Toutes les phases</option>';
-  [...phases].sort().forEach(v=>ph.appendChild(new Option(v,v)));
-  const ty=$('fType');ty.innerHTML='<option value="">Tous les usages</option>';
-  [...types].sort().forEach(v=>ty.appendChild(new Option(v,v)));
-  $('fLevel').onchange=e=>{fLevel=e.target.value;
-    if(fLevel){const p=allPlans.find(pl=>pl.level===fLevel);if(p)loadPlan(p.key);}
-    onFilterChange();};
-  $('fPhase').onchange=e=>{fPhase=e.target.value;onFilterChange();};
-  $('fType').onchange=e=>{fType=e.target.value;onFilterChange();};
-}
-
-/* Rooms matching current plan-level filters */
-function visibleRooms(){
-  return allRooms.filter(r=>{
-    if(fLevel&&(r._levelName||'')!==fLevel)return false;
-    if(fPhase&&getVal(r,'phase')!==fPhase)return false;
-    if(fType&&getVal(r,'usage','occupation','type','fonction','function','use')!==fType)return false;
-    return true;
-  });
-}
-/* All rooms matching phase/type only (ignore level) — for palette + room list */
-function allFiltered(){
-  return allRooms.filter(r=>{
-    if(fPhase&&getVal(r,'phase')!==fPhase)return false;
-    if(fType&&getVal(r,'usage','occupation','type','fonction','function','use')!==fType)return false;
-    return true;
-  });
-}
-function isRoomVis(r){
-  if(fLevel&&(r._levelName||r.LevelName||'')!==fLevel)return false;
-  if(fPhase&&getVal(r,'phase')!==fPhase)return false;
-  if(fType&&getVal(r,'usage','occupation','type','fonction','function','use')!==fType)return false;
-  return true;
-}
-function onFilterChange(){
-  palVal='';selIds.clear();
-  buildParamSelect();buildValList();buildRoomList();
-  paintRooms();renderFiche();updateSelInfo();
-}
-
-/* ════ PARAM SELECT — spans ALL rooms ════ */
-function buildParamSelect(){
-  const base=allFiltered();
-  const paramCounts={};
-  base.forEach(r=>Object.entries(r.Parameters||{}).forEach(([k,v])=>{
-    if(v!==''&&v!=null)paramCounts[k]=(paramCounts[k]||0)+1;
-  }));
-  const prev=$('palParam').value;
-  const sel=$('palParam');sel.innerHTML='<option value="">— Choisir un paramètre —</option>';
-  Object.keys(paramCounts).sort((a,b)=>{const ca=isCore(a),cb=isCore(b);if(ca!==cb)return ca?-1:1;return a.localeCompare(b);})
-    .forEach(k=>sel.appendChild(new Option(`${k} (${paramCounts[k]})`,k)));
-  if(prev&&Object.keys(paramCounts).includes(prev))sel.value=prev;
-  buildValList();
-}
-$('palParam').onchange=function(){palParam=this.value;palVal='';buildValList();};
-
-function buildValList(){
-  const list=$('valList');list.innerHTML='';
-  if(!palParam){list.innerHTML='<div class="val-empty">Choisissez un paramètre</div>';return;}
-  const base=allFiltered();
-  const counts={};
-  base.forEach(r=>{const v=String((r.Parameters||{})[palParam]||'');if(v)counts[v]=(counts[v]||0)+1;});
-  const vals=Object.entries(counts).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
-  if(!vals.length){list.innerHTML='<div class="val-empty">Aucune valeur</div>';return;}
-  vals.forEach(([v,cnt])=>{
-    const row=document.createElement('div');row.className='val-item'+(palVal===v?' active':'');
-    row.innerHTML=`<span class="val-dot"></span><span class="val-name" title="${esc(v)}">${esc(v)}</span><span class="val-cnt">${cnt}</span>`;
-    row.onclick=()=>palValClick(v);
-    list.appendChild(row);
-  });
-}
-
-function palValClick(v){
-  if(palVal===v){palVal='';selIds.clear();autoCenter();}
-  else{
-    palVal=v;selIds.clear();
-    allFiltered().forEach(r=>{if(String((r.Parameters||{})[palParam]||'')===v)selIds.add(r.RevitId);});
-    /* switch to level with most selected rooms */
-    const cnt={};
-    allRooms.filter(r=>selIds.has(r.RevitId)).forEach(r=>cnt[r._planKey]=(cnt[r._planKey]||0)+1);
-    const best=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0];
-    if(best&&best[0]!==currentPlanKey)loadPlan(best[0]);
-  }
-  buildValList();buildRoomList();paintRooms();renderFiche();updateSelInfo();
+  renderSVG();resetView();
+  /* Recolor 3D (don't rebuild) */
   if(R3.ready)recolor3D();
 }
 
-/* ════ ROOM LIST (all levels) ════ */
-function buildRoomList(){
-  const list=$('roomList');list.innerHTML='';
-  const q=($('roomSearch').value||'').toLowerCase();
-  const rooms=allFiltered().filter(r=>{
-    if(!q)return true;
-    return (r.Name||'').toLowerCase().includes(q)||(r.Number||'').toLowerCase().includes(q)||(r._levelName||'').toLowerCase().includes(q);
-  }).sort((a,b)=>(a._levelName||'').localeCompare(b._levelName||'')+(a.Number||'').localeCompare(b.Number||'',undefined,{numeric:true}));
-  if(!rooms.length){list.innerHTML='<div class="room-empty">Aucune pièce</div>';return;}
-  rooms.forEach(r=>{
-    const row=document.createElement('div');row.className='room-row'+(selIds.has(r.RevitId)?' active':'');
-    row.innerHTML=`<span class="room-num">${esc(r.Number||'')}</span><span class="room-name">${esc(r.Name||'—')}</span><span class="room-lvl">${esc(r._levelName||'')}</span>`;
-    row.onclick=e=>roomClick(r.RevitId,e.ctrlKey||e.metaKey||e.shiftKey,r._planKey);
-    list.appendChild(row);
+/* ════ FILTERS ════ */
+function buildFilters(){
+  const lvs=[...new Set(allRooms.map(r=>r._lv||'').filter(Boolean))].sort();
+  const phs=new Set(),tys=new Set();
+  allRooms.forEach(r=>{
+    const p=findP(r,'phase');if(p)phs.add(p);
+    const t=findP(r,'usage','occupation','type','fonction','function');if(t)tys.add(t);
+  });
+  const el=$('fLvl');el.innerHTML='<option value="">Tous les niveaux</option>';
+  lvs.forEach(l=>el.appendChild(new Option(l,l)));
+  const ep=$('fPh');ep.innerHTML='<option value="">Toutes les phases</option>';
+  [...phs].sort().forEach(v=>ep.appendChild(new Option(v,v)));
+  const et=$('fTy');et.innerHTML='<option value="">Tous les usages</option>';
+  [...tys].sort().forEach(v=>et.appendChild(new Option(v,v)));
+  $('fLvl').onchange=e=>{fLvl=e.target.value;if(fLvl){const p=allPlans.find(x=>x.level===fLvl);if(p)loadPlan(p.key);}onFC();};
+  $('fPh').onchange=e=>{fPh=e.target.value;onFC();};
+  $('fTy').onchange=e=>{fTy=e.target.value;onFC();};
+}
+/* Visible on current plan (all 3 filters) */
+function vis(){
+  return allRooms.filter(r=>{
+    if(fLvl&&(r._lv||'')!==fLvl)return false;
+    if(fPh&&findP(r,'phase')!==fPh)return false;
+    if(fTy&&findP(r,'usage','occupation','type','fonction','function')!==fTy)return false;
+    return true;
   });
 }
-$('roomSearch').oninput=buildRoomList;
+/* Filtered but across all levels (palette + room list + export) */
+function allF(){
+  return allRooms.filter(r=>{
+    if(fPh&&findP(r,'phase')!==fPh)return false;
+    if(fTy&&findP(r,'usage','occupation','type','fonction','function')!==fTy)return false;
+    return true;
+  });
+}
+function isVis(r){
+  const lv=r._lv||r.LevelName||'';
+  if(fLvl&&lv!==fLvl)return false;
+  if(fPh&&findP(r,'phase')!==fPh)return false;
+  if(fTy&&findP(r,'usage','occupation','type','fonction','function')!==fTy)return false;
+  return true;
+}
+function onFC(){palV='';selIds.clear();buildPS();buildVL();buildRList();paintRooms();renderFiche();updSel();}
 
-/* ════ ROOM CLICK ════ */
-function roomClick(id,additive,planKey){
-  palVal='';
-  if(planKey&&planKey!==currentPlanKey){
-    loadPlan(planKey).then(()=>{
-      if(!additive)selIds.clear();selIds.add(id);
-      const r=(plan.Rooms||[]).find(x=>x.RevitId===id);
-      if(r&&r.CentroidX)panToRoom(r);
-      buildValList();buildRoomList();paintRooms();renderFiche();updateSelInfo();if(R3.ready)recolor3D();
-    });
-    return;
-  }
-  if(additive){if(selIds.has(id))selIds.delete(id);else selIds.add(id);}
-  else{selIds.clear();selIds.add(id);}
-  if(!additive&&plan){
-    const r=(plan.Rooms||[]).find(x=>x.RevitId===id);
-    if(r&&r.CentroidX)panToRoom(r);
-  }
-  buildValList();buildRoomList();paintRooms();renderFiche();updateSelInfo();if(R3.ready)recolor3D();
+/* ════ PARAM SELECT — all rooms ════ */
+function buildPS(){
+  const base=allF();const pc={};
+  base.forEach(r=>Object.entries(r.Parameters||{}).forEach(([k,v])=>{if(v!==''&&v!=null)pc[k]=(pc[k]||0)+1;}));
+  const prev=$('palP').value;
+  const sel=$('palP');sel.innerHTML='<option value="">— Choisir un paramètre —</option>';
+  Object.keys(pc).sort((a,b)=>{const ca=isCore(a),cb=isCore(b);if(ca!==cb)return ca?-1:1;return a.localeCompare(b);})
+    .forEach(k=>sel.appendChild(new Option(`${k}  (${pc[k]})`,k)));
+  if(prev&&Object.keys(pc).includes(prev))sel.value=prev;
+  buildVL();
+}
+$('palP').onchange=function(){palP=this.value;palV='';buildVL();};
+
+function buildVL(){
+  const list=$('valList');list.innerHTML='';
+  if(!palP){list.innerHTML='<div class="val-e">Choisissez un paramètre</div>';return;}
+  const base=allF();const cnt={};
+  base.forEach(r=>{const v=String((r.Parameters||{})[palP]||'');if(v)cnt[v]=(cnt[v]||0)+1;});
+  const vals=Object.entries(cnt).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+  if(!vals.length){list.innerHTML='<div class="val-e">Aucune valeur</div>';return;}
+  vals.forEach(([v,n])=>{
+    const d=document.createElement('div');d.className='vi'+(palV===v?' on':'');
+    d.innerHTML=`<span class="vdot"></span><span class="vn" title="${esc(v)}">${esc(v)}</span><span class="vc">${n}</span>`;
+    d.onclick=()=>palVClick(v);list.appendChild(d);
+  });
 }
 
-function panToRoom(r){
-  const w=$('viewer2d');
-  panX=w.clientWidth/2-r.CentroidX*zoom;
-  panY=w.clientHeight/2-r.CentroidY*zoom;
-  applyTx($('mainSvg'));
+function palVClick(v){
+  if(palV===v){palV='';selIds.clear();autoCenter();}
+  else{
+    palV=v;selIds.clear();
+    allF().forEach(r=>{if(String((r.Parameters||{})[palP]||'')===v)selIds.add(r.RevitId);});
+    /* switch to best level */
+    const cnt={};allRooms.filter(r=>selIds.has(r.RevitId)).forEach(r=>cnt[r._pk]=(cnt[r._pk]||0)+1);
+    const best=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0];
+    if(best&&best[0]!==currentPlanKey)loadPlan(best[0]);
+  }
+  buildVL();buildRList();paintRooms();renderFiche();updSel();if(R3.ready)recolor3D();
+}
+
+/* ════ ROOM LIST — all levels ════ */
+function buildRList(){
+  const list=$('rList');list.innerHTML='';
+  const q=($('rSrch').value||'').toLowerCase();
+  const rooms=allF().filter(r=>!q||(r.Name||'').toLowerCase().includes(q)||(r.Number||'').toLowerCase().includes(q)||(r._lv||'').toLowerCase().includes(q))
+    .sort((a,b)=>(a._lv||'').localeCompare(b._lv||'')+(a.Number||'').localeCompare(b.Number||'',undefined,{numeric:true}));
+  if(!rooms.length){list.innerHTML='<div class="re">Aucune pièce</div>';return;}
+  rooms.forEach(r=>{
+    const d=document.createElement('div');d.className='rrow'+(selIds.has(r.RevitId)?' on':'');
+    d.innerHTML=`<span class="rnum">${esc(r.Number||'')}</span><span class="rname">${esc(r.Name||'—')}</span><span class="rlvl">${esc(r._lv||'')}</span>`;
+    d.onclick=e=>roomClick(r.RevitId,e.ctrlKey||e.metaKey||e.shiftKey,r._pk);
+    list.appendChild(d);
+  });
+}
+$('rSrch').oninput=buildRList;
+
+/* ════ ROOM CLICK ════ */
+function roomClick(id,add,pk){
+  palV='';
+  if(pk&&pk!==currentPlanKey){
+    loadPlan(pk).then(()=>{if(!add)selIds.clear();selIds.add(id);afterSel(id);});
+    return;
+  }
+  if(add){if(selIds.has(id))selIds.delete(id);else selIds.add(id);}
+  else{selIds.clear();selIds.add(id);}
+  afterSel(id,!add);
+}
+
+function afterSel(id,panTo){
+  if(panTo&&plan){
+    const r=(plan.Rooms||[]).find(x=>x.RevitId===id);
+    if(r&&r.CentroidX){const w=$('v2d');panX=w.clientWidth/2-r.CentroidX*zoom;panY=w.clientHeight/2-r.CentroidY*zoom;applyTx($('mainSvg'));}
+  }
+  buildVL();buildRList();paintRooms();renderFiche();updSel();
+  if(R3.ready){recolor3D();focus3D();}
 }
 
 /* Click outside rooms → deselect + auto-center */
-$('viewer2d').addEventListener('click',e=>{
+$('v2d').addEventListener('click',e=>{
   if(e.target.classList.contains('bfr'))return;
-  if(selIds.size>0){selIds.clear();palVal='';buildValList();buildRoomList();paintRooms();renderFiche();updateSelInfo();if(R3.ready)recolor3D();autoCenter();}
+  if(selIds.size){selIds.clear();palV='';buildVL();buildRList();paintRooms();renderFiche();updSel();if(R3.ready)recolor3D();autoCenter();}
 });
-
-$('selClr').onclick=()=>{selIds.clear();palVal='';$('palParam').value='';palParam='';buildValList();buildRoomList();paintRooms();renderFiche();updateSelInfo();if(R3.ready)recolor3D();autoCenter();};
+$('selClr').onclick=()=>{selIds.clear();palV='';palP='';$('palP').value='';buildVL();buildRList();paintRooms();renderFiche();updSel();if(R3.ready)recolor3D();autoCenter();};
 
 function autoCenter(){resetView();if(R3.ready)fit3D();}
 
-function updateSelInfo(){
+function updSel(){
   const n=selIds.size;
-  if(!n){$('selInfo').innerHTML='<span>Aucune sélection</span>';return;}
+  if(!n){$('selInfo').textContent='Aucune sélection';return;}
   const rooms=allRooms.filter(r=>selIds.has(r.RevitId));
-  let area=0;rooms.forEach(r=>{const v=parseFloat(getVal(r,'surface','area','aire'));if(!isNaN(v))area+=v;});
-  $('selInfo').innerHTML=`<strong>${n}</strong> pièce${n>1?'s':''}${area>0?` · <strong>${area.toFixed(1)} m²</strong>`:''}`;
+  let a=0;rooms.forEach(r=>{const v=parseFloat(findP(r,'surface','area','aire'));if(!isNaN(v))a+=v;});
+  $('selInfo').innerHTML=`<strong>${n}</strong> pièce${n>1?'s':''}${a>0?` · <strong>${a.toFixed(1)} m²</strong>`:''}`;
 }
 
 /* ════ SVG PLAN ════ */
 function renderSVG(){
-  $('v2dEmpty').style.display='none';
+  $('v2dE').style.display='none';
   const old=$('mainSvg');if(old)old.remove();
   const ns='http://www.w3.org/2000/svg';
   const svg=document.createElementNS(ns,'svg');svg.id='mainSvg';
@@ -659,8 +601,7 @@ function renderSVG(){
     p.onclick=e=>{e.stopPropagation();roomClick(r.RevitId,e.ctrlKey||e.metaKey||e.shiftKey);};
     svg.appendChild(p);
   });
-  $('viewer2d').appendChild(svg);
-  setupPanZoom(svg);paintRooms();
+  $('v2d').appendChild(svg);setupPZ(svg);paintRooms();
 }
 
 /* ════ PAINT ROOMS ════ */
@@ -668,61 +609,60 @@ function paintRooms(){
   if(!plan)return;
   const hasSel=selIds.size>0;
   (plan.Rooms||[]).forEach(r=>{
-    const poly=$('poly-'+r.RevitId);if(!poly)return;
-    poly.classList.remove('selected','shaded','filtered-out');
-    const vis=isRoomVis({...r,_levelName:plan.LevelName});
-    const sel=selIds.has(r.RevitId);
-    if(!vis)poly.classList.add('filtered-out');
-    else if(sel)poly.classList.add('selected');
-    else if(hasSel)poly.classList.add('shaded');
+    const p=$('poly-'+r.RevitId);if(!p)return;
+    p.classList.remove('sel','shd','fout');
+    const v=isVis({...r,_lv:plan.LevelName}),s=selIds.has(r.RevitId);
+    if(!v)p.classList.add('fout');
+    else if(s)p.classList.add('sel');
+    else if(hasSel)p.classList.add('shd');
   });
 }
 
-/* ════ PAN / ZOOM ════ */
+/* ════ PAN / ZOOM (FIXED) ════ */
 function resetView(){
   const svg=$('mainSvg');if(!svg)return;
-  const w=$('viewer2d');
-  zoom=Math.min((w.clientWidth-32)/W,(w.clientHeight-32)/H,.0001+0);
-  if(!isFinite(zoom)||zoom<=0)zoom=1;
-  panX=w.clientWidth/2-W/2*zoom;panY=w.clientHeight/2-H/2*zoom;applyTx(svg);
+  const w=$('v2d');
+  const fw=w.clientWidth-24,fh=w.clientHeight-24;
+  if(!fw||!fh||!W||!H)return;
+  zoom=Math.min(fw/W,fh/H);
+  panX=w.clientWidth/2-W/2*zoom;
+  panY=w.clientHeight/2-H/2*zoom;
+  applyTx(svg);
 }
 function applyTx(svg){if(!svg)return;svg.style.left='0';svg.style.top='0';svg.style.transformOrigin='0 0';svg.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`;}
 function zoomAt(f,cx,cy){
-  const w=$('viewer2d');
-  cx=cx??w.clientWidth/2;cy=cy??w.clientHeight/2;
-  const nz=Math.min(Math.max(zoom*f,.04),30);panX=cx-(cx-panX)*(nz/zoom);panY=cy-(cy-panY)*(nz/zoom);zoom=nz;applyTx($('mainSvg'));
+  const w=$('v2d');cx=cx??w.clientWidth/2;cy=cy??w.clientHeight/2;
+  const nz=Math.min(Math.max(zoom*f,.03),30);
+  panX=cx-(cx-panX)*(nz/zoom);panY=cy-(cy-panY)*(nz/zoom);zoom=nz;applyTx($('mainSvg'));
 }
-function setupPanZoom(svg){
-  const wr=$('viewer2d');
-  wr.addEventListener('wheel',e=>{
-    e.preventDefault();
-    const rc=wr.getBoundingClientRect();
-    zoomAt(e.deltaY<0?1.13:1/1.13,e.clientX-rc.left,e.clientY-rc.top);
-  },{passive:false});
-  wr.addEventListener('mousedown',e=>{if(e.button===1||e.button===2){isPan=true;panStart={x:e.clientX-panX,y:e.clientY-panY};wr.style.cursor='grabbing';e.preventDefault();}});
+function setupPZ(svg){
+  const wr=$('v2d');
+  wr.addEventListener('wheel',e=>{e.preventDefault();const rc=wr.getBoundingClientRect();zoomAt(e.deltaY<0?1.13:1/1.13,e.clientX-rc.left,e.clientY-rc.top);},{passive:false});
+  wr.addEventListener('mousedown',e=>{if(e.button===1||e.button===2){panning=true;panStart={x:e.clientX-panX,y:e.clientY-panY};wr.style.cursor='grabbing';e.preventDefault();}});
   wr.addEventListener('contextmenu',e=>e.preventDefault());
-  window.addEventListener('mouseup',e=>{if(e.button===1||e.button===2){isPan=false;wr.style.cursor='';}});
-  window.addEventListener('mousemove',e=>{if(!isPan)return;panX=e.clientX-panStart.x;panY=e.clientY-panStart.y;applyTx($('mainSvg'));});
-  $('zIn').onclick=()=>zoomAt(1.2);$('zOut').onclick=()=>zoomAt(1/1.2);$('zFit').onclick=()=>resetView();
+  window.addEventListener('mouseup',()=>{if(panning){panning=false;$('v2d').style.cursor='';}});
+  window.addEventListener('mousemove',e=>{if(!panning)return;panX=e.clientX-panStart.x;panY=e.clientY-panStart.y;applyTx($('mainSvg'));});
+  $('zIn').onclick=()=>zoomAt(1.2);$('zOut').onclick=()=>zoomAt(1/1.2);$('zFit').onclick=resetView;
 }
 
-/* ════ VIEW MODE ════ */
+/* ════ VIEW MODE TOGGLE ════ */
 $('vmBar').onclick=e=>{
-  const b=e.target.closest('.vm-btn');if(!b)return;
-  const m=b.dataset.m;const c=$('center');
-  c.className=m;
-  [...$('vmBar').children].forEach(x=>x.classList.toggle('active',x===b));
-  setTimeout(()=>{resetView();resize3D();if(!c.classList.contains('v-m2d'))update3D();},30);
+  const b=e.target.closest('.vmbtn');if(!b)return;
+  const m=b.dataset.m;const cc=$('centerCol');
+  cc.className=m;
+  [...$('vmBar').children].forEach(x=>x.classList.toggle('on',x===b));
+  setTimeout(()=>{resetView();resize3D();if(!cc.classList.contains('vm2'))initAndBuild3D();},30);
 };
 
-/* ════ H SPLITTER (2D / 3D) ════ */
-function initCenterSplit(){
-  const c=$('center'),v3=$('viewer3d');
-  const h=c.clientHeight-($('sph').offsetHeight||5);
-  v3.style.height=Math.max(80,h/2)+'px';v3.style.flex='none';
+/* ════ SPLIT H — 50/50 init + drag ════ */
+function initSplit(){
+  const cc=$('centerCol'),v3=$('v3d'),spl=$('hspl');
+  const h=cc.clientHeight-(spl.offsetHeight||5);
+  v3.style.height=Math.max(80,Math.floor(h/2))+'px';
+  v3.style.flex='none';
 }
 (()=>{
-  const bar=$('sph'),v3=$('viewer3d');
+  const bar=$('hspl'),v3=$('v3d');
   bar.onmousedown=ev=>{
     ev.preventDefault();bar.classList.add('drag');
     const s0=ev.clientY,h0=v3.getBoundingClientRect().height;
@@ -732,341 +672,290 @@ function initCenterSplit(){
   };
 })();
 
-/* ════ PANEL RESIZE ════ */
-function setupColResize(handleId,panelId,dir){
-  /* dir: 'right'=left panel grows right, 'left'=right panel grows left */
-  const h=$(handleId),p=$(panelId);
-  const minW=parseInt(p.style.minWidth||p.style.getPropertyValue('min-width'))||160;
-  const maxW=parseInt(p.style.maxWidth||p.style.getPropertyValue('max-width'))||700;
+/* ════ PANEL RESIZE (cols) ════ */
+function setupCR(hId,panId,dir){
+  const h=$(hId),p=$(panId);
   h.onmousedown=ev=>{
-    ev.preventDefault();h.classList.add('drag');
-    document.body.style.cursor='col-resize';
+    ev.preventDefault();h.classList.add('drag');document.body.style.cursor='col-resize';
     const s0=ev.clientX,w0=p.offsetWidth;
-    const mv=e=>{
-      const delta=dir==='right'?(e.clientX-s0):(s0-e.clientX);
-      p.style.width=Math.max(minW,Math.min(maxW,w0+delta))+'px';
-    };
-    const up=()=>{h.classList.remove('drag');document.body.style.cursor='';document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);setTimeout(()=>{resetView();resize3D();},30);};
+    const mv=e=>{const d=dir==='r'?(e.clientX-s0):(s0-e.clientX);p.style.flex='none';p.style.width=Math.max(160,Math.min(700,w0+d))+'px';};
+    const up=()=>{h.classList.remove('drag');document.body.style.cursor='';document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);setTimeout(()=>{resetView();resize3D();},20);};
     document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
   };
 }
-setupColResize('rhLeft','leftPanel','right');
-setupColResize('rhRight','fiche-col','left');
-
+setupCR('rhL','leftCol','r');
+setupCR('rhR','ficheCol','l');
 window.onresize=()=>{resetView();resize3D();};
 
-/* ════ 3D ════ */
-let _threeP=null;
+/* ════ 3D — ALL LEVELS ════ */
+let _thP=null;
 function loadThree(){
   if(window.THREE&&THREE.OrbitControls)return Promise.resolve();
-  if(_threeP)return _threeP;
-  _threeP=new Promise((res,rej)=>{
+  if(_thP)return _thP;
+  _thP=new Promise((res,rej)=>{
     const s1=document.createElement('script');s1.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-    s1.onload=()=>{const s2=document.createElement('script');s2.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';s2.onload=res;s2.onerror=()=>rej(new Error('OrbitControls'));document.head.appendChild(s2);};
-    s1.onerror=()=>rej(new Error('Three.js'));document.head.appendChild(s1);
+    s1.onload=()=>{const s2=document.createElement('script');s2.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';s2.onload=res;s2.onerror=()=>rej(new Error('OC'));document.head.appendChild(s2);};
+    s1.onerror=()=>rej(new Error('Three'));document.head.appendChild(s1);
   });
-  return _threeP;
+  return _thP;
 }
 const R3={ready:false};
+
+async function initAndBuild3D(){
+  if($('centerCol').classList.contains('vm2'))return;
+  try{await loadThree();}catch(e){console.warn('3D unavailable',e);return;}
+  if(!R3.ready)init3D();
+  resize3D();buildAll3D();
+}
+
 function init3D(){
-  const cv=$('canvas3d');
-  R3.renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
-  R3.renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));
-  R3.scene=new THREE.Scene();R3.camera=new THREE.PerspectiveCamera(45,1,.1,1e6);
-  R3.controls=new THREE.OrbitControls(R3.camera,cv);R3.controls.enableDamping=true;R3.controls.dampingFactor=.08;
-  R3.scene.add(new THREE.AmbientLight(0xffffff,.78));
-  const dl=new THREE.DirectionalLight(0xffffff,.55);dl.position.set(1,2,1.2);R3.scene.add(dl);
-  R3.group=new THREE.Group();R3.group.rotation.x=-Math.PI/2;R3.scene.add(R3.group);
-  R3.meshes={};R3.ready=true;resize3D();
-  (function loop(){requestAnimationFrame(loop);R3.controls.update();R3.renderer.render(R3.scene,R3.camera);})();
+  const cv=$('c3d');
+  R3.r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+  R3.r.setPixelRatio(Math.min(2,devicePixelRatio||1));
+  R3.s=new THREE.Scene();R3.c=new THREE.PerspectiveCamera(45,1,.1,1e6);
+  R3.oc=new THREE.OrbitControls(R3.c,cv);R3.oc.enableDamping=true;R3.oc.dampingFactor=.08;
+  R3.s.add(new THREE.AmbientLight(0xffffff,.8));
+  const dl=new THREE.DirectionalLight(0xffffff,.5);dl.position.set(1,2,1);R3.s.add(dl);
+  R3.g=new THREE.Group();R3.g.rotation.x=-Math.PI/2;R3.s.add(R3.g);
+  R3.meshes={};R3.ready=true;
+  resize3D();
+  (function loop(){requestAnimationFrame(loop);R3.oc.update();R3.r.render(R3.s,R3.c);})();
+  /* click handler */
   const ray=new THREE.Raycaster(),v2=new THREE.Vector2();
   cv.onclick=e=>{
     const rc=cv.getBoundingClientRect();
     v2.x=((e.clientX-rc.left)/rc.width)*2-1;v2.y=-((e.clientY-rc.top)/rc.height)*2+1;
-    ray.setFromCamera(v2,R3.camera);const hit=ray.intersectObjects(R3.group.children,true)[0];
-    let o=hit&&hit.object;while(o&&!o.userData.id)o=o.parent;
-    if(o&&o.userData.id)roomClick(o.userData.id,false);
-    else{if(selIds.size){selIds.clear();palVal='';buildValList();buildRoomList();paintRooms();renderFiche();updateSelInfo();fit3D();}};
+    ray.setFromCamera(v2,R3.c);
+    const hits=ray.intersectObjects(R3.g.children,true);
+    let o=hits[0]&&hits[0].object;while(o&&!o.userData.id)o=o.parent;
+    if(o&&o.userData.id){roomClick(o.userData.id,false,o.userData.pk);}
+    else{if(selIds.size){selIds.clear();palV='';buildVL();buildRList();paintRooms();renderFiche();updSel();fit3D();}}
   };
 }
-function resize3D(){if(!R3.ready)return;const p=$('viewer3d');R3.renderer.setSize(p.clientWidth||1,p.clientHeight||1,false);R3.camera.aspect=(p.clientWidth||1)/(p.clientHeight||1);R3.camera.updateProjectionMatrix();}
-function build3D(){
+
+/* Build 3D from ALL cached plans (all levels stacked) */
+function buildAll3D(){
   if(!R3.ready)return;
-  while(R3.group.children.length){const c=R3.group.children.pop();c.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});}
+  while(R3.g.children.length){const c=R3.g.children.pop();c.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});}
   R3.meshes={};let any=false;
-  (plan?.Rooms||[]).forEach(r=>{
-    const fp=r.Footprint;if(!fp||fp.length<3)return;
-    const sh=new THREE.Shape();sh.moveTo(fp[0][0],fp[0][1]);for(let i=1;i<fp.length;i++)sh.lineTo(fp[i][0],fp[i][1]);sh.closePath();
-    const h=Math.max(0.3,r.Height||2.8);
-    const geo=new THREE.ExtrudeGeometry(sh,{depth:h,bevelEnabled:false});geo.translate(0,0,r.BaseZ||0);
-    const mat=new THREE.MeshLambertMaterial({color:0x3b82f6,transparent:true,opacity:.85});
-    const mesh=new THREE.Mesh(geo,mat);mesh.userData.id=r.RevitId;
-    mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:0x0b1424})));
-    R3.group.add(mesh);R3.meshes[r.RevitId]=mesh;any=true;
+  allPlans.forEach(pl=>{
+    const pd=planCache[pl.key];if(!pd)return;
+    (pd.Rooms||[]).forEach(r=>{
+      const fp=r.Footprint;if(!fp||fp.length<3)return;
+      const sh=new THREE.Shape();sh.moveTo(fp[0][0],fp[0][1]);
+      for(let i=1;i<fp.length;i++)sh.lineTo(fp[i][0],fp[i][1]);sh.closePath();
+      const h=Math.max(0.3,r.Height||2.8);
+      const geo=new THREE.ExtrudeGeometry(sh,{depth:h,bevelEnabled:false});
+      geo.translate(0,0,r.BaseZ||0);
+      const mat=new THREE.MeshLambertMaterial({color:0x3b82f6,transparent:true,opacity:.78});
+      const mesh=new THREE.Mesh(geo,mat);
+      mesh.userData.id=r.RevitId;mesh.userData.pk=pl.key;
+      mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:0x0b1424})));
+      R3.g.add(mesh);R3.meshes[r.RevitId]=mesh;any=true;
+    });
   });
-  if(any)fit3D();recolor3D();
+  if(any)fit3D();
+  recolor3D();
 }
+
+function resize3D(){if(!R3.ready)return;const p=$('v3d');R3.r.setSize(p.clientWidth||1,p.clientHeight||1,false);R3.c.aspect=(p.clientWidth||1)/(p.clientHeight||1);R3.c.updateProjectionMatrix();}
+
 function fit3D(){
-  if(!R3.ready)return;const box=new THREE.Box3().setFromObject(R3.group);if(box.isEmpty())return;
+  if(!R3.ready)return;const box=new THREE.Box3().setFromObject(R3.g);if(box.isEmpty())return;
   const c=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3());const d=Math.max(s.x,s.y,s.z,5);
-  R3.controls.target.copy(c);R3.camera.position.set(c.x+d*.75,c.y+d*.9,c.z+d*.75);
-  R3.camera.near=Math.max(.05,d/2000);R3.camera.far=d*200;R3.camera.updateProjectionMatrix();R3.controls.update();
+  R3.oc.target.copy(c);R3.c.position.set(c.x+d*.8,c.y+d*1.0,c.z+d*.8);
+  R3.c.near=Math.max(.05,d/2000);R3.c.far=d*200;R3.c.updateProjectionMatrix();R3.oc.update();
 }
+
+/* Focus 3D camera on selected rooms */
+function focus3D(){
+  if(!R3.ready)return;
+  if(!selIds.size){fit3D();return;}
+  const sel=[...selIds].map(id=>R3.meshes[id]).filter(Boolean);
+  if(!sel.length)return;
+  const box=new THREE.Box3();sel.forEach(m=>box.expandByObject(m));
+  if(box.isEmpty())return;
+  const c=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3());
+  const d=Math.max(s.x,s.y,s.z,4);
+  R3.oc.target.copy(c);R3.c.position.set(c.x+d*.8,c.y+d*.8,c.z+d*.8);
+  R3.c.near=Math.max(.05,d/2000);R3.c.far=d*500;R3.c.updateProjectionMatrix();R3.oc.update();
+}
+
+/* Recolor 3D based on selection/filter */
 function recolor3D(){
-  if(!R3.ready||!plan)return;
+  if(!R3.ready)return;
   const hasSel=selIds.size>0;
-  (plan.Rooms||[]).forEach(r=>{
-    const mesh=R3.meshes[r.RevitId];if(!mesh)return;
-    const vis=isRoomVis({...r,_levelName:plan.LevelName}),sel=selIds.has(r.RevitId);
-    if(!vis){mesh.material.color.setHex(0x0a1222);mesh.material.opacity=.08;}
-    else if(sel){mesh.material.color.setHex(0x38bdf8);mesh.material.opacity=.92;}
-    else if(hasSel){mesh.material.color.setHex(0x0d1a2e);mesh.material.opacity=.18;}
-    else{mesh.material.color.setHex(0x3b82f6);mesh.material.opacity=.82;}
+  Object.entries(R3.meshes).forEach(([id,mesh])=>{
+    const room=allRooms.find(r=>r.RevitId===id);if(!mesh||!room)return;
+    const v=isVis(room),s=selIds.has(id);
+    if(!v){mesh.material.color.setHex(0x0c1526);mesh.material.opacity=.04;}
+    else if(s){mesh.material.color.setHex(0x38bdf8);mesh.material.opacity=.9;}
+    else if(hasSel){mesh.material.color.setHex(0x0f1e36);mesh.material.opacity=.12;}
+    else{mesh.material.color.setHex(0x3b82f6);mesh.material.opacity=.75;}
   });
 }
-async function update3D(){
-  if($('center').classList.contains('v-m2d'))return;
-  try{await loadThree();}catch(e){$('hint3d').textContent='3D indisponible';return;}
-  if(!R3.ready)init3D();resize3D();build3D();
-}
-$('fit3dBtn').onclick=fit3D;
-$('m3dBar').onclick=e=>{const b=e.target.closest('.m3d-btn');if(!b)return;[...$('m3dBar').children].forEach(x=>x.classList.toggle('active',x===b));update3D();};
 
-/* ════ FICHE HTML GENERATOR (pure, reusable) ════ */
-function ficheHTML(room,projectName){
-  const P=room.Parameters||{};
+$('fit3Btn').onclick=()=>{if(selIds.size)focus3D();else fit3D();};
+$('m3bar').onclick=e=>{const b=e.target.closest('.m3btn');if(!b)return;[...$('m3bar').children].forEach(x=>x.classList.toggle('on',x===b));buildAll3D();};
+
+/* ════ FICHE HTML (pure function) ════ */
+function ficheH(room){
   const num=room.Number||'',name=room.Name||'—';
-  const lvl=room._levelName||room.LevelName||'';
-  const areaRaw=getVal(room,'surface','area','aire');
-  const areaN=parseFloat(areaRaw);
-  const phase=getVal(room,'phase');
-  const usage=getVal(room,'usage','occupation','type','fonction','function');
-  const proj=projectName||room._projectName||'';
+  const lvl=room._lv||room.LevelName||'';
+  const area=parseFloat(findP(room,'surface','area','aire'));
+  const phase=findP(room,'phase');
+  const usage=findP(room,'usage','occupation','type','fonction','function');
+  const proj=room._proj||'';
 
-  const sections=SCHEMA.map(s=>{
-    if(s.group==='NOTES / COMMENTAIRES'){
-      const v=schemaVal(room,s.fields[0]);
-      return `<div class="fa4-sec"><div class="fa4-sec-hd">${s.group}</div><div class="fa4-notes ${v?'':'empty'}">${esc(v||'—')}</div></div>`;
+  const secs=SCHEMA.map(s=>{
+    if(s.f[0]?.notes){
+      const v=schV(room,s.f[0]);
+      return `<div class="fa-sec"><div class="fa-sh">${s.g}</div><div class="fa-notes ${v?'':'mt'}">${esc(v||'—')}</div></div>`;
     }
-    return `<div class="fa4-sec"><div class="fa4-sec-hd">${s.group}</div><div class="${s.grid}">${s.fields.map(f=>{
-      const v=schemaVal(room,f);
-      return `<div class="fa4-f"><div class="fa4-fl">${esc(f.lbl)}</div><div class="fa4-fv ${v?'has':'empty'}">${esc(v||'—')}${v&&f.unit?` <small style="color:#94a3b8;font-size:8px">${f.unit}</small>`:''}</div></div>`;
+    return `<div class="fa-sec"><div class="fa-sh">${s.g}</div><div class="${s.cls}">${s.f.map(f=>{
+      const v=schV(room,f);
+      return `<div class="ff"><div class="ffl">${esc(f.l)}</div><div class="ffv ${v?'':'mt'}">${esc(v||'—')}${v&&f.u?`<small style="color:#94a3b8;font-size:8px"> ${f.u}</small>`:''}</div></div>`;
     }).join('')}</div></div>`;
   }).join('');
 
-  return `<div class="fiche-a4">
-    <div class="fa4-hdr">
-      <div><div class="fa4-brand">BIM<span>ATIKA</span></div><div style="font-size:9px;opacity:.7;margin-top:2px">BIMFlow Platform</div></div>
-      <div><div class="fa4-title">FICHE DE LOCAL</div><div class="fa4-subtitle">Room Data Sheet</div></div>
+  return `<div class="fa">
+    <div class="fa-hdr"><div><div class="fa-brand">BIM<span>ATIKA</span></div><div style="font-size:9px;opacity:.7;margin-top:2px">BIMFlow Platform</div></div><div><div class="fa-title">FICHE DE LOCAL</div><div class="fa-sub">Room Data Sheet</div></div></div>
+    <div class="fa-proj">
+      <div class="fa-pi"><span class="fa-pl">Projet :</span><span class="fa-pv">${esc(proj||'—')}</span></div>
+      <div class="fa-pi"><span class="fa-pl">Niveau :</span><span class="fa-pv">${esc(lvl||'—')}</span></div>
+      ${phase?`<div class="fa-pi"><span class="fa-pl">Phase :</span><span class="fa-pv">${esc(phase)}</span></div>`:''}
+      ${usage?`<div class="fa-pi"><span class="fa-pl">Usage :</span><span class="fa-pv">${esc(usage)}</span></div>`:''}
     </div>
-    <div class="fa4-proj">
-      <div class="fa4-pi"><span class="fa4-pl">Projet :</span><span class="fa4-pv">${esc(proj||'—')}</span></div>
-      <div class="fa4-pi"><span class="fa4-pl">Niveau :</span><span class="fa4-pv">${esc(lvl||'—')}</span></div>
-      ${phase?`<div class="fa4-pi"><span class="fa4-pl">Phase :</span><span class="fa4-pv">${esc(phase)}</span></div>`:''}
-      ${usage?`<div class="fa4-pi"><span class="fa4-pl">Usage :</span><span class="fa4-pv">${esc(usage)}</span></div>`:''}
-    </div>
-    <div class="fa4-id">
-      ${num?`<div class="fa4-num">${esc(num)}</div>`:''}
-      <div class="fa4-name">${esc(name)}</div>
-      ${!isNaN(areaN)?`<div class="fa4-area">${areaN.toFixed(2)}<span> m²</span></div>`:''}
-    </div>
-    ${sections}
-    <div class="fa4-footer"><span>BIMFlow · bimatika-bimplan.pages.dev</span><span>${new Date().toLocaleDateString('fr-FR')}</span></div>
+    <div class="fa-id">${num?`<div class="fa-num">${esc(num)}</div>`:''}<div class="fa-name">${esc(name)}</div>${!isNaN(area)?`<div class="fa-area">${area.toFixed(2)}<span> m²</span></div>`:''}</div>
+    ${secs}
+    <div class="fa-foot"><span>BIMFlow · bimatika-bimplan.pages.dev</span><span>${new Date().toLocaleDateString('fr-FR')}</span></div>
   </div>`;
 }
 
 /* ════ RENDER FICHE PANEL ════ */
-function missingFields(){
-  const vis=allFiltered();if(!vis.length)return[];
-  return SCHEMA.flatMap(s=>s.fields).filter(f=>f.create&&!vis.some(r=>schemaVal(r,f)));
+function missingF(){
+  const base=allF();if(!base.length)return[];
+  return SCHEMA.flatMap(s=>s.f).filter(f=>f.c&&!base.some(r=>schV(r,f)));
 }
 
 function renderFiche(){
-  const selArr=allRooms.filter(r=>selIds.has(r.RevitId));
-  const missing=missingFields();
-  $('btnCreateParams').style.display=missing.length&&selArr.length?'':'none';
-
-  if(!selArr.length){
-    $('ficheTopSub').textContent='';
-    $('ficheScroll').innerHTML=`<div class="fiche-empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 12h6M9 16h6M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M9 4h6v4H9z"/></svg><p>Sélectionnez une pièce sur le plan ou via la palette.</p></div>`;
+  const selA=allRooms.filter(r=>selIds.has(r.RevitId));
+  $('btnCP').style.display=missingF().length&&selA.length?'':'none';
+  if(!selA.length){
+    $('ftopSub').textContent='';
+    $('fScroll').innerHTML=`<div class="fempty"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 12h6M9 16h6M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M9 4h6v4H9z"/></svg><p>Sélectionnez une pièce sur le plan ou via la palette de paramètres.</p></div>`;
     return;
   }
-  if(selArr.length===1){
-    const r=selArr[0];
-    $('ficheTopSub').textContent=(r.Number?r.Number+' · ':'')+r.Name;
-    $('ficheScroll').innerHTML=ficheHTML(r);
+  if(selA.length===1){
+    $('ftopSub').textContent=(selA[0].Number?selA[0].Number+' · ':'')+selA[0].Name;
+    $('fScroll').innerHTML=ficheH(selA[0]);
   } else {
-    renderMulti(selArr);
+    renderMulti(selA);
   }
 }
 
 function renderMulti(rooms){
-  const n=rooms.length;let totalArea=0;
-  rooms.forEach(r=>{const v=parseFloat(getVal(r,'surface','area','aire'));if(!isNaN(v))totalArea+=v;});
-  $('ficheTopSub').textContent=`${n} pièces`;
-  const anyPh=rooms.some(r=>getVal(r,'phase'));
-  const anyUs=rooms.some(r=>getVal(r,'usage','occupation','type','fonction'));
-  const rows=rooms.map(r=>{
-    const area=parseFloat(getVal(r,'surface','area','aire'));
-    return `<tr onclick="singleJump('${r.RevitId}')" style="cursor:pointer">
-      <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0;font-weight:600">${esc(r.Number||'')}</td>
-      <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0">${esc(r.Name||'—')}</td>
-      <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0;color:#64748b">${esc(r._levelName||r.LevelName||'')}</td>
-      <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0;text-align:right">${isNaN(area)?'—':area.toFixed(2)+' m²'}</td>
-      ${anyPh?`<td style="padding:5px 8px;border-bottom:1px solid #e2e8f0">${esc(getVal(r,'phase')||'—')}</td>`:''}
-      ${anyUs?`<td style="padding:5px 8px;border-bottom:1px solid #e2e8f0">${esc(getVal(r,'usage','occupation','type','fonction')||'—')}</td>`:''}
-    </tr>`;
-  }).join('');
-  $('ficheScroll').innerHTML=`<div class="fiche-a4">
-    <div class="fa4-hdr"><div><div class="fa4-brand">BIM<span>ATIKA</span></div></div><div><div class="fa4-title">SÉLECTION</div><div class="fa4-subtitle">${n} pièces · ${totalArea.toFixed(2)} m²</div></div></div>
+  const n=rooms.length;let ta=0;
+  rooms.forEach(r=>{const v=parseFloat(findP(r,'surface','area','aire'));if(!isNaN(v))ta+=v;});
+  $('ftopSub').textContent=`${n} pièces`;
+  const anyP=rooms.some(r=>findP(r,'phase'));const anyU=rooms.some(r=>findP(r,'usage','occupation','type','fonction'));
+  $('fScroll').innerHTML=`<div class="fa">
+    <div class="fa-hdr"><div><div class="fa-brand">BIM<span>ATIKA</span></div></div><div><div class="fa-title">SÉLECTION</div><div class="fa-sub">${n} pièces · ${ta.toFixed(2)} m²</div></div></div>
     <table style="width:100%;border-collapse:collapse;font-size:11px">
       <thead><tr style="background:#1e293b;color:#fff">
         <th style="padding:5px 8px;text-align:left">N°</th><th style="padding:5px 8px;text-align:left">Nom</th>
         <th style="padding:5px 8px;text-align:left">Niveau</th><th style="padding:5px 8px;text-align:right">Surface</th>
-        ${anyPh?'<th style="padding:5px 8px;text-align:left">Phase</th>':''}
-        ${anyUs?'<th style="padding:5px 8px;text-align:left">Usage</th>':''}
+        ${anyP?'<th style="padding:5px 8px;text-align:left">Phase</th>':''}${anyU?'<th style="padding:5px 8px;text-align:left">Usage</th>':''}
       </tr></thead>
-      <tbody>${rows}</tbody>
+      <tbody>${rooms.map(r=>{const a=parseFloat(findP(r,'surface','area','aire'));
+        return `<tr onclick="sJump('${r.RevitId}')" style="cursor:pointer">
+          <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0;font-weight:600">${esc(r.Number||'')}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0">${esc(r.Name||'—')}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0;color:#64748b">${esc(r._lv||'')}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0;text-align:right">${isNaN(a)?'—':a.toFixed(2)+' m²'}</td>
+          ${anyP?`<td style="padding:5px 8px;border-bottom:1px solid #e2e8f0">${esc(findP(r,'phase')||'—')}</td>`:''}
+          ${anyU?`<td style="padding:5px 8px;border-bottom:1px solid #e2e8f0">${esc(findP(r,'usage','occupation','type','fonction')||'—')}</td>`:''}
+        </tr>`;}).join('')}
+      </tbody>
       <tfoot><tr style="background:#f1f5f9;font-weight:700">
-        <td colspan="${3+(anyPh?1:0)+(anyUs?1:0)}" style="padding:5px 8px">Total</td>
-        <td style="padding:5px 8px;text-align:right">${totalArea.toFixed(2)} m²</td>
+        <td colspan="${3+(anyP?1:0)+(anyU?1:0)}" style="padding:5px 8px">Total</td>
+        <td style="padding:5px 8px;text-align:right">${ta.toFixed(2)} m²</td>
       </tr></tfoot>
     </table>
-    <div class="fa4-footer"><span>Cliquez une ligne → fiche individuelle</span><span>${new Date().toLocaleDateString('fr-FR')}</span></div>
+    <div class="fa-foot"><span>Cliquez une ligne → fiche individuelle</span><span>${new Date().toLocaleDateString('fr-FR')}</span></div>
   </div>`;
 }
 
-function singleJump(id){selIds.clear();selIds.add(id);buildValList();buildRoomList();paintRooms();renderFiche();updateSelInfo();if(R3.ready)recolor3D();}
+function sJump(id){selIds.clear();selIds.add(id);buildVL();buildRList();paintRooms();renderFiche();updSel();if(R3.ready){recolor3D();focus3D();}}
 
 /* ════ CREATE MISSING PARAMS ════ */
-$('btnCreateParams').onclick=async()=>{
-  const missing=missingFields();if(!missing.length)return;
-  const names=missing.map(f=>f.create).join('\n');
-  if(!confirm(`Créer ces paramètres dans Revit ?\n\n${names}\n\nValeurs initiales vides.`))return;
+$('btnCP').onclick=async()=>{
+  const mf=missingF();if(!mf.length)return;
+  if(!confirm(`Créer dans Revit :\n${mf.map(f=>f.c).join('\n')}\n\n(valeurs initiales vides)`))return;
   try{
-    const updates=allRooms.map(r=>({RevitId:r.RevitId,Parameters:Object.fromEntries(missing.map(f=>[f.create,'']))}));
-    await api('/api/updates',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({PlanKey:currentPlanKey,Updates:updates,NewParameters:missing.map(f=>({Name:f.create,Type:'text'}))})});
-    alert('Paramètres créés !\nDans Revit : cliquez "Recevoir depuis BIMFlow".');
+    await apiFetch('/api/updates',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({PlanKey:currentPlanKey,Updates:allRooms.map(r=>({RevitId:r.RevitId,Parameters:Object.fromEntries(mf.map(f=>[f.c,'']))})),NewParameters:mf.map(f=>({Name:f.c,Type:'text'}))})});
+    alert('Paramètres créés ! Dans Revit : "Recevoir depuis BIMFlow".');
     planCache[currentPlanKey]=null;await loadPlan(currentPlanKey);
   }catch(e){alert('Erreur: '+e.message);}
 };
 
-/* ════ PRINT CURRENT ════ */
-$('btnPrint').onclick=()=>{if(!selIds.size){alert('Sélectionnez au moins une pièce.');return;}window.print();};
+/* ════ PRINT ════ */
+$('btnPrint').onclick=()=>{if(!selIds.size){alert('Sélectionnez une pièce.');return;}window.print();};
 
 /* ════ EXPORT DROPDOWN ════ */
-$('btnExpToggle').onclick=e=>{e.stopPropagation();$('expWrap').classList.toggle('open');};
-document.addEventListener('click',()=>$('expWrap').classList.remove('open'));
+$('edBtn').onclick=e=>{e.stopPropagation();$('edWrap').classList.toggle('open');};
+document.addEventListener('click',()=>$('edWrap').classList.remove('open'));
 
-/* ════ EXPORT EXCEL ════ */
-async function exportExcel(allRoomsMode){
-  setStatus('Préparation Excel…','loading');
-  try{
-    if(!window.XLSX){
-      await new Promise((res,rej)=>{
-        const s=document.createElement('script');
-        s.src='https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js';
-        s.onload=res;s.onerror=()=>rej(new Error('SheetJS CDN indisponible'));
-        document.head.appendChild(s);
-      });
-    }
-    const rooms=allRoomsMode?allRooms:allFiltered();
-    if(!rooms.length){alert('Aucune pièce à exporter.');setStatus('Prêt','ok');return;}
-
-    /* Collect all unique param keys */
-    const paramKeys=new Set();
-    rooms.forEach(r=>Object.keys(r.Parameters||{}).forEach(k=>paramKeys.add(k)));
-
-    /* Schema field labels first, then remaining params */
-    const schemaKeys=SCHEMA.flatMap(s=>s.fields).map(f=>({lbl:f.lbl,keys:f.keys}));
-    const otherKeys=[...paramKeys].filter(k=>!schemaKeys.some(sf=>sf.keys.some(sk=>k.toLowerCase().includes(sk.toLowerCase())))).sort();
-
-    const header=['N°','Nom','Niveau',
-      ...schemaKeys.map(f=>f.lbl),
-      ...otherKeys
-    ];
-
-    const rowData=rooms.map(r=>{
-      const area=getVal(r,'surface','area','aire');
-      const row=[r.Number||'',r.Name||'',r._levelName||r.LevelName||''];
-      schemaKeys.forEach(f=>row.push(schemaVal(r,{keys:f.keys})||''));
-      otherKeys.forEach(k=>row.push((r.Parameters||{})[k]||''));
-      return row;
-    });
-
-    /* Group by level into sheets */
-    const levels=[...new Set(rooms.map(r=>r._levelName||r.LevelName||'Inconnu'))];
-    const wb=XLSX.utils.book_new();
-
-    /* All rooms sheet */
-    const wsAll=XLSX.utils.aoa_to_sheet([header,...rowData]);
-    styleXlsxHeader(wsAll,header.length);
-    XLSX.utils.book_append_sheet(wb,wsAll,'Toutes les pièces');
-
-    /* Per-level sheets */
-    levels.forEach(lvl=>{
-      const lvlRows=rooms.filter(r=>(r._levelName||r.LevelName||'Inconnu')===lvl)
-        .map(r=>{const row=[r.Number||'',r.Name||'',r._levelName||r.LevelName||''];
-          schemaKeys.forEach(f=>row.push(schemaVal(r,{keys:f.keys})||''));
-          otherKeys.forEach(k=>row.push((r.Parameters||{})[k]||''));return row;});
-      const ws=XLSX.utils.aoa_to_sheet([header,...lvlRows]);
-      styleXlsxHeader(ws,header.length);
-      XLSX.utils.book_append_sheet(wb,ws,lvl.substring(0,31));
-    });
-
-    XLSX.writeFile(wb,`BIMFlow_Fiches_${new Date().toISOString().slice(0,10)}.xlsx`);
-    setStatus(`${rooms.length} pièces exportées`,'ok');
-  }catch(e){setStatus('Erreur export: '+e.message,'err');alert('Erreur: '+e.message);}
-}
-
-function styleXlsxHeader(ws,colCount){
-  if(!ws['!cols'])ws['!cols']=[];
-  for(let i=0;i<colCount;i++){if(!ws['!cols'][i])ws['!cols'][i]={};ws['!cols'][i].wch=i<3?18:22;}
-  /* Bold header row */
-  for(let c=0;c<colCount;c++){
-    const cell=XLSX.utils.encode_cell({r:0,c});
-    if(ws[cell])ws[cell].s={font:{bold:true},fill:{fgColor:{rgb:'1E293B'}},font:{color:{rgb:'FFFFFF'}}};
-  }
-  ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:0,c:colCount-1}})};
-}
-
-/* ════ EXPORT PDF (print window) ════ */
-function exportPDF(allRoomsMode){
-  const rooms=allRoomsMode?allRooms:allFiltered();
+/* ════ EXPORT CSV (instant, no library) ════ */
+function exportCSV(allMode){
+  const rooms=allMode?allRooms:allF();
   if(!rooms.length){alert('Aucune pièce à exporter.');return;}
+  setSt('Génération CSV…','load');
 
-  const cssText=Array.from(document.styleSheets).flatMap(ss=>{try{return Array.from(ss.cssRules).map(r=>r.cssText);}catch{return [];}}).join('\n');
+  /* Collect all unique param keys */
+  const allPK=new Set();rooms.forEach(r=>Object.keys(r.Parameters||{}).forEach(k=>allPK.add(k)));
+  const schFields=SCHEMA.flatMap(s=>s.f);
+  /* Schema cols first, then remaining */
+  const extraKeys=[...allPK].filter(k=>!schFields.some(f=>f.k.some(sk=>k.toLowerCase().includes(sk.toLowerCase())))).sort();
 
-  const body=rooms.map((r,i)=>ficheHTML(r)+(i<rooms.length-1?'<div style="page-break-after:always"></div>':'')).join('');
+  const header=['N°','Nom','Niveau','Phase','Usage',...schFields.map(f=>f.l),...extraKeys];
+  const rows=rooms.map(r=>[
+    r.Number||'', r.Name||'', r._lv||r.LevelName||'',
+    findP(r,'phase'), findP(r,'usage','occupation','type','fonction','function'),
+    ...schFields.map(f=>schV(r,f)),
+    ...extraKeys.map(k=>String((r.Parameters||{})[k]||''))
+  ]);
 
-  const win=window.open('','_blank','width=900,height=700');
-  win.document.write(`<!DOCTYPE html><html><head>
-    <meta charset="UTF-8"><title>BIMFlow — Fiches de Local</title>
-    <style>
-      *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-      body{font-family:'Segoe UI',Arial,sans-serif;background:#fff}
-      ${cssText}
-      .fiche-a4{margin:0 0 0 0;border:none;page-break-inside:avoid}
-      @page{size:A4;margin:10mm}
-      @media screen{.fiche-a4{margin:12px;border:1px solid #ddd;border-radius:3px}}
-    </style>
-  </head><body>${body}
-    <script>window.onload=()=>{window.print();}<\/script>
-  </body></html>`);
-  win.document.close();
-  setStatus(`${rooms.length} fiches préparées`,'ok');
+  const csv='﻿'+[header,...rows].map(row=>row.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`BIMFlow_Fiches_${allMode?'Tout':'Filtre'}_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);
+  setSt(`${rooms.length} pièces exportées`,'ok');
+}
+
+/* ════ EXPORT PDF — print all in hidden div ════ */
+function exportPDF(allMode){
+  const rooms=allMode?allRooms:allF();
+  if(!rooms.length){alert('Aucune pièce à exporter.');return;}
+  setSt('Préparation PDF…','load');
+  $('printAll').innerHTML=rooms.map(r=>ficheH(r)).join('');
+  document.body.setAttribute('data-pa','1');
+  window.print();
+  /* Restore after print dialog closes */
+  setTimeout(()=>{
+    document.body.removeAttribute('data-pa');
+    $('printAll').innerHTML='';
+    setSt(`${rooms.length} fiches imprimées`,'ok');
+  },500);
 }
 
 /* ════ LANG + THEME ════ */
-function applyLangEl(root){
-  (root||document).querySelectorAll('[data-en]').forEach(el=>{if(el._fr===undefined)el._fr=el.innerHTML;el.innerHTML=(document.documentElement.lang==='en')?el.getAttribute('data-en'):el._fr;});
-  (root||document).querySelectorAll('[data-en-ph]').forEach(el=>{if(el._frph===undefined)el._frph=el.getAttribute('placeholder')||'';el.setAttribute('placeholder',(document.documentElement.lang==='en')?el.getAttribute('data-en-ph'):el._frph);});
-}
-function applyLang(l){document.documentElement.lang=l;applyLangEl();$('langBtn').textContent=(l==='en')?'FR':'EN';try{localStorage.setItem('bimflow_lang',l);}catch(e){}}
-function applyTheme(t){document.documentElement.setAttribute('data-theme',t);$('themeBtn').textContent=(t==='dark')?'☀':'☾';try{localStorage.setItem('bimflow_theme',t);}catch(e){}}
+function applyLang(l){document.documentElement.lang=l;$('langBtn').textContent=(l==='en')?'FR':'EN';try{localStorage.setItem('bfl',l);}catch(e){}}
+function applyTheme(t){document.documentElement.setAttribute('data-theme',t);$('themeBtn').textContent=(t==='dark')?'☀':'☾';try{localStorage.setItem('bft',t);}catch(e){}}
 $('langBtn').onclick=()=>applyLang(document.documentElement.lang==='en'?'fr':'en');
 $('themeBtn').onclick=()=>applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');
-(()=>{let l='fr',t='dark';try{l=localStorage.getItem('bimflow_lang')||'fr';t=localStorage.getItem('bimflow_theme')||'dark';}catch(e){}applyTheme(t);if(l==='en')applyLang('en');else $('langBtn').textContent='EN';})();
+(()=>{let l='fr',t='dark';try{l=localStorage.getItem('bfl')||'fr';t=localStorage.getItem('bft')||'dark';}catch(e){}applyTheme(t);if(l==='en')applyLang('en');else $('langBtn').textContent='EN';})();
 
 /* ════ INIT ════ */
 loadAll();
