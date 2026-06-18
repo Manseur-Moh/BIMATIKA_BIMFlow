@@ -261,7 +261,7 @@ table.boq tfoot tr:last-child td{font-weight:600;color:var(--c-text3)}
         <div class="set-hd" data-en="📊 Group by">📊 Répartition par</div>
         <select class="set-select" id="groupSel"><option value="__level" data-en="Level">Niveau</option></select>
       </div>
-      <button class="btn" id="btnExport" data-en="⬇ Export CSV">⬇ Exporter CSV</button>
+      <button class="btn" id="btnExport" data-en="⬇ Export Excel">⬇ Exporter Excel</button>
       <button class="btn ghost" id="btnReset" style="margin-top:6px" data-en="↺ Reset prices">↺ Réinitialiser les prix</button>
     </div>
   </div>
@@ -889,20 +889,174 @@ function setupPanels(){
   window.addEventListener('mouseup',()=>{if(resizing){$('vSplitLeft').classList.remove('dragging');$('vSplitRight').classList.remove('dragging');resizing=null;}});
 }
 
-/* ════════ CSV EXPORT ════════ */
-function exportCSV(){
-  const scope=roomsInScope();
-  const finCols=finishes.map(f=>'Cout_'+(f.name||'fin').replace(/[^a-zA-Z0-9]/g,'_'));
-  const head=['Niveau','Numero','Nom','Surface_m2','Perimetre_m',...finCols,'Cout_total','Devise'];
-  const lines=[head.join(';')];
-  scope.forEach(x=>{const c=computeRoom(x.room);
-    lines.push([plans[x.planKey]?.LevelName||'',x.room.Number||'',(x.room.Name||'').replace(/;/g,','),
-      c.area.toFixed(2),c.perim.toFixed(2),
-      ...c.fin.map(f=>f.cost.toFixed(0)),
-      c.total.toFixed(0),curSel.value].join(';'));});
-  const blob=new Blob(['﻿'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='BIMFlow_couts_'+($('scopeSel').value==='all'?'tous':(curPlan?.LevelName||'niveau'))+'.csv';a.click();
+/* ════════ EXCEL EXPORT ════════ */
+let _exjsPromise=null;
+function loadExcelJS(){
+  if(window.ExcelJS)return Promise.resolve(window.ExcelJS);
+  if(_exjsPromise)return _exjsPromise;
+  _exjsPromise=new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+    s.onload=()=>res(window.ExcelJS);s.onerror=()=>rej(new Error('Échec chargement ExcelJS'));
+    document.head.appendChild(s);
+  });
+  return _exjsPromise;
+}
+function dlBuf(buf,name){
+  const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+async function exportXLSX(){
+  try{
+    const ExcelJS=await loadExcelJS();
+    const wb=new ExcelJS.Workbook();wb.creator='BIMFlow';
+    const cur=curSel.value;
+    const scope=$('scopeSel').value;
+    const lvlName=scope==='all'?'Tous les niveaux':(curPlan?.LevelName||'—');
+    const today=new Date().toLocaleDateString('fr-FR');
+    const rooms=roomsInScope();
+    const computed=rooms.map(x=>({...x,c:computeRoom(x.room)}));
+
+    /* ── SHEET 1 : DEVIS ESTIMATIF ── */
+    const ws=wb.addWorksheet('Devis Estimatif',{views:[{showGridLines:false}]});
+    ws.columns=[{key:'no',width:6},{key:'desc',width:36},{key:'param',width:24},
+      {key:'qty',width:14},{key:'unit',width:8},{key:'pu',width:14},{key:'total',width:16}];
+
+    const cell=(r,c)=>ws.getCell(r,c);
+    const DARK='FF0F172A',BLUE='FF1D4ED8',LBLUE='FFdbeafe',PURPLE='FF7C3AED',LPURP='FFede9fe',
+          AMBER='FFD97706',LAMBER='FFfef3c7',GREEN='FF059669',LGREEN='FFd1fae5',
+          RED='FFDC2626',LRED='FFfee2e2',TEAL='FF0F172A';
+    const FIN_BG=[BLUE,PURPLE,AMBER,GREEN,RED];
+    const FIN_LT=[LBLUE,LPURP,LAMBER,LGREEN,LRED];
+    const solidFill=c=>({type:'pattern',pattern:'solid',fgColor:{argb:c}});
+    const thinBorder={style:'thin',color:{argb:'FFCBD5E1'}};
+
+    // Row 1 — Title
+    ws.mergeCells('A1:G1');
+    const r1c1=ws.getCell('A1');
+    r1c1.value='DEVIS ESTIMATIF — FINITIONS';
+    r1c1.font={bold:true,size:15,color:{argb:'FFFFFFFF'}};
+    r1c1.alignment={horizontal:'center',vertical:'middle'};
+    r1c1.fill=solidFill(DARK);
+    ws.getRow(1).height=34;
+
+    // Row 2 — Sub-title
+    ws.mergeCells('A2:G2');
+    const r2c1=ws.getCell('A2');
+    r2c1.value=`Projet : BIMFlow   ·   Niveau : ${lvlName}   ·   Date : ${today}   ·   Devise : ${cur}`;
+    r2c1.font={italic:true,size:10,color:{argb:'FF94A3B8'}};
+    r2c1.alignment={horizontal:'center'};
+    r2c1.fill=solidFill('FF1E293B');
+    ws.getRow(2).height=18;
+
+    // Row 3 — spacer
+    ws.addRow([]);ws.getRow(3).height=6;
+
+    // Row 4 — Column headers
+    const hdr=ws.addRow(['N°','Désignation','Paramètre / Valeur','Quantité','Unité','P.U. ('+cur+')','Montant HT ('+cur+')']);
+    hdr.height=20;
+    hdr.eachCell(c=>{
+      c.font={bold:true,color:{argb:'FFFFFFFF'},size:11};
+      c.fill=solidFill(BLUE);c.alignment={horizontal:'center',vertical:'middle'};
+      c.border={bottom:{style:'medium',color:{argb:'FF60A5FA'}}};
+    });
+    hdr.getCell(2).alignment={horizontal:'left'};hdr.getCell(3).alignment={horizontal:'left'};
+
+    let grandTotal=0;
+    finishes.forEach((f,fi)=>{
+      if(dashFinFilter>=0&&dashFinFilter!==fi)return;
+      const qtyByVal={},costByVal={};
+      let finTotal=0,finQty=0;
+      computed.forEach(x=>{
+        const fc=x.c.fin[fi];if(!fc)return;
+        const val=f.param?String((x.room.Parameters||{})[f.param]||'(vide)'):'';
+        qtyByVal[val]=(qtyByVal[val]||0)+fc.qty;
+        costByVal[val]=(costByVal[val]||0)+fc.cost;
+        finTotal+=fc.cost;finQty+=fc.qty;
+      });
+      grandTotal+=finTotal;
+      const bg=FIN_BG[fi%FIN_BG.length],lt=FIN_LT[fi%FIN_LT.length];
+
+      // Section spacer
+      ws.addRow([]);ws.getRow(ws.rowCount).height=5;
+
+      // Section header
+      const sr=ws.addRow(['',(fi+1)+'. '+f.name,'','','','',''+Math.round(finTotal)]);
+      sr.height=20;sr.eachCell({includeEmpty:true},c=>{c.font={bold:true,color:{argb:'FFFFFFFF'},size:11};c.fill=solidFill(bg);});
+      sr.getCell(2).alignment={horizontal:'left'};
+      sr.getCell(7).alignment={horizontal:'right'};sr.getCell(7).numFmt='#,##0';
+
+      // Detail rows
+      const entries=Object.entries(qtyByVal);
+      entries.forEach(([val,qty],vi)=>{
+        const cost=costByVal[val]||0;
+        const prices=f.prices||{};
+        const pu=prices[val]!=null?prices[val]:(prices['']||0);
+        const unit=f.formula==='area'?'m²':(f.formula.includes('perim')?'m²':'—');
+        const label=f.param&&val&&val!=='(vide)'?val:(entries.length===1?'Forfait':val||'(vide)');
+        const dr=ws.addRow([vi+1,f.name,label,+qty.toFixed(2),unit,+pu.toFixed(2),+cost.toFixed(0)]);
+        dr.height=16;
+        dr.eachCell({includeEmpty:true},c=>{c.fill=solidFill(lt);c.border={bottom:{style:'thin',color:{argb:'FFCBD5E1'}}};});
+        dr.getCell(2).alignment={horizontal:'left'};dr.getCell(3).alignment={horizontal:'left'};
+        dr.getCell(4).numFmt='#,##0.0';dr.getCell(4).alignment={horizontal:'right'};
+        dr.getCell(6).numFmt='#,##0.00';dr.getCell(6).alignment={horizontal:'right'};
+        dr.getCell(7).numFmt='#,##0';dr.getCell(7).alignment={horizontal:'right'};
+      });
+
+      // Sub-total
+      const str=ws.addRow(['','','','','','Sous-total '+f.name,''+Math.round(finTotal)]);
+      str.height=16;str.eachCell({includeEmpty:true},c=>{
+        c.font={bold:true,size:10,color:{argb:'FF1E293B'}};
+        c.fill=solidFill(lt);c.border={bottom:{style:'medium',color:{argb:bg}}};
+      });
+      str.getCell(6).alignment={horizontal:'right'};str.getCell(7).alignment={horizontal:'right'};
+      str.getCell(7).numFmt='#,##0';
+    });
+
+    // Spacer before grand total
+    ws.addRow([]);ws.getRow(ws.rowCount).height=8;
+
+    // Grand total
+    const gtr=ws.addRow(['','','','','','TOTAL HT',+grandTotal.toFixed(0)]);
+    gtr.height=26;gtr.eachCell({includeEmpty:true},c=>{
+      c.font={bold:true,size:13,color:{argb:'FF0F172A'}};
+      c.fill=solidFill('FF7DD3FC');
+      c.border={top:{style:'medium',color:{argb:'FF0EA5E9'}},bottom:{style:'medium',color:{argb:'FF0EA5E9'}}};
+    });
+    gtr.getCell(6).alignment={horizontal:'right'};gtr.getCell(7).alignment={horizontal:'right'};
+    gtr.getCell(7).numFmt='#,##0';
+
+    // Conversion
+    const c2=$('curSel2').value;
+    if(c2){
+      const rate=+$('convRate').value||0;
+      const cvr=ws.addRow(['','','','','','≈ en '+c2,+(grandTotal*rate).toFixed(0)]);
+      cvr.height=16;cvr.getCell(6).font={italic:true,size:10,color:{argb:'FF64748B'}};
+      cvr.getCell(7).font={bold:true,size:10,color:{argb:'FF64748B'}};
+      cvr.getCell(6).alignment={horizontal:'right'};cvr.getCell(7).alignment={horizontal:'right'};
+      cvr.getCell(7).numFmt='#,##0';
+    }
+
+    /* ── SHEET 2 : DÉTAIL PAR PIÈCE ── */
+    const ws2=wb.addWorksheet('Détail par pièce',{views:[{showGridLines:false}]});
+    const col2=[{header:'Niveau',width:16},{header:'N°',width:8},{header:'Pièce',width:26},{header:'Surface m²',width:12}];
+    finishes.forEach(f=>col2.push({header:(f.name||'F')+' ('+cur+')',width:14}));
+    col2.push({header:'Total HT ('+cur+')',width:16});
+    ws2.columns=col2;
+    const hdr2=ws2.addRow(col2.map(c=>c.header));
+    hdr2.height=18;hdr2.eachCell(c=>{c.font={bold:true,color:{argb:'FFFFFFFF'}};c.fill=solidFill(BLUE);c.alignment={horizontal:'center'};});
+    hdr2.getCell(1).alignment={horizontal:'left'};hdr2.getCell(3).alignment={horizontal:'left'};
+    computed.forEach((x,xi)=>{
+      const lvl=plans[x.planKey]?.LevelName||'';
+      const dr=ws2.addRow([lvl,x.room.Number||'',x.room.Name||'',+x.c.area.toFixed(1),
+        ...x.c.fin.map(f=>+f.cost.toFixed(0)),+x.c.total.toFixed(0)]);
+      if(xi%2===0)dr.eachCell({includeEmpty:true},c=>c.fill=solidFill('FFF8FAFC'));
+      dr.getCell(4).numFmt='#,##0.0';
+      for(let ci=5;ci<=4+finishes.length+1;ci++){dr.getCell(ci).numFmt='#,##0';dr.getCell(ci).alignment={horizontal:'right'};}
+    });
+
+    dlBuf(await wb.xlsx.writeBuffer(),'BIMFlow_Estimatif_'+(scope==='all'?'Tous':(curPlan?.LevelName||'niveau').replace(/[^a-zA-Z0-9]/g,'_'))+'.xlsx');
+  }catch(e){alert('Erreur Excel: '+e.message);}
 }
 
 /* ════════ LANG + THEME ════════ */
@@ -926,7 +1080,7 @@ $('scopeSel').addEventListener('change',recompute);
 $('groupSel').addEventListener('change',recompute);
 $('curSel2').addEventListener('change',recompute);
 $('convRate').addEventListener('input',recompute);
-$('btnExport').addEventListener('click',exportCSV);
+$('btnExport').addEventListener('click',exportXLSX);
 $('btnReset').addEventListener('click',()=>{
   finishes=DEFAULT_FINISHES.map(f=>({...f,prices:{...f.prices}}));
   activeFinIdx=0;activeFilterVal='';dashFinFilter=-1;wallH.value=2.8;

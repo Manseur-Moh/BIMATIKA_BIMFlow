@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="dark">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>BIMFlow — Créer des paramètres</title>
+  <title>BIMFlow &mdash; Cr&eacute;ation de Param&egrave;tres</title>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
@@ -15,8 +15,8 @@
     .nav a{display:flex;align-items:center;padding:0 16px;font-size:13px;font-weight:600;color:#64748b;text-decoration:none;border-right:1px solid #1f2937}
     .nav a:hover{background:#1f2937;color:#e2e8f0}
     .nav a.active{color:#38bdf8;background:#0c1a2e;box-shadow:inset 0 -2px 0 #38bdf8}
-    .topbar-right{display:flex;align-items:center;gap:8px;padding:0 16px;margin-left:auto}
-    .tbtn{background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:6px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer}
+    .topbar-right{display:flex;align-items:center;gap:6px;padding:0 14px;margin-left:auto}
+    .tbtn{background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:6px;padding:4px 11px;font-size:12px;font-weight:600;cursor:pointer;height:28px;line-height:1;outline:none}
     .tbtn:hover{background:#374151;color:#fff}
     .tbtn.send{background:#1d4ed8;color:#e0f2fe;border-color:#1d4ed8}
     .tbtn.send:hover:not(:disabled){background:#2563eb}
@@ -44,11 +44,11 @@
 
     /* TOOLBAR */
     .toolbar{display:flex;align-items:center;gap:8px;padding:8px 16px;border-bottom:1px solid #1f2937;flex-shrink:0;background:#111827;flex-wrap:wrap}
-    .toolbar-title{font-size:13px;font-weight:700;color:#f1f5f9;flex-shrink:0}
+    .toolbar-title{font-size:13px;font-weight:700;color:#f1f5f9;flex-shrink:0;text-transform:uppercase;letter-spacing:.04em}
     .toolbar-sep{flex:1}
-    .btn-add{background:#0e4429;color:#3fb950;border:1px solid #238636;border-radius:5px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer}
+    .btn-add{background:#0e4429;color:#3fb950;border:1px solid #238636;border-radius:5px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;outline:none}
     .btn-add:hover{background:#238636;color:#fff}
-    .tbtn-sm{background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:5px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer}
+    .tbtn-sm{background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:5px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;outline:none}
     .tbtn-sm:hover{background:#374151;color:#fff}
     .tbtn-sm.guid{background:#0e4429;color:#3fb950;border-color:#238636}
     .tbtn-sm.guid:hover{background:#238636;color:#fff}
@@ -91,6 +91,8 @@
     [data-theme=light] table.pt th{background:#eef2f8;color:#475569}
     [data-theme=light] table.pt td{border-color:#e6e9f0}
     [data-theme=light] .gc-cpy{background:#eef2f8;border-color:#d4dae6;color:#475569}
+    [data-theme=light] .empty-state{color:#94a3b8}
+    [data-theme=light] .empty-state p{color:#94a3b8}
   </style>
 </head>
 <body>
@@ -98,39 +100,40 @@
 <div class="topbar">
   <div class="logo">BIM<span>Flow</span></div>
   <div class="nav">
-    <a href="/">🗺 Plans</a>
-    <a href="/analyse.html">📊 Analyse</a>
-    <a href="/parametres.html" class="active" data-en="🔧 Parameters">🔧 Paramètres</a>
+    <a href="/" data-en="&#128506; Plans">&#128506; Plans</a>
+    <a href="/analyse.html" data-en="&#128202; Analysis">&#128202; Analyse</a>
+    <a href="/parametres.html" class="active" data-en="&#128295; Parameters">&#128295; Param&egrave;tres</a>
   </div>
   <div class="topbar-right">
-    <button class="tbtn" id="themeBtn" title="Thème">☾</button>
+    <button class="tbtn" id="langBtn">EN</button>
+    <button class="tbtn" id="themeBtn">&#9728;</button>
     <div class="status-dot" id="statusDot"></div>
-    <div class="status-txt" id="statusTxt">Prêt</div>
+    <div class="status-txt" id="statusTxt">Pr&ecirc;t</div>
   </div>
 </div>
 
 <!-- GUID RAPIDE -->
 <div class="guid-banner">
-  <span class="guid-banner-title">🔑 GUID rapide</span>
+  <span class="guid-banner-title" data-en="&#128273; Quick GUID">&#128273; GUID rapide</span>
   <div class="guid-box">
-    <span class="guid-val empty" id="quickGuidVal">— cliquez Générer —</span>
-    <button class="gb-btn gb-gen" id="btnQuickGen">🔑 Générer</button>
-    <button class="gb-btn gb-cpy" id="btnQuickCpy">📋 Copier</button>
+    <span class="guid-val empty" id="quickGuidVal" data-en="&mdash; click Generate &mdash;">&mdash; cliquez G&eacute;n&eacute;rer &mdash;</span>
+    <button class="gb-btn gb-gen" id="btnQuickGen" data-en="&#128273; Generate">&#128273; G&eacute;n&eacute;rer</button>
+    <button class="gb-btn gb-cpy" id="btnQuickCpy" data-en="&#128203; Copy">&#128203; Copier</button>
   </div>
-  <span class="guid-hint">Générez et copiez des GUIDs pour les paramètres partagés Revit</span>
+  <span class="guid-hint" data-en="Generate and copy GUIDs for shared Revit parameters">G&eacute;n&eacute;rez et copiez des GUIDs pour les param&egrave;tres partag&eacute;s Revit</span>
 </div>
 
 <main>
   <!-- TOOLBAR -->
   <div class="toolbar">
-    <span class="toolbar-title">Paramètres à créer dans Revit</span>
-    <button class="btn-add" id="btnAdd">+ Ajouter ligne</button>
-    <button class="tbtn-sm guid" id="btnGenAll">🔑 GUIDs manquants</button>
-    <button class="tbtn-sm" id="btnCopyAll" title="Copier tous les GUIDs dans le presse-papiers">📋 Copier tous GUIDs</button>
+    <span class="toolbar-title" data-en="PARAMETER CREATION">CR&Eacute;ATION DE PARAM&Egrave;TRES</span>
+    <button class="btn-add" id="btnAdd" data-en="+ Add row">+ Ajouter ligne</button>
+    <button class="tbtn-sm guid" id="btnGenAll" data-en="&#128273; Missing GUIDs">&#128273; GUIDs manquants</button>
+    <button class="tbtn-sm" id="btnCopyAll" data-en="&#128203; Copy all GUIDs">&#128203; Copier tous GUIDs</button>
     <div class="toolbar-sep"></div>
-    <button class="tbtn-sm" id="btnExport">⬇ Excel</button>
-    <label class="filebtn">⬆ Importer<input type="file" id="fileImport" accept=".xlsx,.xls,.csv" hidden/></label>
-    <button class="tbtn-sm" id="btnClear" title="Vider la liste">🗑 Vider</button>
+    <button class="tbtn-sm" id="btnExport" data-en="&#8595; Excel">&#8595; Excel</button>
+    <label class="filebtn" data-en="&#8593; Import">&#8593; Importer<input type="file" id="fileImport" accept=".xlsx,.xls,.csv" hidden/></label>
+    <button class="tbtn-sm" id="btnClear" data-en="&#128465; Clear">&#128465; Vider</button>
   </div>
 
   <!-- TABLE -->
@@ -138,28 +141,28 @@
     <table class="pt" id="paramTable">
       <thead>
         <tr>
-          <th style="width:200px">Nom</th>
-          <th style="width:130px">Type</th>
-          <th style="width:150px">Groupe</th>
-          <th style="width:110px">Genre</th>
-          <th style="width:110px">Liaison</th>
-          <th style="width:120px">Défaut</th>
+          <th style="width:200px" data-en="Name">Nom</th>
+          <th style="width:130px" data-en="Type">Type</th>
+          <th style="width:150px" data-en="Group">Groupe</th>
+          <th style="width:110px" data-en="Kind">Genre</th>
+          <th style="width:110px" data-en="Binding">Liaison</th>
+          <th style="width:120px" data-en="Default">D&eacute;faut</th>
           <th>GUID</th>
           <th style="width:32px"></th>
         </tr>
       </thead>
       <tbody id="paramBody"></tbody>
     </table>
-    <div class="empty-state" id="emptyState">
-      Aucun paramètre<p>Cliquez « + Ajouter ligne » ou importez un fichier Excel / CSV</p>
+    <div class="empty-state" id="emptyState" data-en="No parameters&lt;p&gt;Click &laquo; + Add row &raquo; or import an Excel / CSV file&lt;/p&gt;">
+      Aucun param&egrave;tre<p>Cliquez &laquo; + Ajouter ligne &raquo; ou importez un fichier Excel / CSV</p>
     </div>
   </div>
 
   <!-- BOTTOM BAR -->
   <div class="bottom-bar">
-    <span class="row-count" id="rowCount">0 paramètre(s)</span>
+    <span class="row-count" id="rowCount">0 param&egrave;tre(s)</span>
     <div style="flex:1"></div>
-    <button class="tbtn send" id="btnSend" disabled>↑ Envoyer vers Revit</button>
+    <button class="tbtn send" id="btnSend" disabled data-en="&#8593; Send to Revit">&#8593; Envoyer vers Revit</button>
   </div>
 </main>
 
@@ -181,8 +184,7 @@ function copyText(t){
     const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
   }
 }
-function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function escAttr(s){ return String(s).replace(/"/g,'&quot;'); }
+function escAttr(s){ return String(s==null?'':s).replace(/"/g,'&quot;'); }
 function optsHtml(opts,sel){ return opts.map(([v,l])=>`<option value="${v}"${v===sel?' selected':''}>${l}</option>`).join(''); }
 
 function render(){
@@ -256,9 +258,7 @@ document.getElementById('btnQuickCpy').addEventListener('click',()=>{
 
 /* TOOLBAR */
 document.getElementById('btnAdd').addEventListener('click',addRow);
-document.getElementById('btnGenAll').addEventListener('click',()=>{
-  rows.forEach(r=>{ if(!r.GUID) r.GUID=genGUID(); }); render();
-});
+document.getElementById('btnGenAll').addEventListener('click',()=>{ rows.forEach(r=>{ if(!r.GUID) r.GUID=genGUID(); }); render(); });
 document.getElementById('btnCopyAll').addEventListener('click',()=>{
   const guids=rows.map(r=>r.GUID).filter(Boolean);
   if(!guids.length){ alert('Aucun GUID généré. Cliquez « 🔑 GUIDs manquants » d\'abord.'); return; }
@@ -305,12 +305,15 @@ function cellText(v){ if(v==null)return''; if(typeof v==='object'){if(v.text!=nu
 document.getElementById('btnExport').addEventListener('click',async()=>{
   try{
     const ExcelJS=await loadExcelJS();
-    const wb=new ExcelJS.Workbook(); const ws=wb.addWorksheet('Paramètres');
-    ws.columns=[{header:'Name',width:28},{header:'Type',width:14},{header:'Group',width:18},{header:'Kind',width:12},{header:'Binding',width:12},{header:'Default',width:16},{header:'GUID',width:38}];
+    const wb=new ExcelJS.Workbook(); const ws=wb.addWorksheet('Paramètres',{views:[{showGridLines:false}]});
+    ws.columns=[{header:'Nom',width:28},{header:'Type',width:14},{header:'Groupe',width:18},{header:'Genre',width:12},{header:'Liaison',width:12},{header:'Défaut',width:16},{header:'GUID',width:38}];
     let data=rows.filter(r=>r.Name&&r.Name.trim()).map(r=>[r.Name,r.Type||'text',r.Group||'data',r.Kind||'shared',r.Instance===false?'type':'instance',r.DefaultValue||'',r.GUID||'']);
     if(!data.length) data=[['ExempleParam','text','data','shared','instance','','']];
     data.forEach(row=>ws.addRow(row));
-    const hr=ws.getRow(1); hr.font={bold:true,color:{argb:'FFFFFFFF'}}; hr.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1D4ED8'}};
+    const hr=ws.getRow(1); hr.height=20;
+    hr.eachCell(c=>{ c.font={bold:true,color:{argb:'FFFFFFFF'},size:11}; c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1D4ED8'}}; c.alignment={horizontal:'center',vertical:'middle'}; });
+    hr.getCell(1).alignment={horizontal:'left'}; hr.getCell(7).alignment={horizontal:'left'};
+    for(let r=2;r<=ws.rowCount;r++){const dr=ws.getRow(r);dr.height=16;if(r%2===0)dr.eachCell({includeEmpty:true},c=>c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF1F5F9'}});}
     const lists={B:'"text,multitext,integer,number,length,area,volume,angle,yesno,url,material,currency,mass"',
       C:'"data,identity,dimensions,constraints,text,graphics,materials,phasing,general"',D:'"shared,project"',E:'"instance,type"'};
     for(let r=2;r<=300;r++) for(const col in lists) ws.getCell(col+r).dataValidation={type:'list',allowBlank:true,formulae:[lists[col]]};
@@ -339,16 +342,27 @@ document.getElementById('fileImport').addEventListener('change',async function()
   this.value='';
 });
 
-/* THEME */
+/* LANG + THEME */
+function applyLang(l){
+  document.documentElement.lang=l;
+  document.querySelectorAll('[data-en]').forEach(el=>{if(el._fr===undefined)el._fr=el.innerHTML;el.innerHTML=(l==='en')?el.getAttribute('data-en'):el._fr;});
+  document.getElementById('langBtn').textContent=(l==='en')?'FR':'EN';
+  try{localStorage.setItem('bimflow_lang',l);}catch(e){}
+}
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme',t);
   document.getElementById('themeBtn').textContent=(t==='dark')?'☀':'☾';
   try{ localStorage.setItem('bimflow_theme',t); }catch(e){}
 }
+document.getElementById('langBtn').addEventListener('click',()=>applyLang(document.documentElement.lang==='en'?'fr':'en'));
 document.getElementById('themeBtn').addEventListener('click',()=>{
   applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');
 });
-(function(){ let t='dark'; try{ t=localStorage.getItem('bimflow_theme')||'dark'; }catch(e){} applyTheme(t); })();
+(function(){
+  let l='fr',t='dark';
+  try{l=localStorage.getItem('bimflow_lang')||'fr';t=localStorage.getItem('bimflow_theme')||'dark';}catch(e){}
+  applyTheme(t); if(l==='en') applyLang('en'); else document.getElementById('langBtn').textContent='EN';
+})();
 
 render();
 </script>
