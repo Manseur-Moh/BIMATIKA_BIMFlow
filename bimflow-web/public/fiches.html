@@ -88,8 +88,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
 .bfr.shd{fill:rgba(4,8,22,.74)!important;stroke:rgba(56,189,248,.04)!important;opacity:.55!important}
 .bfr.fout{fill:rgba(4,8,22,.9)!important;stroke:rgba(56,189,248,.02)!important;opacity:.25!important;cursor:not-allowed!important}
 /* 2D overlays */
-.vmbar{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:20;display:flex;background:rgba(15,23,42,.92);border:1px solid #1f2937;border-radius:7px;overflow:hidden}
-.vmbtn{background:transparent;border:none;color:#94a3b8;font-size:12px;font-weight:600;padding:6px 10px;cursor:pointer;border-right:1px solid #1f2937}
+.vmbar{display:flex;flex-shrink:0;background:#111827;border-bottom:1px solid #1f2937;justify-content:center;padding:2px 0}
+.vmbtn{background:transparent;border:none;color:#94a3b8;font-size:12px;font-weight:600;padding:5px 14px;cursor:pointer;border-right:1px solid #1f2937}
 .vmbtn:last-child{border-right:none}
 .vmbtn:hover{color:#e2e8f0}.vmbtn.on{background:#1d4ed8;color:#fff}
 .zbx{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:3px;z-index:10}
@@ -106,11 +106,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
 #c3d{display:block;width:100%;height:100%}
 .zbx3{position:absolute;top:8px;left:10px;z-index:10}
 .h3d{position:absolute;left:10px;bottom:8px;font-size:10px;color:#475569;background:rgba(13,21,38,.7);padding:3px 7px;border-radius:4px;pointer-events:none}
-/* View modes: hide/show 2D or 3D */
+/* View modes: hide/show 2D or 3D — vmBar stays always visible */
 .vm2 #v3d,.vm2 .hspl{display:none}
 .vm3 #v2d,.vm3 .hspl{display:none}
-.vm2 #v2d{flex:1}
-.vm3 #v3d{flex:1}
+.vm2 #v2d,.vm3 #v3d{flex:1}
 
 /* ════ RIGHT — A4 FICHE ════ */
 #ficheCol{flex:1;min-width:260px;max-width:700px;background:#0b1221;display:flex;flex-direction:column;overflow:hidden}
@@ -283,15 +282,15 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
 
   <!-- ══ CENTER — 2D top + 3D bottom ══ -->
   <div id="centerCol" class="vmb">
+    <div class="vmbar" id="vmBar">
+      <button class="vmbtn" data-m="vm2">🗺 2D</button>
+      <button class="vmbtn on" data-m="vmb">⊞ 2D+3D</button>
+      <button class="vmbtn" data-m="vm3">🧊 3D</button>
+    </div>
     <div id="v2d">
       <div class="vempty" id="v2dE">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
         <p>Envoyez un plan depuis Revit</p>
-      </div>
-      <div class="vmbar" id="vmBar">
-        <button class="vmbtn" data-m="vm2">🗺 2D</button>
-        <button class="vmbtn on" data-m="vmb">⊞ 2D+3D</button>
-        <button class="vmbtn" data-m="vm3">🧊 3D</button>
       </div>
       <div class="zbx">
         <button class="zb" id="zIn">+</button>
@@ -938,28 +937,62 @@ function doPrint(mode){
   next();
 }
 
-/* ════ EXCEL / CSV ════ */
-function doExcel(mode){
+/* ════ EXCEL — une fiche par onglet, format A4 ════ */
+let _xlP=null;
+function loadXLSX(){
+  if(window.XLSX)return Promise.resolve();
+  if(_xlP)return _xlP;
+  _xlP=new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+    s.onload=res;s.onerror=()=>rej(new Error('XLSX indisponible'));
+    document.head.appendChild(s);
+  });
+  return _xlP;
+}
+
+async function doExcel(mode){
   const rooms=mode==='sel'?allRooms.filter(r=>selIds.has(r.RevitId)):allRooms;
   if(!rooms.length){alert(mode==='sel'?'Sélectionnez des pièces d\'abord.':'Aucune pièce.');return;}
   $('edWrap').classList.remove('open');
-  setSt('Génération Excel…','load');
-  const schFields=SCHEMA.flatMap(s=>s.f);
-  const allPK=new Set();rooms.forEach(r=>Object.keys(r.Parameters||{}).forEach(k=>allPK.add(k)));
-  const extra=[...allPK].filter(k=>!schFields.some(f=>f.k.some(sk=>k.toLowerCase().includes(sk.toLowerCase())))).sort();
-  const hdr=['N°','Nom','Niveau','Phase','Usage',...schFields.map(f=>f.l),...extra];
-  const rows=rooms.map(r=>[
-    r.Number||'',r.Name||'',r._lv||r.LevelName||'',
-    findP(r,'phase'),findP(r,'usage','occupation','type','fonction','function'),
-    ...schFields.map(f=>schV(r,f)),
-    ...extra.map(k=>String((r.Parameters||{})[k]||''))
-  ]);
-  const csv='﻿'+[hdr,...rows].map(row=>row.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n');
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=`BIMFlow_${mode==='sel'?'Selection':'Projet'}_${new Date().toISOString().slice(0,10)}.csv`;
-  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);
-  setSt(`${rooms.length} pièces exportées`,'ok');
+  setSt('Chargement Excel…','load');
+  try{await loadXLSX();}catch(e){alert('Bibliothèque Excel indisponible (vérifiez la connexion).');setSt('Erreur','err');return;}
+  setSt(`Excel : ${rooms.length} fiches…`,'load');
+
+  const wb=XLSX.utils.book_new();
+  rooms.forEach((r,idx)=>{
+    const rows=[];
+    /* En-tête fiche */
+    rows.push(['FICHE DE LOCAL','','','']);
+    rows.push(['BIMFlow — bimatika-bimplan.pages.dev','','Date :',_today]);
+    rows.push(['','','','']);
+    /* Identification rapide */
+    rows.push(['Numéro',r.Number||'—','Nom',r.Name||'—']);
+    rows.push(['Niveau',r._lv||r.LevelName||'—','Projet',r._proj||'—']);
+    rows.push(['Phase',findP(r,'phase')||'—','Usage',findP(r,'usage','occupation','type','fonction','function')||'—']);
+    rows.push(['','','','']);
+    /* Sections schema */
+    SCHEMA.forEach(sec=>{
+      rows.push([sec.g,'','','']);
+      sec.f.forEach(field=>{
+        const v=schV(r,field);
+        rows.push(['',field.l,v||'—',field.u||'']);
+      });
+      rows.push(['','','','']);
+    });
+
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:4},{wch:26},{wch:28},{wch:12}];
+    /* A4 portrait pour impression directe depuis Excel */
+    ws['!pageSetup']={paperSize:9,orientation:'portrait',fitToPage:true,fitToWidth:1,fitToHeight:0};
+    ws['!margins']={left:.5,right:.5,top:.75,bottom:.75,header:.3,footer:.3};
+
+    const nm=`${r.Number||''}${r.Number&&r.Name?' ':''}${r.Name||'Local'}`.replace(/[:\\\/\?\*\[\]]/g,'').substring(0,31).trim()||`Local-${idx+1}`;
+    XLSX.utils.book_append_sheet(wb,ws,nm);
+  });
+
+  XLSX.writeFile(wb,`BIMFlow_Fiches_${mode==='sel'?'Selection':'Projet'}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  setSt(`${rooms.length} fiches exportées`,'ok');
 }
 
 /* ════ LANG + THEME ════ */
