@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>BIMFlow — Fiches de Pièces</title>
+<title>BIMFlow — Fiches de Local</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
@@ -24,156 +24,179 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .status-txt{font-size:12px;color:#64748b}
 
-/* ── MAIN LAYOUT ── */
-#appMain{display:flex;flex:1;overflow:hidden;min-height:0}
+/* ── APP BODY ── */
+#app{display:flex;flex:1;overflow:hidden;min-height:0}
 
-/* ── LEFT SIDEBAR ── */
-.left-panel{width:272px;flex-shrink:0;background:#0d1526;border-right:1px solid #1f2937;display:flex;flex-direction:column;overflow:hidden}
-.lp-sec{border-bottom:1px solid #1f2937;flex-shrink:0}
-.lp-hd{padding:7px 12px;font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em}
-.lp-body{padding:6px 10px;display:flex;flex-direction:column;gap:6px}
-.lp-row{display:flex;flex-direction:column;gap:3px}
-.lp-lbl{font-size:10px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.06em}
-.lp-sel{background:#0f172a;color:#e2e8f0;border:1px solid #1f2937;border-radius:5px;padding:5px 8px;font-size:12px;cursor:pointer;outline:none;width:100%}
-.lp-sel:focus{border-color:#3b82f6}
+/* ════════════════════════
+   LEFT PANEL — Filters + Selection
+   ════════════════════════ */
+.left{width:230px;flex-shrink:0;background:#0d1526;border-right:1px solid #1f2937;display:flex;flex-direction:column;overflow:hidden}
+.lsec{border-bottom:1px solid #1f2937;flex-shrink:0}
+.lsec-hd{padding:6px 12px;font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em}
+.lsec-body{padding:6px 10px;display:flex;flex-direction:column;gap:5px}
+.lrow{display:flex;flex-direction:column;gap:2px}
+.llbl{font-size:10px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.05em}
+.lsel{background:#0f172a;color:#e2e8f0;border:1px solid #1f2937;border-radius:4px;padding:4px 7px;font-size:12px;cursor:pointer;outline:none;width:100%}
+.lsel:focus{border-color:#3b82f6}
 
-/* ── PALETTE ── */
-.pal-search{padding:6px 10px;flex-shrink:0;border-bottom:1px solid #1f2937}
-.pal-search input{width:100%;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:5px 8px;font-size:12px;outline:none}
-.pal-search input:focus{border-color:#3b82f6}
-.palette-wrap{flex:1;overflow-y:auto}
-.pal-param{border-bottom:1px solid #111c30}
-.pal-param-hd{display:flex;align-items:center;gap:6px;padding:7px 10px;cursor:pointer;user-select:none}
-.pal-param-hd:hover{background:#111c30}
-.pal-chev{font-size:9px;color:#475569;transition:transform .15s;flex-shrink:0}
-.pal-param.open .pal-chev{transform:rotate(90deg)}
-.pal-pname{flex:1;font-size:12px;font-weight:600;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pal-param.open .pal-pname{color:#e2e8f0}
-.pal-pcnt{font-size:10px;color:#475569;flex-shrink:0}
-.pal-values{display:none;padding:2px 0 4px}
-.pal-param.open .pal-values{display:block}
-.pal-val{display:flex;align-items:center;gap:6px;padding:4px 10px 4px 24px;cursor:pointer}
-.pal-val:hover{background:#111c30}
-.pal-val.active{background:#0c1a2e}
-.pal-vname{flex:1;font-size:11px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pal-val:hover .pal-vname{color:#cbd5e1}
-.pal-val.active .pal-vname{color:#38bdf8;font-weight:600}
-.pal-vcnt{font-size:10px;background:#1f2937;border-radius:10px;padding:1px 6px;color:#475569;flex-shrink:0}
-.pal-val.active .pal-vcnt{background:#1d4ed8;color:#e0f2fe}
+/* Param selector */
+.param-sel-wrap{padding:6px 10px 4px;flex-shrink:0}
+.param-sel-lbl{font-size:10px;font-weight:700;color:#38bdf8;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.param-sel-select{background:#0f172a;color:#e2e8f0;border:1px solid #1f2937;border-radius:4px;padding:4px 7px;font-size:12px;cursor:pointer;outline:none;width:100%}
+.param-sel-select:focus{border-color:#3b82f6}
 
-/* ── SELECTION FOOTER ── */
-.sel-footer{padding:8px 10px;border-top:1px solid #1f2937;display:flex;align-items:center;gap:8px;flex-shrink:0}
+/* Flat value list */
+.val-list{flex:1;overflow-y:auto;min-height:0}
+.val-empty{padding:14px 12px;font-size:11px;color:#475569;text-align:center}
+.val-item{display:flex;align-items:center;gap:6px;padding:5px 10px;cursor:pointer;border-bottom:1px solid #0f1928}
+.val-item:hover{background:#111c30}
+.val-item.active{background:#0c1a2e}
+.val-dot{width:8px;height:8px;border-radius:50%;background:#374151;flex-shrink:0}
+.val-item.active .val-dot{background:#38bdf8}
+.val-name{flex:1;font-size:12px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.val-item:hover .val-name{color:#e2e8f0}
+.val-item.active .val-name{color:#38bdf8;font-weight:600}
+.val-cnt{font-size:10px;color:#475569;background:#111827;border-radius:8px;padding:1px 6px;flex-shrink:0}
+.val-item.active .val-cnt{background:#1d4ed8;color:#e0f2fe}
+
+/* Room search & list */
+.room-search-wrap{padding:5px 10px;border-top:1px solid #1f2937;flex-shrink:0}
+.room-search{width:100%;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:4px;padding:4px 7px;font-size:11px;outline:none}
+.room-search:focus{border-color:#3b82f6}
+.room-list{height:140px;overflow-y:auto;border-top:1px solid #0f1928}
+.room-row{display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;border-bottom:1px solid #0f1928}
+.room-row:hover{background:#111c30}
+.room-row.active{background:#0c1a2e;border-left:2px solid #38bdf8}
+.room-num{font-size:10px;color:#475569;flex-shrink:0;min-width:28px}
+.room-row.active .room-num{color:#7dd3fc}
+.room-name{font-size:11px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.room-row.active .room-name{color:#e2e8f0;font-weight:600}
+.room-empty{padding:10px;font-size:11px;color:#475569;text-align:center}
+
+/* Selection footer */
+.sel-foot{padding:6px 10px;border-top:1px solid #1f2937;display:flex;align-items:center;gap:6px;flex-shrink:0}
 .sel-info{flex:1;font-size:11px;color:#64748b}
 .sel-info strong{color:#38bdf8}
-.sel-clear{background:transparent;border:1px solid #374151;color:#64748b;border-radius:4px;padding:3px 8px;font-size:10px;font-weight:600;cursor:pointer}
-.sel-clear:hover{border-color:#ef4444;color:#ef4444}
+.sel-clr{background:transparent;border:1px solid #374151;color:#64748b;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;cursor:pointer}
+.sel-clr:hover{border-color:#ef4444;color:#ef4444}
 
-/* ── CENTER COLUMN ── */
-#centerCol{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-
-/* ── VIEWER ROW ── */
-#viewerRow{flex:1;display:flex;overflow:hidden;min-height:0;position:relative}
-.viewer-split{flex:1;display:flex;min-height:0;overflow:hidden}
-.viewer-wrap{flex:1;position:relative;overflow:hidden;background:#060e1f;cursor:grab;min-width:0}
-.viewer-wrap:active{cursor:grabbing}
+/* ════════════════════════
+   CENTER — 2D top + 3D bottom
+   ════════════════════════ */
+#center{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+#viewer2d{flex:1;position:relative;overflow:hidden;background:#060e1f;cursor:grab;min-height:0}
+#viewer2d:active{cursor:grabbing}
 #mainSvg{position:absolute;will-change:transform}
-
-/* ── ROOMS SVG STATES ── */
-.bimflow-room{cursor:pointer;fill:rgba(56,189,248,.06);stroke:rgba(56,189,248,.4);stroke-width:1.5;stroke-linejoin:round;transition:fill .12s,stroke .12s,opacity .18s}
-.bimflow-room:hover{fill:rgba(56,189,248,.2);stroke:#38bdf8;stroke-width:2.5}
-/* Selected: bright highlight */
-.bimflow-room.selected{fill:rgba(56,189,248,.55)!important;stroke:#38bdf8!important;stroke-width:3!important;opacity:1!important}
-/* Shaded: same level, not selected, but something IS selected */
-.bimflow-room.shaded{fill:rgba(5,10,25,.68)!important;stroke:rgba(56,189,248,.06)!important;stroke-width:1!important;opacity:.7!important;cursor:pointer}
-/* Filtered-out: doesn't match current phase/type filter */
-.bimflow-room.filtered-out{fill:rgba(5,10,25,.82)!important;stroke:rgba(56,189,248,.04)!important;opacity:.35!important;cursor:not-allowed!important}
-
 #mainSvg > image{filter:invert(1)}
 
-/* ── 3D PANE ── */
-.pane3d{flex:1;position:relative;background:#060e1f;border-left:1px solid #1f2937;overflow:hidden;min-width:0}
-.pane3d canvas{display:block;width:100%;height:100%}
-.viewer-split.m2d .pane3d{display:none}
-.viewer-split.m3d .viewer-wrap{display:none}
-.viewer-split.m3d .pane3d{border-left:none}
-.pane3d-hint{position:absolute;left:12px;bottom:12px;font-size:11px;color:#475569;background:rgba(13,21,38,.7);padding:4px 8px;border-radius:5px;pointer-events:none}
+/* Room polygon states */
+.bimflow-room{cursor:pointer;fill:rgba(56,189,248,.06);stroke:rgba(56,189,248,.35);stroke-width:1.5;stroke-linejoin:round;transition:fill .1s,stroke .1s,opacity .15s}
+.bimflow-room:hover{fill:rgba(56,189,248,.2);stroke:#38bdf8;stroke-width:2.5}
+.bimflow-room.selected{fill:rgba(56,189,248,.52)!important;stroke:#38bdf8!important;stroke-width:3!important;opacity:1!important}
+.bimflow-room.shaded{fill:rgba(4,8,22,.72)!important;stroke:rgba(56,189,248,.05)!important;opacity:.65!important}
+.bimflow-room.filtered-out{fill:rgba(4,8,22,.88)!important;stroke:rgba(56,189,248,.03)!important;opacity:.3!important;cursor:not-allowed!important}
 
-/* ── CONTROLS ── */
-.view-modes{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:20;display:flex;background:rgba(15,23,42,.92);border:1px solid #1f2937;border-radius:7px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.5)}
-.view-modes button{background:transparent;border:none;color:#94a3b8;font-size:12px;font-weight:600;padding:6px 12px;cursor:pointer;border-right:1px solid #1f2937}
-.view-modes button:last-child{border-right:none}
-.view-modes button:hover{color:#e2e8f0}
-.view-modes button.active{background:#1d4ed8;color:#fff}
-.mode3d-btns{position:absolute;top:10px;right:12px;z-index:20;display:flex;background:rgba(15,23,42,.92);border:1px solid #1f2937;border-radius:7px;overflow:hidden}
-.mode3d-btns button{background:transparent;border:none;color:#94a3b8;font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;border-right:1px solid #1f2937}
-.mode3d-btns button:last-child{border-right:none}
-.mode3d-btns button.active{background:#1d4ed8;color:#fff}
-.zoom-wrap{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:3px;z-index:10}
-.zbtn{width:28px;height:28px;background:#1f2937;border:1px solid #374151;color:#d1d5db;border-radius:5px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+/* View-mode overlay buttons */
+.vm-bar{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:20;display:flex;background:rgba(15,23,42,.92);border:1px solid #1f2937;border-radius:7px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+.vm-btn{background:transparent;border:none;color:#94a3b8;font-size:12px;font-weight:600;padding:6px 11px;cursor:pointer;border-right:1px solid #1f2937}
+.vm-btn:last-child{border-right:none}
+.vm-btn:hover{color:#e2e8f0}
+.vm-btn.active{background:#1d4ed8;color:#fff}
+
+/* Zoom buttons */
+.zbx{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:3px;z-index:10}
+.zbtn{width:26px;height:26px;background:#1f2937;border:1px solid #374151;color:#d1d5db;border-radius:4px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .zbtn:hover{background:#374151}
 
-/* ── MINIMAP ── */
-#minimap{position:absolute;bottom:12px;left:12px;z-index:10;border:1px solid #1f2937;border-radius:6px;overflow:hidden;background:#0f172a;box-shadow:0 4px 16px rgba(0,0,0,.6);width:130px;display:none}
-#minimap-lbl{padding:2px 8px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;border-bottom:1px solid #1f2937}
-#minimapSvg{display:block}
-.mini-room{fill:rgba(56,189,248,.05);stroke:rgba(56,189,248,.2);stroke-width:.8;stroke-linejoin:round}
-.mini-room.selected{fill:rgba(56,189,248,.5)!important;stroke:#38bdf8!important;stroke-width:1.5}
-.mini-room.shaded{fill:rgba(5,10,25,.5)!important;stroke:rgba(56,189,248,.04)!important}
-.mini-room.filtered-out{fill:rgba(5,10,25,.7)!important;stroke:rgba(56,189,248,.02)!important;opacity:.3}
-#mini-vp{fill:rgba(255,255,255,.04);stroke:rgba(255,255,255,.5);stroke-width:.7}
+/* 3D pane */
+.sph{height:5px;flex-shrink:0;cursor:row-resize;background:#0a1222;border-top:1px solid #1f2937;position:relative}
+.sph:hover,.sph.drag{background:#1f2937}
+.sph::after{content:"";position:absolute;top:1.5px;left:50%;transform:translateX(-50%);height:2px;width:40px;background:#374151;border-radius:2px}
+#viewer3d{height:210px;flex-shrink:0;position:relative;background:#060e1f;overflow:hidden}
+#canvas3d{display:block;width:100%;height:100%}
+.hint3d{position:absolute;left:10px;bottom:8px;font-size:10px;color:#475569;background:rgba(13,21,38,.7);padding:3px 7px;border-radius:4px;pointer-events:none}
+.m3d-bar{position:absolute;top:8px;right:10px;z-index:20;display:flex;background:rgba(15,23,42,.92);border:1px solid #1f2937;border-radius:6px;overflow:hidden}
+.m3d-btn{background:transparent;border:none;color:#94a3b8;font-size:11px;font-weight:600;padding:4px 9px;cursor:pointer;border-right:1px solid #1f2937}
+.m3d-btn:last-child{border-right:none}
+.m3d-btn.active{background:#1d4ed8;color:#fff}
+.zbx3{position:absolute;top:8px;left:10px;z-index:10}
 
-/* ── EMPTY STATE (viewer) ── */
-.viewer-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#374151;pointer-events:none}
-.viewer-empty h2{font-size:14px;color:#4b5563}
-.viewer-empty p{font-size:12px;text-align:center;max-width:220px;line-height:1.7}
+/* View mode hide logic */
+.v-m2d #viewer3d,.v-m2d .sph{display:none}
+.v-m3d #viewer2d,.v-m3d .sph{display:none}
+.v-m3d #viewer3d{flex:1;height:auto}
+.v-m2d #viewer2d{flex:1}
 
-/* ── SPLIT HANDLE ── */
-.split-h{height:6px;flex-shrink:0;cursor:row-resize;background:#0a1222;border-top:1px solid #1f2937;position:relative}
-.split-h:hover,.split-h.dragging{background:#1f2937}
-.split-h::after{content:"";position:absolute;top:2px;left:50%;transform:translateX(-50%);height:2px;width:40px;background:#374151;border-radius:2px}
+/* ════════════════════════
+   RIGHT — A4 Fiche de Local
+   ════════════════════════ */
+#fiche-col{width:352px;flex-shrink:0;background:#0b1221;border-left:1px solid #1f2937;display:flex;flex-direction:column;overflow:hidden}
+.fiche-topbar{display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid #1f2937;flex-shrink:0;background:#0d1526}
+.fiche-topbar-title{font-size:12px;font-weight:700;color:#f1f5f9}
+.fiche-topbar-sub{font-size:11px;color:#38bdf8;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fiche-actions{display:flex;gap:5px}
+.fact-btn{display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid #334155;background:transparent;color:#cbd5e1}
+.fact-btn:hover{background:#1f2937;color:#fff}
+.fact-btn.warn{border-color:#b45309;color:#fbbf24}
+.fact-btn.warn:hover{background:#451a03;color:#fcd34d}
+.fact-btn.primary{background:#1d4ed8;border-color:#1d4ed8;color:#e0f2fe}
+.fact-btn.primary:hover{background:#2563eb}
 
-/* ── DATA SHEET PANEL ── */
-#sheetPanel{height:290px;flex-shrink:0;background:#0d1526;display:flex;flex-direction:column;overflow:hidden}
-.sheet-bar{display:flex;align-items:center;gap:10px;padding:7px 14px;border-bottom:1px solid #1f2937;flex-shrink:0}
-.sheet-title{font-size:13px;font-weight:700;color:#f1f5f9}
-.sheet-sub{font-size:11px;color:#38bdf8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
-.sheet-actions{display:flex;gap:6px;flex-shrink:0}
-.sheet-btn{display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #334155;background:transparent;color:#cbd5e1}
-.sheet-btn:hover{background:#1f2937;color:#fff}
-.sheet-body{flex:1;overflow:auto}
+/* FICHE SCROLL AREA */
+.fiche-scroll{flex:1;overflow-y:auto;overflow-x:hidden}
 
-/* ── SHEET EMPTY ── */
-.sheet-empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#374151}
-.sheet-empty p{font-size:12px;text-align:center;line-height:1.6;max-width:260px}
+/* Empty fiche */
+.fiche-empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#374151;padding:20px;text-align:center}
+.fiche-empty svg{opacity:.4}
+.fiche-empty p{font-size:12px;line-height:1.7;color:#475569}
 
-/* ── SINGLE ROOM FICHE ── */
-.fiche{padding:14px 16px}
-.fiche-hd{display:flex;align-items:baseline;flex-wrap:wrap;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #1f2937}
-.fiche-num{font-size:11px;font-weight:700;color:#38bdf8;background:#0c1a2e;border:1px solid #1e3a58;border-radius:4px;padding:2px 8px;flex-shrink:0}
-.fiche-name{font-size:17px;font-weight:700;color:#f1f5f9;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fiche-badges{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap}
-.fiche-badge{font-size:11px;color:#94a3b8;background:#111827;border:1px solid #1f2937;border-radius:4px;padding:2px 8px}
-.fiche-badge.area{color:#34d399;border-color:#1a3a2e}
-.fiche-badge.phase{color:#f59e0b;border-color:#2a1f00}
-.fiche-badge.usage{color:#a78bfa;border-color:#1e1340}
-.params-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:5px}
-.param-cell{background:#111827;border:1px solid #1a2640;border-radius:4px;padding:7px 10px;min-width:0}
-.param-cell.core{border-color:#1e3a58}
-.param-key{font-size:10px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.param-cell.core .param-key{color:#3b82f6}
-.param-val{font-size:13px;color:#e2e8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.param-cell.core .param-val{font-weight:600}
+/* ── A4 FICHE BODY ── */
+.fiche-a4{background:#fff;color:#111;margin:12px;border:1px solid #334155;border-radius:3px;font-family:'Segoe UI',Arial,sans-serif;font-size:11px;line-height:1.4}
 
-/* ── MULTI SHEET ── */
-.multi-sheet{padding:12px 14px}
-.multi-hd{display:flex;align-items:center;gap:14px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #1f2937;flex-wrap:wrap}
-.multi-count{font-size:18px;font-weight:700;color:#38bdf8}
-.multi-area{font-size:13px;color:#34d399;font-weight:600}
-.multi-scroll{overflow:auto;max-height:180px}
-table.multi-tbl{width:100%;border-collapse:collapse;font-size:11px}
-table.multi-tbl th{position:sticky;top:0;background:#111c33;color:#64748b;font-weight:600;text-align:left;padding:4px 8px;border-bottom:1px solid #1e2b45;white-space:nowrap;font-size:10px;text-transform:uppercase;letter-spacing:.04em}
-table.multi-tbl td{padding:4px 8px;border-bottom:1px solid #16233f;color:#cbd5e1;white-space:nowrap}
-table.multi-tbl tr:hover td{background:#111c30;cursor:pointer}
+/* A4 header band */
+.fa4-header{display:grid;grid-template-columns:1fr auto;background:#1d4ed8;color:#fff;padding:10px 14px;gap:8px}
+.fa4-brand{font-size:14px;font-weight:800;letter-spacing:.01em}
+.fa4-brand span{opacity:.7;font-weight:400}
+.fa4-title{font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;text-align:right;line-height:1}
+.fa4-subtitle{font-size:10px;opacity:.8;letter-spacing:.08em;text-transform:uppercase;text-align:right}
+
+/* Project strip */
+.fa4-proj{display:grid;grid-template-columns:1fr 1fr;background:#f1f5f9;border-bottom:1px solid #e2e8f0;padding:6px 12px;gap:6px;font-size:10px}
+.fa4-proj-item{display:flex;gap:5px}
+.fa4-proj-lbl{font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.fa4-proj-val{color:#0f172a;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ID strip */
+.fa4-id{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;padding:8px 12px;border-bottom:2px solid #1d4ed8}
+.fa4-num{background:#1d4ed8;color:#fff;font-weight:800;font-size:16px;padding:4px 12px;border-radius:3px;flex-shrink:0}
+.fa4-name{font-size:16px;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fa4-area{font-size:20px;font-weight:800;color:#0f172a;text-align:right;white-space:nowrap}
+.fa4-area span{font-size:11px;font-weight:400;color:#64748b}
+
+/* Sections */
+.fa4-sec{border-bottom:1px solid #e2e8f0}
+.fa4-sec-hd{background:#1e293b;color:#fff;padding:4px 12px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.12em}
+.fa4-grid{display:grid;gap:0}
+.fa4-grid-2{grid-template-columns:1fr 1fr}
+.fa4-grid-3{grid-template-columns:1fr 1fr 1fr}
+.fa4-grid-4{grid-template-columns:1fr 1fr 1fr 1fr}
+.fa4-field{padding:6px 10px;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0}
+.fa4-field:last-child{border-right:none}
+.fa4-field-lbl{font-size:8.5px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.fa4-field-val{font-size:12px;color:#0f172a;font-weight:500;min-height:16px}
+.fa4-field-val.missing{color:#94a3b8;font-style:italic}
+.fa4-field-val.has-val{color:#0f172a}
+
+/* Notes section */
+.fa4-notes{padding:8px 12px;min-height:50px;font-size:11px;color:#374151;line-height:1.6}
+.fa4-notes.empty{color:#94a3b8;font-style:italic}
+
+/* Footer */
+.fa4-footer{display:flex;align-items:center;justify-content:space-between;padding:5px 12px;background:#f8fafc;border-top:1px solid #e2e8f0;font-size:9px;color:#94a3b8}
+
+/* Missing params alert (inside dark UI) */
+.missing-alert{margin:8px 12px;padding:8px 10px;background:#1a0e00;border:1px solid #78350f;border-radius:5px;font-size:10px;color:#fbbf24}
+.missing-alert b{display:block;margin-bottom:4px;color:#f59e0b}
 
 /* ── LIGHT THEME ── */
 [data-theme=light] body{background:#eef1f6;color:#1e2733}
@@ -181,73 +204,55 @@ table.multi-tbl tr:hover td{background:#111c30;cursor:pointer}
 [data-theme=light] .nav a{color:#64748b;border-right-color:#dde2ec}
 [data-theme=light] .nav a:hover{background:#eef2f8;color:#111}
 [data-theme=light] .nav a.active{background:#e7f3fc;color:#0284c7;box-shadow:inset 0 -2px 0 #0284c7}
-[data-theme=light] .left-panel{background:#f6f8fb;border-right-color:#dde2ec}
-[data-theme=light] .lp-sec{border-bottom-color:#dde2ec}
-[data-theme=light] .lp-sel{background:#fff;color:#1e2733;border-color:#d4dae6}
-[data-theme=light] .pal-search input{background:#fff;color:#1e2733;border-color:#d4dae6}
-[data-theme=light] .pal-param{border-bottom-color:#e6e9f0}
-[data-theme=light] .pal-param-hd:hover{background:#eef2f8}
-[data-theme=light] .pal-pname{color:#475569}
-[data-theme=light] .pal-param.open .pal-pname{color:#0f172a}
-[data-theme=light] .pal-val:hover{background:#eef2f8}
-[data-theme=light] .pal-val.active{background:#e7f3fc}
-[data-theme=light] .pal-vname{color:#64748b}
-[data-theme=light] .pal-val:hover .pal-vname{color:#0f172a}
-[data-theme=light] .pal-val.active .pal-vname{color:#0284c7}
-[data-theme=light] .pal-vcnt{background:#eef2f8;color:#64748b}
-[data-theme=light] .sel-footer{border-top-color:#dde2ec}
-[data-theme=light] .sel-info{color:#64748b}
-[data-theme=light] .sel-clear{border-color:#d4dae6;color:#64748b}
-[data-theme=light] .viewer-wrap,[data-theme=light] .pane3d{background:#eef1f6}
-[data-theme=light] .pane3d{border-left-color:#dde2ec}
+[data-theme=light] .left{background:#f6f8fb;border-right-color:#dde2ec}
+[data-theme=light] .lsec{border-bottom-color:#dde2ec}
+[data-theme=light] .lsel,.param-sel-select{background:#fff;color:#1e2733;border-color:#d4dae6}
+[data-theme=light] .val-item{border-bottom-color:#eef2f8}
+[data-theme=light] .val-item:hover{background:#eef2f8}
+[data-theme=light] .val-item.active{background:#e7f3fc}
+[data-theme=light] .val-name{color:#475569}
+[data-theme=light] .val-item.active .val-name{color:#0284c7}
+[data-theme=light] .val-cnt{background:#eef2f8;color:#64748b}
+[data-theme=light] .room-search{background:#fff;color:#1e2733;border-color:#d4dae6}
+[data-theme=light] .room-row{border-bottom-color:#eef2f8}
+[data-theme=light] .room-row:hover{background:#eef2f8}
+[data-theme=light] .room-row.active{background:#e7f3fc;border-left-color:#0284c7}
+[data-theme=light] .room-name{color:#475569}
+[data-theme=light] .room-row.active .room-name{color:#0f172a}
+[data-theme=light] .sel-foot{border-top-color:#dde2ec}
+[data-theme=light] .sel-clr{border-color:#d4dae6;color:#64748b}
+[data-theme=light] #viewer2d,[data-theme=light] #viewer3d{background:#eef1f6}
 [data-theme=light] #mainSvg > image{filter:none}
-[data-theme=light] .bimflow-room{fill:rgba(2,132,199,.06);stroke:rgba(2,132,199,.4)}
-[data-theme=light] .bimflow-room:hover{fill:rgba(2,132,199,.2);stroke:#0284c7}
+[data-theme=light] .bimflow-room{fill:rgba(2,132,199,.06);stroke:rgba(2,132,199,.35)}
+[data-theme=light] .bimflow-room:hover{fill:rgba(2,132,199,.18);stroke:#0284c7}
 [data-theme=light] .bimflow-room.selected{fill:rgba(2,132,199,.45)!important;stroke:#0284c7!important}
-[data-theme=light] .bimflow-room.shaded{fill:rgba(220,228,240,.82)!important;stroke:rgba(2,132,199,.08)!important}
-[data-theme=light] .bimflow-room.filtered-out{fill:rgba(220,228,240,.92)!important}
-[data-theme=light] #minimap{background:#fff;border-color:#dde2ec}
-[data-theme=light] .split-h{background:#e6e9f0;border-top-color:#dde2ec}
-[data-theme=light] #sheetPanel{background:#f6f8fb;border-top-color:#dde2ec}
-[data-theme=light] .sheet-bar{border-bottom-color:#dde2ec}
-[data-theme=light] .sheet-title{color:#0f172a}
-[data-theme=light] .sheet-btn{border-color:#cdd5e3;color:#334155}
-[data-theme=light] .sheet-btn:hover{background:#eef2f8;color:#0f172a}
-[data-theme=light] .fiche-hd{border-bottom-color:#dde2ec}
-[data-theme=light] .fiche-name{color:#0f172a}
-[data-theme=light] .fiche-num{background:#e7f3fc;border-color:#bfdbfe;color:#0284c7}
-[data-theme=light] .fiche-badge{background:#eef2f8;border-color:#dde2ec;color:#475569}
-[data-theme=light] .fiche-badge.area{color:#047857;border-color:#d1fae5;background:#f0fdf4}
-[data-theme=light] .fiche-badge.phase{color:#b45309;border-color:#fde68a;background:#fffbeb}
-[data-theme=light] .fiche-badge.usage{color:#6d28d9;border-color:#ddd6fe;background:#f5f3ff}
-[data-theme=light] .param-cell{background:#fff;border-color:#e6e9f0}
-[data-theme=light] .param-cell.core{border-color:#bfdbfe}
-[data-theme=light] .param-key{color:#64748b}
-[data-theme=light] .param-cell.core .param-key{color:#0284c7}
-[data-theme=light] .param-val{color:#1e2733}
-[data-theme=light] table.multi-tbl th{background:#eef2f8;color:#475569}
-[data-theme=light] table.multi-tbl td{border-bottom-color:#e6e9f0;color:#334155}
-[data-theme=light] table.multi-tbl tr:hover td{background:#eef2f8}
+[data-theme=light] .bimflow-room.shaded{fill:rgba(218,225,235,.82)!important;stroke:rgba(2,132,199,.06)!important}
+[data-theme=light] .bimflow-room.filtered-out{fill:rgba(218,225,235,.92)!important}
+[data-theme=light] .sph{background:#e6e9f0;border-top-color:#dde2ec}
+[data-theme=light] #fiche-col{background:#f0f4f8;border-left-color:#dde2ec}
+[data-theme=light] .fiche-topbar{background:#f6f8fb;border-bottom-color:#dde2ec}
 [data-theme=light] .tbtn{background:#eef2f8;border-color:#d4dae6;color:#334155}
 [data-theme=light] .zbtn{background:#eef2f8;border-color:#d4dae6;color:#334155}
-[data-theme=light] .view-modes,.mode3d-btns{background:rgba(255,255,255,.95);border-color:#dde2ec}
-[data-theme=light] .view-modes button,[data-theme=light] .mode3d-btns button{color:#475569;border-right-color:#dde2ec}
-[data-theme=light] .view-modes button:hover,[data-theme=light] .mode3d-btns button:hover{color:#0f172a}
+[data-theme=light] .fact-btn{border-color:#cdd5e3;color:#334155}
+[data-theme=light] .fact-btn:hover{background:#eef2f8}
+[data-theme=light] .fa4-a4{border-color:#dde2ec}
+[data-theme=light] .param-sel-select{background:#fff;color:#1e2733;border-color:#d4dae6}
 
 /* ── PRINT ── */
 @media print{
-  .topbar,.left-panel,.split-h,#viewerRow,.sheet-actions,.status-dot,.status-txt{display:none!important}
-  #sheetPanel{height:auto!important;border:none}
-  body{overflow:auto;height:auto}
-  #appMain{display:block}
-  #centerCol{display:block}
-  .fiche{padding:20px}
-  .params-grid{grid-template-columns:repeat(3,1fr)}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .topbar,.left,#center,.fiche-topbar,.fiche-actions,.missing-alert{display:none!important}
+  body,#app,#fiche-col{display:block;height:auto;overflow:visible}
+  #fiche-col{width:100%;border:none}
+  .fiche-scroll{overflow:visible}
+  .fiche-a4{margin:0;border:none;page-break-inside:avoid}
+  @page{size:A4;margin:12mm}
 }
 </style>
 </head>
 <body>
 
+<!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BIM<span>Flow</span></div>
   <div class="nav">
@@ -264,524 +269,434 @@ table.multi-tbl tr:hover td{background:#111c30;cursor:pointer}
   </div>
 </div>
 
-<div id="appMain">
+<div id="app">
 
-  <!-- ══ LEFT PANEL ══ -->
-  <div class="left-panel">
+  <!-- ══════ LEFT PANEL ══════ -->
+  <div class="left">
 
     <!-- Filters -->
-    <div class="lp-sec">
-      <div class="lp-hd" data-en="Filters">Filtres</div>
-      <div class="lp-body">
-        <div class="lp-row">
-          <label class="lp-lbl" data-en="Level">Niveau</label>
-          <select class="lp-sel" id="filterLevel"><option value="">— Tous les niveaux —</option></select>
-        </div>
-        <div class="lp-row">
-          <label class="lp-lbl" data-en="Phase">Phase</label>
-          <select class="lp-sel" id="filterPhase"><option value="">— Toutes les phases —</option></select>
-        </div>
-        <div class="lp-row">
-          <label class="lp-lbl" data-en="Usage / Type">Usage / Type</label>
-          <select class="lp-sel" id="filterType"><option value="">— Tous les types —</option></select>
-        </div>
+    <div class="lsec">
+      <div class="lsec-hd" data-en="Filters">Filtres</div>
+      <div class="lsec-body">
+        <div class="lrow"><label class="llbl" data-en="Level">Niveau</label>
+          <select class="lsel" id="fLevel"><option value="">Tous les niveaux</option></select></div>
+        <div class="lrow"><label class="llbl">Phase</label>
+          <select class="lsel" id="fPhase"><option value="">Toutes les phases</option></select></div>
+        <div class="lrow"><label class="llbl" data-en="Usage">Usage</label>
+          <select class="lsel" id="fType"><option value="">Tous les usages</option></select></div>
       </div>
     </div>
 
-    <!-- Palette header + search -->
-    <div class="lp-sec">
-      <div class="lp-hd" data-en="Select by parameter">Sélectionner par paramètre</div>
-      <div class="pal-search">
-        <input type="text" id="palSearch" placeholder="Rechercher un paramètre…" data-en-ph="Search parameter…"/>
+    <!-- Parameter selector (flat) -->
+    <div class="lsec" style="flex-shrink:0">
+      <div class="param-sel-wrap">
+        <div class="param-sel-lbl" data-en="Select by parameter →">Sélectionner par paramètre →</div>
+        <select class="param-sel-select" id="palParam"><option value="">— Choisir un paramètre —</option></select>
       </div>
     </div>
+    <div class="val-list" id="valList"><div class="val-empty" data-en="Choose a parameter above">Choisissez un paramètre</div></div>
 
-    <!-- Parameter accordion -->
-    <div class="palette-wrap" id="paletteList"></div>
+    <!-- Room search -->
+    <div class="room-search-wrap">
+      <input class="room-search" id="roomSearch" type="text" placeholder="Rechercher une pièce…" data-en-ph="Search room…"/>
+    </div>
+    <div class="room-list" id="roomList"><div class="room-empty">Aucune pièce</div></div>
 
-    <!-- Selection summary -->
-    <div class="sel-footer">
-      <div class="sel-info" id="selInfo"><span data-en="No room selected">Aucune pièce sélectionnée</span></div>
-      <button class="sel-clear" id="selClear" data-en="Clear">Effacer</button>
+    <!-- Footer -->
+    <div class="sel-foot">
+      <div class="sel-info" id="selInfo"><span data-en="No selection">Aucune sélection</span></div>
+      <button class="sel-clr" id="selClr" data-en="Clear">Effacer</button>
     </div>
   </div>
 
-  <!-- ══ CENTER ══ -->
-  <div id="centerCol">
+  <!-- ══════ CENTER — 2D top + 3D bottom ══════ -->
+  <div id="center" class="v-mboth">
 
-    <!-- Viewer row -->
-    <div id="viewerRow">
-      <div class="viewer-split mboth" id="viewerSplit">
-
-        <!-- View mode buttons -->
-        <div class="view-modes" id="viewModes">
-          <button data-m="m2d">🗺 2D</button>
-          <button data-m="mboth" class="active">⊞ 2D+3D</button>
-          <button data-m="m3d">🧊 3D</button>
-        </div>
-
-        <!-- 2D viewer -->
-        <div class="viewer-wrap" id="viewerWrap">
-          <div id="viewerEmpty" class="viewer-empty">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-            <h2>BIMFlow</h2>
-            <p data-en="Send a plan from Revit via &quot;Send to BIMFlow&quot;">Envoyez un plan depuis Revit via &laquo; Envoyer vers BIMFlow &raquo;</p>
-          </div>
-          <div id="minimap"><div id="minimap-lbl">Vue d'ensemble</div><svg id="minimapSvg"></svg></div>
-          <div class="zoom-wrap">
-            <button class="zbtn" id="zIn">+</button>
-            <button class="zbtn" id="zOut">−</button>
-            <button class="zbtn" id="zReset" title="Recadrer">⌖</button>
-          </div>
-        </div>
-
-        <!-- 3D pane -->
-        <div class="pane3d" id="pane3d">
-          <canvas id="canvas3d"></canvas>
-          <div class="mode3d-btns" id="mode3dBtns">
-            <button data-v="level" class="active" data-en="Level">Niveau</button>
-            <button data-v="project" data-en="Project">Projet</button>
-          </div>
-          <div class="pane3d-hint" id="hint3d" data-en="Drag to rotate · Scroll to zoom">Glissez pour pivoter · Molette pour zoomer</div>
-          <div class="zoom-wrap"><button class="zbtn" id="fit3d" title="Recadrer 3D">⌖</button></div>
-        </div>
+    <!-- 2D plan viewer -->
+    <div id="viewer2d">
+      <div id="v2dEmpty" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#374151;pointer-events:none">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        <p style="font-size:12px;text-align:center;max-width:200px" data-en="Send a plan from Revit via &quot;Send to BIMFlow&quot;">Envoyez un plan depuis Revit</p>
+      </div>
+      <!-- View mode bar -->
+      <div class="vm-bar" id="vmBar">
+        <button class="vm-btn" data-m="v-m2d">🗺 2D</button>
+        <button class="vm-btn active" data-m="v-mboth">⊞ 2D+3D</button>
+        <button class="vm-btn" data-m="v-m3d">🧊 3D</button>
+      </div>
+      <!-- Zoom -->
+      <div class="zbx">
+        <button class="zbtn" id="zIn">+</button>
+        <button class="zbtn" id="zOut">−</button>
+        <button class="zbtn" id="zFit">⌖</button>
       </div>
     </div>
 
-    <!-- Resizable split -->
-    <div class="split-h" id="splitH"></div>
+    <!-- Horizontal splitter -->
+    <div class="sph" id="sph"></div>
 
-    <!-- Data sheet panel -->
-    <div id="sheetPanel">
-      <div class="sheet-bar">
-        <span class="sheet-title" data-en="Room Data Sheet">Fiche de pièce</span>
-        <span class="sheet-sub" id="sheetSub"></span>
-        <div class="sheet-actions">
-          <button class="sheet-btn" id="btnPrint" data-en="🖨 Print">🖨 Imprimer</button>
-        </div>
+    <!-- 3D viewer -->
+    <div id="viewer3d">
+      <canvas id="canvas3d"></canvas>
+      <div class="m3d-bar">
+        <button class="m3d-btn active" data-v="level" data-en="Level">Niveau</button>
+        <button class="m3d-btn" data-v="project" data-en="Project">Projet</button>
       </div>
-      <div class="sheet-body" id="sheetBody">
-        <div class="sheet-empty">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 12h6M9 16h6M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M9 4h6v4H9z"/></svg>
-          <p data-en="Click a room on the plan or select via the palette">Cliquez une pièce sur le plan ou sélectionnez via la palette</p>
-        </div>
+      <div class="zbx3"><button class="zbtn" id="fit3d">⌖</button></div>
+      <div class="hint3d" id="hint3d" data-en="Drag · Scroll to zoom">Glissez · Molette = zoom</div>
+    </div>
+  </div>
+
+  <!-- ══════ RIGHT — A4 Fiche de Local ══════ -->
+  <div id="fiche-col">
+    <div class="fiche-topbar">
+      <span class="fiche-topbar-title" data-en="Room Data Sheet">Fiche de Local</span>
+      <span class="fiche-topbar-sub" id="ficheTopSub"></span>
+      <div class="fiche-actions">
+        <button class="fact-btn warn" id="btnCreateParams" style="display:none" data-en="⚠ Create missing params">⚠ Créer paramètres</button>
+        <button class="fact-btn primary" id="btnPrint" data-en="🖨 Print A4">🖨 A4</button>
       </div>
     </div>
+    <div class="fiche-scroll" id="ficheScroll">
+      <div class="fiche-empty">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 12h6M9 16h6M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M9 4h6v4H9z"/></svg>
+        <p data-en="Select a room on the plan or via the parameter palette to view its data sheet.">Sélectionnez une pièce sur le plan ou via la palette de paramètres pour afficher sa fiche de local.</p>
+      </div>
+    </div>
+  </div>
 
-  </div><!-- /centerCol -->
-</div><!-- /appMain -->
+</div><!-- /app -->
 
 <script>
 const $=id=>document.getElementById(id);
 
-/* ══ STATE ══ */
+/* ════ FICHE DE LOCAL SCHEMA (standard params) ════ */
+const SCHEMA=[
+  { group:'IDENTIFICATION', grid:'fa4-grid-2', fields:[
+    { lbl:'Fonction / Usage', keys:['fonction','function','usage','occupation','type','use'], create:'Fonction' },
+    { lbl:'Phase', keys:['phase'], create:'Phase' },
+    { lbl:'Département / Zone', keys:['département','department','zone','dept'], create:'Département' },
+    { lbl:'Code local', keys:['code local','code','local code'], create:'Code local' },
+  ]},
+  { group:'SURFACES & DIMENSIONS', grid:'fa4-grid-3', fields:[
+    { lbl:'Surface utile (SU)', keys:['surface','area','aire','su'], unit:'m²' },
+    { lbl:'Volume', keys:['volume'], unit:'m³' },
+    { lbl:'Périmètre', keys:['périmètre','perimeter'], unit:'m' },
+    { lbl:'Hauteur libre', keys:['hauteur libre','hauteur','height','ht libre','unbounded height'], unit:'m', create:'Hauteur libre' },
+    { lbl:'Hauteur sous-plafond', keys:['hauteur sous-plafond','ht plafond','ceiling height'], unit:'m', create:'Hauteur sous-plafond' },
+    { lbl:'Surface de vitrage', keys:['vitrage','glazing','fenêtres'], unit:'m²', create:'Surface de vitrage' },
+  ]},
+  { group:'FINITIONS', grid:'fa4-grid-3', fields:[
+    { lbl:'Revêtement de sol', keys:['revêtement de sol','revêtement sol','sol','floor','finition sol'], create:'Revêtement de sol' },
+    { lbl:'Revêtement mural', keys:['revêtement mural','revêtement mur','mur','wall','finition mur'], create:'Revêtement mural' },
+    { lbl:'Revêtement plafond', keys:['revêtement plafond','plafond','ceiling','finition plafond'], create:'Revêtement plafond' },
+    { lbl:'Plinthe', keys:['plinthe','baseboard'], create:'Plinthe' },
+  ]},
+  { group:'TECHNIQUE', grid:'fa4-grid-2', fields:[
+    { lbl:'Ventilation / VMC', keys:['ventilation','vmc','air neuf','hvac','air'], create:'Ventilation' },
+    { lbl:'Éclairage', keys:['éclairage','eclairage','lighting','lux','lumière'], create:'Éclairage' },
+    { lbl:'Chauffage / CVC', keys:['chauffage','cvc','hvac','heating','climatisation','froid'], create:'Chauffage / CVC' },
+    { lbl:'Électricité / Prises', keys:['électricité','electricite','electrical','prises','courant'], create:'Électricité' },
+  ]},
+  { group:'ACCESSIBILITÉ', grid:'fa4-grid-2', fields:[
+    { lbl:'PMR', keys:['pmr','accessible','accessibilité','accessibilite','handicap'], create:'PMR' },
+    { lbl:'Revêt. antidérapant', keys:['antidérapant','antiderapant','non-slip','glissance'], create:'Revêt. antidérapant' },
+  ]},
+  { group:'NOTES / COMMENTAIRES', grid:'', fields:[
+    { lbl:'Commentaires', keys:['commentaires','comments','notes','remarques','observations'], create:'Commentaires', fullRow:true },
+  ]},
+];
+
+/* ════ STATE ════ */
 let allPlans=[], allRooms=[];
 let plan=null, currentPlanKey='';
 let selIds=new Set();
-let filterLevel='', filterPhase='', filterType='';
-let activePalKey='', activePalVal='';
-let zoom=1, panX=0, panY=0, W=0, H=0;
-let isPan=false, panStart={x:0,y:0};
+let fLevel='', fPhase='', fType='';
+let palParam='', palVal='';
+let zoom=1,panX=0,panY=0,W=0,H=0;
+let isPan=false,panStart={x:0,y:0};
 const planCache={};
 
-const CORE=['nom','name','numéro','numero','number','surface','area','aire','niveau','level',
-  'département','department','occupation','occupancy','usage','phase','commentaires','comments'];
-const isCore=k=>CORE.some(c=>k.toLowerCase().includes(c)||c.includes(k.toLowerCase()));
+/* ════ HELPERS ════ */
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function setStatus(m,t){$('statusTxt').textContent=m;$('statusDot').className='status-dot'+(t?' '+t:'');}
+async function api(url,opts){const r=await fetch(url,opts);if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
 
-/* ══ HELPERS ══ */
-function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function setStatus(msg,t){ $('statusTxt').textContent=msg; $('statusDot').className='status-dot'+(t?' '+t:''); }
-async function api(url){ const r=await fetch(url); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }
-
-/* Case-insensitive param lookup */
-function getParam(room,...keys){
+/* Case-insensitive param lookup against a list of candidate substrings */
+function findParam(room,...keys){
   const P=room.Parameters||{};
   for(const k of keys){
-    const match=Object.keys(P).find(pk=>pk.toLowerCase().includes(k.toLowerCase()));
-    if(match&&P[match]) return P[match];
+    const mk=Object.keys(P).find(pk=>pk.toLowerCase().includes(k.toLowerCase())||k.toLowerCase().includes(pk.toLowerCase()));
+    if(mk!=null&&P[mk]!==undefined&&P[mk]!=='') return {key:mk,val:P[mk]};
   }
-  return '';
+  return null;
+}
+function getVal(room,...keys){const r=findParam(room,...keys);return r?String(r.val):'';}
+
+/* Schema field lookup */
+function schemaVal(room,field){return getVal(room,...field.keys);}
+
+/* Check which schema fields are missing across visible rooms */
+function missingSchemaFields(){
+  const vis=visibleRooms(); if(!vis.length)return[];
+  return SCHEMA.flatMap(s=>s.fields).filter(f=>{
+    if(!f.create)return false;
+    return !vis.some(r=>schemaVal(r,f));
+  });
 }
 
-/* ══ LOAD ALL PLANS ══ */
+/* ════ LOAD ════ */
 async function loadAll(){
   try{
     setStatus('Chargement…','loading');
     allPlans=await api('/api/plans');
-    if(!allPlans.length){ setStatus('Aucun plan — envoyez depuis Revit',''); buildPalette(); return; }
-    const results=await Promise.all(allPlans.map(p=>getPlanData(p.key)));
+    if(!allPlans.length){setStatus('Aucun plan — envoyez depuis Revit','');return;}
+    const res=await Promise.all(allPlans.map(p=>getPlanData(p.key)));
     allRooms=[];
-    results.forEach(p=>(p.Rooms||[]).forEach(r=>allRooms.push({
-      ...r, _levelName:p.LevelName, _planKey:p.key
-    })));
-    buildFilters();
-    buildPalette();
+    res.forEach(p=>(p.Rooms||[]).forEach(r=>allRooms.push({...r,_levelName:p.LevelName,_planKey:p.key})));
+    buildFilters(); buildParamSelect();
     await loadPlan(allPlans[allPlans.length-1].key);
     setStatus(`${allRooms.length} pièces · ${allPlans.length} niveau(x)`,'ok');
-  }catch(e){ setStatus('Erreur: '+e.message,'err'); }
+  }catch(e){setStatus('Erreur: '+e.message,'err');}
 }
-
 async function getPlanData(key){
-  if(planCache[key]) return planCache[key];
-  const p=await api('/api/plans?key='+encodeURIComponent(key));
-  planCache[key]=p; return p;
+  if(planCache[key])return planCache[key];
+  const p=await api('/api/plans?key='+encodeURIComponent(key));planCache[key]=p;return p;
 }
-
 async function loadPlan(key){
-  if(!key||key===currentPlanKey) return;
-  plan=await getPlanData(key); currentPlanKey=key;
-  W=plan.ImageWidth; H=plan.ImageHeight;
-  renderPlan(); setupMinimap(); resetView(); update3D();
+  if(!key||key===currentPlanKey)return;
+  plan=await getPlanData(key);currentPlanKey=key;
+  W=plan.ImageWidth;H=plan.ImageHeight;
+  renderSVG();setupMinimap?.();resetView();update3D();
 }
 
-/* ══ FILTERS ══ */
+/* ════ FILTERS ════ */
 function buildFilters(){
-  // Level
   const levels=[...new Set(allRooms.map(r=>r._levelName||'').filter(Boolean))].sort();
-  const lvSel=$('filterLevel'); lvSel.innerHTML='<option value="">— Tous les niveaux —</option>';
-  levels.forEach(l=>lvSel.appendChild(new Option(l,l)));
-
-  // Phase
-  const phases=new Set(); allRooms.forEach(r=>{ const v=getParam(r,'phase'); if(v) phases.add(v); });
-  const phSel=$('filterPhase'); phSel.innerHTML='<option value="">— Toutes les phases —</option>';
-  [...phases].sort().forEach(v=>phSel.appendChild(new Option(v,v)));
-
-  // Usage / Type
-  const types=new Set(); allRooms.forEach(r=>{ const v=getParam(r,'usage','occupation','type','fonction','use'); if(v) types.add(v); });
-  const tySel=$('filterType'); tySel.innerHTML='<option value="">— Tous les types —</option>';
-  [...types].sort().forEach(v=>tySel.appendChild(new Option(v,v)));
-
-  $('filterLevel').onchange=function(){ filterLevel=this.value;
-    if(filterLevel){ const p=allPlans.find(pl=>pl.level===filterLevel); if(p) loadPlan(p.key); }
-    onFilterChange(); };
-  $('filterPhase').onchange=function(){ filterPhase=this.value; onFilterChange(); };
-  $('filterType').onchange=function(){ filterType=this.value; onFilterChange(); };
+  const phases=new Set(),types=new Set();
+  allRooms.forEach(r=>{
+    const ph=getVal(r,'phase');if(ph)phases.add(ph);
+    const ty=getVal(r,'usage','occupation','type','fonction','function','use');if(ty)types.add(ty);
+  });
+  const lv=$('fLevel');lv.innerHTML='<option value="">Tous les niveaux</option>';
+  levels.forEach(l=>lv.appendChild(new Option(l,l)));
+  const ph=$('fPhase');ph.innerHTML='<option value="">Toutes les phases</option>';
+  [...phases].sort().forEach(v=>ph.appendChild(new Option(v,v)));
+  const ty=$('fType');ty.innerHTML='<option value="">Tous les usages</option>';
+  [...types].sort().forEach(v=>ty.appendChild(new Option(v,v)));
+  $('fLevel').onchange=e=>{fLevel=e.target.value;
+    if(fLevel){const p=allPlans.find(pl=>pl.level===fLevel);if(p)loadPlan(p.key);}
+    onFilterChange();};
+  $('fPhase').onchange=e=>{fPhase=e.target.value;onFilterChange();};
+  $('fType').onchange=e=>{fType=e.target.value;onFilterChange();};
 }
-
-/* Rooms that pass current filters */
 function visibleRooms(){
   return allRooms.filter(r=>{
-    if(filterLevel&&(r._levelName||'')!==filterLevel) return false;
-    if(filterPhase&&getParam(r,'phase')!==filterPhase) return false;
-    if(filterType&&getParam(r,'usage','occupation','type','fonction','use')!==filterType) return false;
+    if(fLevel&&(r._levelName||'')!==fLevel)return false;
+    if(fPhase&&getVal(r,'phase')!==fPhase)return false;
+    if(fType&&getVal(r,'usage','occupation','type','fonction','function','use')!==fType)return false;
     return true;
   });
 }
-
-function isRoomVisible(r){
-  if(filterLevel&&(r._levelName||r.LevelName||'')!==filterLevel) return false;
-  if(filterPhase&&getParam(r,'phase')!==filterPhase) return false;
-  if(filterType&&getParam(r,'usage','occupation','type','fonction','use')!==filterType) return false;
+function isRoomVis(r){
+  if(fLevel&&(r._levelName||r.LevelName||'')!==fLevel)return false;
+  if(fPhase&&getVal(r,'phase')!==fPhase)return false;
+  if(fType&&getVal(r,'usage','occupation','type','fonction','function','use')!==fType)return false;
   return true;
 }
+function onFilterChange(){palParam='';palVal='';selIds.clear();buildParamSelect();buildValList();buildRoomList();paintRooms();renderFiche();updateSelInfo();}
 
-function onFilterChange(){
-  activePalKey=''; activePalVal='';
-  selIds.clear();
-  buildPalette(); paintRooms(); renderSheet(); updateSelInfo();
-}
-
-/* ══ PARAMETER PALETTE ══ */
-function buildPalette(){
+/* ════ PARAM SELECT (simple dropdown) ════ */
+function buildParamSelect(){
   const vis=visibleRooms();
-  const list=$('paletteList'); list.innerHTML='';
-  if(!vis.length){
-    list.innerHTML='<div style="padding:18px;text-align:center;font-size:12px;color:#475569">Aucune pièce</div>';
-    return;
-  }
-
-  /* Build param → value → count map */
-  const paramMap={};
-  vis.forEach(r=>{
-    Object.entries(r.Parameters||{}).forEach(([k,v])=>{
-      if(!v&&v!==0) return;
-      if(!paramMap[k]) paramMap[k]={};
-      const sv=String(v);
-      paramMap[k][sv]=(paramMap[k][sv]||0)+1;
-    });
+  const params=new Set();
+  vis.forEach(r=>Object.keys(r.Parameters||{}).forEach(k=>{if((r.Parameters[k]!==''&&r.Parameters[k]!=null))params.add(k);}));
+  const sel=$('palParam');
+  const prev=sel.value;
+  sel.innerHTML='<option value="">— Choisir un paramètre —</option>';
+  const sorted=[...params].sort((a,b)=>{
+    const ca=isCore(a),cb=isCore(b);if(ca!==cb)return ca?-1:1;return a.localeCompare(b);
   });
+  sorted.forEach(k=>sel.appendChild(new Option(k,k)));
+  if(prev&&sorted.includes(prev))sel.value=prev;
+  buildValList();
+}
+const CORE_K=['nom','name','numéro','numero','number','surface','area','niveau','level','occupation','usage','phase','département','department'];
+const isCore=k=>CORE_K.some(c=>k.toLowerCase().includes(c)||c.includes(k.toLowerCase()));
 
-  const q=($('palSearch').value||'').toLowerCase();
-  const keys=Object.keys(paramMap)
-    .filter(k=>!q||k.toLowerCase().includes(q))
-    .sort((a,b)=>{ const ca=isCore(a),cb=isCore(b); if(ca!==cb)return ca?-1:1; return a.localeCompare(b); });
+$('palParam').onchange=function(){palParam=this.value;palVal='';buildValList();};
 
-  if(!keys.length){
-    list.innerHTML='<div style="padding:14px;text-align:center;font-size:12px;color:#475569">Aucun paramètre</div>';
-    return;
-  }
-
-  keys.forEach(k=>{
-    const vals=paramMap[k];
-    const total=Object.values(vals).reduce((s,n)=>s+n,0);
-    const isOpen=k===activePalKey;
-
-    const pd=document.createElement('div'); pd.className='pal-param'+(isOpen?' open':'');
-
-    const hd=document.createElement('div'); hd.className='pal-param-hd';
-    hd.innerHTML=`<span class="pal-chev">▶</span><span class="pal-pname" title="${esc(k)}">${esc(k)}</span><span class="pal-pcnt">${total}</span>`;
-    hd.onclick=()=>pd.classList.toggle('open');
-    pd.appendChild(hd);
-
-    const vd=document.createElement('div'); vd.className='pal-values';
-    Object.entries(vals)
-      .sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))
-      .forEach(([v,cnt])=>{
-        const active=activePalKey===k&&activePalVal===v;
-        const row=document.createElement('div'); row.className='pal-val'+(active?' active':'');
-        row.innerHTML=`<span class="pal-vname" title="${esc(v)}">${esc(v)}</span><span class="pal-vcnt">${cnt}</span>`;
-        row.onclick=e=>{ e.stopPropagation(); palSelect(k,v); };
-        vd.appendChild(row);
-      });
-    pd.appendChild(vd);
-    list.appendChild(pd);
+function buildValList(){
+  const list=$('valList');list.innerHTML='';
+  if(!palParam){list.innerHTML='<div class="val-empty" data-en="Choose a parameter above">Choisissez un paramètre</div>';applyLangEl(list);return;}
+  const vis=visibleRooms();
+  const counts={};
+  vis.forEach(r=>{const v=String((r.Parameters||{})[palParam]||'');if(v){counts[v]=(counts[v]||0)+1;}});
+  const vals=Object.entries(counts).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+  if(!vals.length){list.innerHTML='<div class="val-empty">Aucune valeur</div>';return;}
+  vals.forEach(([v,cnt])=>{
+    const active=palVal===v;
+    const row=document.createElement('div');row.className='val-item'+(active?' active':'');
+    row.innerHTML=`<span class="val-dot"></span><span class="val-name" title="${esc(v)}">${esc(v)}</span><span class="val-cnt">${cnt}</span>`;
+    row.onclick=()=>palValClick(v);
+    list.appendChild(row);
   });
 }
 
-function palSelect(key,val){
-  /* Toggle off if same */
-  if(activePalKey===key&&activePalVal===val){
-    activePalKey=''; activePalVal=''; selIds.clear();
-  } else {
-    activePalKey=key; activePalVal=val;
-    selIds.clear();
-    /* Auto-select all visible rooms matching this param value */
-    visibleRooms().forEach(r=>{
-      const v=String((r.Parameters||{})[key]||'');
-      if(v===val) selIds.add(r.RevitId);
-    });
-    /* Switch to level where most selected rooms are */
+function palValClick(v){
+  if(palVal===v){palVal='';selIds.clear();}
+  else{
+    palVal=v;selIds.clear();
+    visibleRooms().forEach(r=>{if(String((r.Parameters||{})[palParam]||'')===v)selIds.add(r.RevitId);});
+    /* Auto-switch level */
     const keys=[...new Set(visibleRooms().filter(r=>selIds.has(r.RevitId)).map(r=>r._planKey))];
-    if(keys.length===1&&keys[0]&&keys[0]!==currentPlanKey) loadPlan(keys[0]);
+    if(keys.length===1&&keys[0]&&keys[0]!==currentPlanKey)loadPlan(keys[0]);
   }
-  buildPalette(); paintRooms(); renderSheet(); updateSelInfo();
-  if(R3.ready) recolor3D();
+  buildValList();buildRoomList();paintRooms();renderFiche();updateSelInfo();
+  if(R3.ready)recolor3D();
 }
 
-$('palSearch').oninput=()=>buildPalette();
-$('selClear').onclick=()=>{ selIds.clear(); activePalKey=''; activePalVal=''; buildPalette(); paintRooms(); renderSheet(); updateSelInfo(); if(R3.ready)recolor3D(); };
+/* ════ ROOM LIST ════ */
+function buildRoomList(){
+  const list=$('roomList');list.innerHTML='';
+  const q=($('roomSearch').value||'').toLowerCase();
+  const vis=visibleRooms().filter(r=>{
+    if(!q)return true;
+    return (r.Name||'').toLowerCase().includes(q)||(r.Number||'').toLowerCase().includes(q);
+  }).sort((a,b)=>(a.Number||'').localeCompare(b.Number||'',undefined,{numeric:true}));
+  if(!vis.length){list.innerHTML='<div class="room-empty">Aucune pièce</div>';return;}
+  vis.forEach(r=>{
+    const row=document.createElement('div');row.className='room-row'+(selIds.has(r.RevitId)?' active':'');
+    row.innerHTML=`<span class="room-num">${esc(r.Number||'')}</span><span class="room-name">${esc(r.Name||'—')}</span>`;
+    row.onclick=e=>roomClick(r.RevitId,e.ctrlKey||e.metaKey||e.shiftKey,r._planKey);
+    list.appendChild(row);
+  });
+}
+$('roomSearch').oninput=buildRoomList;
+
+/* ════ ROOM CLICK ════ */
+function roomClick(id,additive,planKey){
+  palVal='';palParam=palParam; // keep param but clear val
+  const plan2=planKey||currentPlanKey;
+  if(plan2&&plan2!==currentPlanKey){
+    loadPlan(plan2).then(()=>{selIds.clear();selIds.add(id);buildValList();buildRoomList();paintRooms();renderFiche();updateSelInfo();if(R3.ready)recolor3D();});
+    return;
+  }
+  if(additive){if(selIds.has(id))selIds.delete(id);else selIds.add(id);}
+  else{selIds.clear();selIds.add(id);}
+  /* Pan to room */
+  if(!additive&&plan){
+    const r=(plan.Rooms||[]).find(x=>x.RevitId===id);
+    if(r&&r.CentroidX){const w=$('viewer2d');panX=w.clientWidth/2-r.CentroidX*zoom;panY=w.clientHeight/2-r.CentroidY*zoom;applyTx($('mainSvg'));}
+  }
+  buildValList();buildRoomList();paintRooms();renderFiche();updateSelInfo();
+  if(R3.ready)recolor3D();
+}
+
+$('viewer2d').onclick=e=>{
+  if(e.target===$('viewer2d')||e.target.id==='mainSvg'||e.target.tagName==='image'||e.target.closest('#v2dEmpty')){
+    if(selIds.size){selIds.clear();palVal='';buildValList();buildRoomList();paintRooms();renderFiche();updateSelInfo();if(R3.ready)recolor3D();}
+  }
+};
+
+$('selClr').onclick=()=>{selIds.clear();palVal='';palParam='';$('palParam').value='';buildValList();buildRoomList();paintRooms();renderFiche();updateSelInfo();if(R3.ready)recolor3D();};
 
 function updateSelInfo(){
   const n=selIds.size;
-  if(!n){ $('selInfo').innerHTML='<span data-en="No room selected">Aucune pièce sélectionnée</span>'; applyLangEl($('selInfo')); return; }
+  if(!n){$('selInfo').innerHTML='<span data-en="No selection">Aucune sélection</span>';applyLangEl($('selInfo'));return;}
   const rooms=allRooms.filter(r=>selIds.has(r.RevitId));
-  let area=0; rooms.forEach(r=>{ const v=parseFloat(getParam(r,'surface','area','aire')); if(!isNaN(v))area+=v; });
+  let area=0;rooms.forEach(r=>{const v=parseFloat(getVal(r,'surface','area','aire'));if(!isNaN(v))area+=v;});
   $('selInfo').innerHTML=`<strong>${n}</strong> pièce${n>1?'s':''}${area>0?` · <strong>${area.toFixed(1)} m²</strong>`:''}`;
 }
 
-/* ══ RENDER SVG PLAN ══ */
-function renderPlan(){
-  $('viewerEmpty').style.display='none';
-  const old=$('mainSvg'); if(old) old.remove();
+/* ════ SVG PLAN ════ */
+function renderSVG(){
+  $('v2dEmpty').style.display='none';
+  const old=$('mainSvg');if(old)old.remove();
   const ns='http://www.w3.org/2000/svg';
-  const svg=document.createElementNS(ns,'svg'); svg.id='mainSvg';
-  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.style.width=W+'px'; svg.style.height=H+'px';
+  const svg=document.createElementNS(ns,'svg');svg.id='mainSvg';
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.style.width=W+'px';svg.style.height=H+'px';
   const img=document.createElementNS(ns,'image');
   img.setAttribute('href','data:image/png;base64,'+plan.ImageBase64);
-  img.setAttribute('x','0'); img.setAttribute('y','0'); img.setAttribute('width',W); img.setAttribute('height',H);
+  img.setAttribute('x','0');img.setAttribute('y','0');img.setAttribute('width',W);img.setAttribute('height',H);
   svg.appendChild(img);
-  (plan.Rooms||[]).forEach(room=>{
-    if(!room.SvgPolygon) return;
-    const poly=document.createElementNS(ns,'polygon');
-    poly.id='poly-'+room.RevitId; poly.setAttribute('class','bimflow-room'); poly.setAttribute('points',room.SvgPolygon);
-    poly.onclick=e=>{ e.stopPropagation(); roomClick(room.RevitId, e.ctrlKey||e.metaKey||e.shiftKey); };
-    svg.appendChild(poly);
+  (plan.Rooms||[]).forEach(r=>{
+    if(!r.SvgPolygon)return;
+    const p=document.createElementNS(ns,'polygon');
+    p.id='poly-'+r.RevitId;p.setAttribute('class','bimflow-room');p.setAttribute('points',r.SvgPolygon);
+    p.onclick=e=>{e.stopPropagation();roomClick(r.RevitId,e.ctrlKey||e.metaKey||e.shiftKey);};
+    svg.appendChild(p);
   });
-  $('viewerWrap').appendChild(svg);
-  setupPanZoom(svg);
-  paintRooms();
+  $('viewer2d').appendChild(svg);
+  setupPanZoom(svg);paintRooms();
 }
 
-/* ══ PAINT ROOMS (shading logic) ══ */
+/* ════ PAINT ROOMS ════ */
 function paintRooms(){
-  if(!plan) return;
+  if(!plan)return;
   const hasSel=selIds.size>0;
   (plan.Rooms||[]).forEach(r=>{
-    const poly=$('poly-'+r.RevitId);
-    const mini=$('mp-'+r.RevitId);
-    if(!poly) return;
+    const poly=$('poly-'+r.RevitId);if(!poly)return;
     poly.classList.remove('selected','shaded','filtered-out');
-    if(mini) mini.classList.remove('selected','shaded','filtered-out');
-    const vis=isRoomVisible({...r, _levelName:plan.LevelName});
+    const vis=isRoomVis({...r,_levelName:plan.LevelName});
     const sel=selIds.has(r.RevitId);
-    if(!vis){
-      poly.classList.add('filtered-out');
-      if(mini) mini.classList.add('filtered-out');
-    } else if(sel){
-      poly.classList.add('selected');
-      if(mini) mini.classList.add('selected');
-    } else if(hasSel){
-      poly.classList.add('shaded');
-      if(mini) mini.classList.add('shaded');
-    }
+    if(!vis)poly.classList.add('filtered-out');
+    else if(sel)poly.classList.add('selected');
+    else if(hasSel)poly.classList.add('shaded');
   });
-  updateMinimap();
 }
 
-/* ══ ROOM CLICK ══ */
-function roomClick(id, additive){
-  const roomObj=(plan.Rooms||[]).find(r=>r.RevitId===id); if(!roomObj) return;
-  if(!isRoomVisible({...roomObj,_levelName:plan.LevelName})) return;
-  activePalKey=''; activePalVal='';
-  if(additive){ if(selIds.has(id)) selIds.delete(id); else selIds.add(id); }
-  else { selIds.clear(); selIds.add(id); }
-  /* Pan to room */
-  if(!additive&&roomObj.CentroidX){
-    const w=$('viewerWrap');
-    panX=w.clientWidth/2-roomObj.CentroidX*zoom;
-    panY=w.clientHeight/2-roomObj.CentroidY*zoom;
-    applyTx($('mainSvg'));
-  }
-  buildPalette(); paintRooms(); renderSheet(); updateSelInfo();
-  if(R3.ready) recolor3D();
-}
-
-$('viewerWrap').onclick=()=>{ if(selIds.size){ selIds.clear(); activePalKey=''; activePalVal=''; buildPalette(); paintRooms(); renderSheet(); updateSelInfo(); if(R3.ready)recolor3D(); } };
-
-/* ══ DATA SHEET ══ */
-function renderSheet(){
-  const sel=allRooms.filter(r=>selIds.has(r.RevitId));
-  const sub=$('sheetSub'), body=$('sheetBody');
-  if(!sel.length){
-    sub.textContent='';
-    body.innerHTML=`<div class="sheet-empty"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 12h6M9 16h6M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M9 4h6v4H9z"/></svg><p data-en="Click a room on the plan or select via the palette">Cliquez une pièce sur le plan ou sélectionnez via la palette</p></div>`;
-    applyLangEl(body); return;
-  }
-  if(sel.length===1){ renderSingle(sel[0]); return; }
-  renderMulti(sel);
-}
-
-function renderSingle(room){
-  const P=room.Parameters||{};
-  const num=room.Number||'', name=room.Name||'—';
-  const lvl=room._levelName||room.LevelName||'';
-  const areaRaw=getParam(room,'surface','area','aire');
-  const area=parseFloat(areaRaw); const areaStr=!isNaN(area)?area.toFixed(2)+' m²':'';
-  const phase=getParam(room,'phase');
-  const usage=getParam(room,'usage','occupation','type','fonction');
-  $('sheetSub').textContent=(num?num+' · ':'')+name;
-  const cols=Object.keys(P).sort((a,b)=>{ const ca=isCore(a),cb=isCore(b); if(ca!==cb)return ca?-1:1; return a.localeCompare(b); });
-  $('sheetBody').innerHTML=`<div class="fiche">
-    <div class="fiche-hd">
-      ${num?`<span class="fiche-num">${esc(num)}</span>`:''}
-      <div class="fiche-name">${esc(name)}</div>
-      <div class="fiche-badges">
-        ${lvl?`<span class="fiche-badge">${esc(lvl)}</span>`:''}
-        ${areaStr?`<span class="fiche-badge area">${esc(areaStr)}</span>`:''}
-        ${phase?`<span class="fiche-badge phase">Phase: ${esc(phase)}</span>`:''}
-        ${usage?`<span class="fiche-badge usage">${esc(usage)}</span>`:''}
-      </div>
-    </div>
-    <div class="params-grid">
-      ${cols.map(k=>`<div class="param-cell${isCore(k)?' core':''}"><div class="param-key">${esc(k)}</div><div class="param-val" title="${esc(P[k]||'')}">${esc(P[k]||'—')}</div></div>`).join('')}
-    </div>
-  </div>`;
-}
-
-function renderMulti(rooms){
-  const n=rooms.length;
-  let totalArea=0; rooms.forEach(r=>{ const v=parseFloat(getParam(r,'surface','area','aire')); if(!isNaN(v))totalArea+=v; });
-  $('sheetSub').textContent=`${n} pièces sélectionnées`;
-  const anyPhase=rooms.some(r=>getParam(r,'phase'));
-  const anyUsage=rooms.some(r=>getParam(r,'usage','occupation','type'));
-  const rows=rooms.map(r=>{
-    const area=parseFloat(getParam(r,'surface','area','aire'));
-    const phase=anyPhase?`<td>${esc(getParam(r,'phase')||'—')}</td>`:'';
-    const usage=anyUsage?`<td>${esc(getParam(r,'usage','occupation','type')||'—')}</td>`:'';
-    return `<tr onclick="jumpToRoom('${r.RevitId}')"><td>${esc(r.Number||'')}</td><td>${esc(r.Name||'—')}</td><td>${esc(r._levelName||r.LevelName||'')}</td><td>${isNaN(area)?'—':area.toFixed(2)+' m²'}</td>${phase}${usage}</tr>`;
-  }).join('');
-  $('sheetBody').innerHTML=`<div class="multi-sheet">
-    <div class="multi-hd">
-      <span class="multi-count">${n} pièce${n>1?'s':''}</span>
-      ${totalArea>0?`<span class="multi-area">Σ ${totalArea.toFixed(2)} m²</span>`:''}
-    </div>
-    <div class="multi-scroll"><table class="multi-tbl">
-      <thead><tr><th>N°</th><th>Nom</th><th>Niveau</th><th>Surface</th>${anyPhase?'<th>Phase</th>':''}${anyUsage?'<th>Usage</th>':''}</tr></thead>
-      <tbody>${rows}</tbody>
-    </table></div>
-  </div>`;
-}
-
-function jumpToRoom(id){
-  selIds.clear(); selIds.add(id);
-  const room=allRooms.find(r=>r.RevitId===id);
-  if(room&&room._planKey&&room._planKey!==currentPlanKey) loadPlan(room._planKey).then(()=>{ buildPalette(); paintRooms(); renderSheet(); updateSelInfo(); if(R3.ready)recolor3D(); });
-  else { buildPalette(); paintRooms(); renderSheet(); updateSelInfo(); if(R3.ready)recolor3D(); }
-}
-
-/* ══ PAN / ZOOM ══ */
+/* ════ PAN / ZOOM ════ */
 function resetView(){
-  const svg=$('mainSvg'); if(!svg)return;
-  const w=$('viewerWrap');
+  const svg=$('mainSvg');if(!svg)return;
+  const w=$('viewer2d');
   zoom=Math.min((w.clientWidth-40)/W,(w.clientHeight-40)/H);
-  panX=w.clientWidth/2-W/2*zoom; panY=w.clientHeight/2-H/2*zoom;
-  applyTx(svg);
+  panX=w.clientWidth/2-W/2*zoom;panY=w.clientHeight/2-H/2*zoom;applyTx(svg);
 }
-function applyTx(svg){ if(!svg)return; svg.style.left='0'; svg.style.top='0'; svg.style.transformOrigin='0 0'; svg.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`; updateMinimap(); }
-function zoomAt(f){ const w=$('viewerWrap').getBoundingClientRect(); const cx=w.width/2,cy=w.height/2; const nz=Math.min(Math.max(zoom*f,.07),30); panX=cx-(cx-panX)*(nz/zoom); panY=cy-(cy-panY)*(nz/zoom); zoom=nz; applyTx($('mainSvg')); }
+function applyTx(svg){if(!svg)return;svg.style.left='0';svg.style.top='0';svg.style.transformOrigin='0 0';svg.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`;}
+function zoomAt(f){const w=$('viewer2d').getBoundingClientRect();const cx=w.width/2,cy=w.height/2;const nz=Math.min(Math.max(zoom*f,.05),30);panX=cx-(cx-panX)*(nz/zoom);panY=cy-(cy-panY)*(nz/zoom);zoom=nz;applyTx($('mainSvg'));}
 function setupPanZoom(svg){
-  const wr=$('viewerWrap');
+  const wr=$('viewer2d');
   wr.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.deltaY<0?1.13:1/1.13);},{passive:false});
-  wr.addEventListener('mousedown',e=>{ if(e.button===1||e.button===2){isPan=true;panStart={x:e.clientX-panX,y:e.clientY-panY};wr.style.cursor='grabbing';e.preventDefault();} });
+  wr.addEventListener('mousedown',e=>{if(e.button===1||e.button===2){isPan=true;panStart={x:e.clientX-panX,y:e.clientY-panY};wr.style.cursor='grabbing';e.preventDefault();}});
   wr.addEventListener('contextmenu',e=>e.preventDefault());
-  window.addEventListener('mouseup',e=>{ if(e.button===1||e.button===2){isPan=false;wr.style.cursor='';} });
-  window.addEventListener('mousemove',e=>{ if(!isPan)return; panX=e.clientX-panStart.x; panY=e.clientY-panStart.y; applyTx($('mainSvg')); });
-  $('zIn').onclick=()=>zoomAt(1.2); $('zOut').onclick=()=>zoomAt(1/1.2); $('zReset').onclick=()=>resetView();
+  window.addEventListener('mouseup',e=>{if(e.button===1||e.button===2){isPan=false;wr.style.cursor='';}});
+  window.addEventListener('mousemove',e=>{if(!isPan)return;panX=e.clientX-panStart.x;panY=e.clientY-panStart.y;applyTx($('mainSvg'));});
+  $('zIn').onclick=()=>zoomAt(1.2);$('zOut').onclick=()=>zoomAt(1/1.2);$('zFit').onclick=()=>resetView();
 }
 
-/* ══ MINIMAP ══ */
-const MINI_W=128;
-function setupMinimap(){
-  if(!plan) return;
-  const ns='http://www.w3.org/2000/svg'; const miniH=Math.round(H*MINI_W/W);
-  const svg=$('minimapSvg'); svg.setAttribute('width',MINI_W); svg.setAttribute('height',miniH); svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.innerHTML='';
-  const img=document.createElementNS(ns,'image'); img.setAttribute('href','data:image/png;base64,'+plan.ImageBase64);
-  img.setAttribute('x','0');img.setAttribute('y','0');img.setAttribute('width',W);img.setAttribute('height',H); svg.appendChild(img);
-  (plan.Rooms||[]).forEach(r=>{ if(!r.SvgPolygon)return; const p=document.createElementNS(ns,'polygon'); p.id='mp-'+r.RevitId; p.setAttribute('class','mini-room'); p.setAttribute('points',r.SvgPolygon); svg.appendChild(p); });
-  const rect=document.createElementNS(ns,'rect'); rect.id='mini-vp'; svg.appendChild(rect);
-  $('minimap').style.display='';
-}
-function updateMinimap(){
-  if(!plan) return;
-  const wr=$('viewerWrap'); const wW=wr.clientWidth,wH=wr.clientHeight;
-  const x1=Math.max(0,(0-panX)/zoom),y1=Math.max(0,(0-panY)/zoom);
-  const x2=Math.min(W,(wW-panX)/zoom),y2=Math.min(H,(wH-panY)/zoom);
-  const r=$('mini-vp'); if(r){r.setAttribute('x',x1);r.setAttribute('y',y1);r.setAttribute('width',Math.max(0,x2-x1));r.setAttribute('height',Math.max(0,y2-y1));}
-}
-
-/* ══ VIEW MODE SWITCH ══ */
-$('viewModes').onclick=e=>{
-  const b=e.target.closest('button'); if(!b)return;
-  const vs=$('viewerSplit'); vs.classList.remove('m2d','m3d','mboth'); vs.classList.add(b.dataset.m);
-  [...$('viewModes').children].forEach(x=>x.classList.toggle('active',x===b));
-  setTimeout(()=>{ resetView(); resize3D(); update3D(); },30);
+/* ════ VIEW MODE ════ */
+$('vmBar').onclick=e=>{
+  const b=e.target.closest('.vm-btn');if(!b)return;
+  const m=b.dataset.m;
+  const c=$('center');c.className=m;
+  [...$('vmBar').children].forEach(x=>x.classList.toggle('active',x===b));
+  setTimeout(()=>{resetView();resize3D();if(!c.classList.contains('v-m2d'))update3D();},30);
 };
-$('fit3d').onclick=fit3D;
 
-/* ══ RESIZABLE SPLIT ══ */
+/* ════ SPLIT 3D/2D ════ */
 (()=>{
-  const bar=$('splitH'), el=$('sheetPanel');
+  const bar=$('sph'),el=$('viewer3d');
   bar.onmousedown=ev=>{
-    ev.preventDefault(); bar.classList.add('dragging');
-    const s0=ev.clientY, h0=el.getBoundingClientRect().height;
-    const mv=e=>{ el.style.height=Math.max(80,h0-(e.clientY-s0))+'px'; el.style.flex='none'; };
-    const up=()=>{ bar.classList.remove('dragging'); document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); };
-    document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+    ev.preventDefault();bar.classList.add('drag');
+    const s0=ev.clientY,h0=el.getBoundingClientRect().height;
+    const mv=e=>{el.style.height=Math.max(80,h0-(e.clientY-s0))+'px';el.style.flex='none';};
+    const up=()=>{bar.classList.remove('drag');document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);};
+    document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
   };
 })();
 
-window.onresize=()=>{ resetView(); resize3D(); };
+window.onresize=()=>{resetView();resize3D();};
 
-/* ══ 3D VIEWER ══ */
+/* ════ 3D ════ */
 let _threeP=null;
 function loadThree(){
-  if(window.THREE&&THREE.OrbitControls) return Promise.resolve();
-  if(_threeP) return _threeP;
+  if(window.THREE&&THREE.OrbitControls)return Promise.resolve();
+  if(_threeP)return _threeP;
   _threeP=new Promise((res,rej)=>{
-    const s1=document.createElement('script'); s1.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-    s1.onload=()=>{ const s2=document.createElement('script'); s2.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
-      s2.onload=res; s2.onerror=()=>rej(new Error('OrbitControls')); document.head.appendChild(s2); };
-    s1.onerror=()=>rej(new Error('Three.js')); document.head.appendChild(s1);
+    const s1=document.createElement('script');s1.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+    s1.onload=()=>{const s2=document.createElement('script');s2.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';s2.onload=res;s2.onerror=()=>rej(new Error('OrbitControls'));document.head.appendChild(s2);};
+    s1.onerror=()=>rej(new Error('Three.js'));document.head.appendChild(s1);
   });
   return _threeP;
 }
@@ -790,83 +705,224 @@ function init3D(){
   const cv=$('canvas3d');
   R3.renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
   R3.renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));
-  R3.scene=new THREE.Scene();
-  R3.camera=new THREE.PerspectiveCamera(45,1,.1,1e6);
-  R3.controls=new THREE.OrbitControls(R3.camera,cv); R3.controls.enableDamping=true; R3.controls.dampingFactor=.08;
+  R3.scene=new THREE.Scene();R3.camera=new THREE.PerspectiveCamera(45,1,.1,1e6);
+  R3.controls=new THREE.OrbitControls(R3.camera,cv);R3.controls.enableDamping=true;R3.controls.dampingFactor=.08;
   R3.scene.add(new THREE.AmbientLight(0xffffff,.78));
-  const dl=new THREE.DirectionalLight(0xffffff,.55); dl.position.set(1,2,1.2); R3.scene.add(dl);
-  R3.group=new THREE.Group(); R3.group.rotation.x=-Math.PI/2; R3.scene.add(R3.group);
-  R3.meshes={}; R3.ready=true; resize3D();
-  (function loop(){ requestAnimationFrame(loop); R3.controls.update(); R3.renderer.render(R3.scene,R3.camera); })();
+  const dl=new THREE.DirectionalLight(0xffffff,.55);dl.position.set(1,2,1.2);R3.scene.add(dl);
+  R3.group=new THREE.Group();R3.group.rotation.x=-Math.PI/2;R3.scene.add(R3.group);
+  R3.meshes={};R3.ready=true;resize3D();
+  (function loop(){requestAnimationFrame(loop);R3.controls.update();R3.renderer.render(R3.scene,R3.camera);})();
   const ray=new THREE.Raycaster(),v2=new THREE.Vector2();
-  cv.onclick=e=>{ const rc=cv.getBoundingClientRect(); v2.x=((e.clientX-rc.left)/rc.width)*2-1; v2.y=-((e.clientY-rc.top)/rc.height)*2+1;
-    ray.setFromCamera(v2,R3.camera); const hit=ray.intersectObjects(R3.group.children,true)[0];
-    let o=hit&&hit.object; while(o&&!o.userData.id)o=o.parent; if(o&&o.userData.id)roomClick(o.userData.id,false); };
+  cv.onclick=e=>{const rc=cv.getBoundingClientRect();v2.x=((e.clientX-rc.left)/rc.width)*2-1;v2.y=-((e.clientY-rc.top)/rc.height)*2+1;
+    ray.setFromCamera(v2,R3.camera);const hit=ray.intersectObjects(R3.group.children,true)[0];
+    let o=hit&&hit.object;while(o&&!o.userData.id)o=o.parent;if(o&&o.userData.id)roomClick(o.userData.id,false);};
 }
-function resize3D(){ if(!R3.ready)return; const p=$('pane3d'); R3.renderer.setSize(p.clientWidth||1,p.clientHeight||1,false); R3.camera.aspect=(p.clientWidth||1)/(p.clientHeight||1); R3.camera.updateProjectionMatrix(); }
+function resize3D(){if(!R3.ready)return;const p=$('viewer3d');R3.renderer.setSize(p.clientWidth||1,p.clientHeight||1,false);R3.camera.aspect=(p.clientWidth||1)/(p.clientHeight||1);R3.camera.updateProjectionMatrix();}
 function build3D(){
-  if(!R3.ready) return;
-  while(R3.group.children.length){ const c=R3.group.children.pop(); c.traverse(o=>{ if(o.geometry)o.geometry.dispose(); if(o.material)o.material.dispose(); }); }
-  R3.meshes={}; let any=false;
+  if(!R3.ready)return;
+  while(R3.group.children.length){const c=R3.group.children.pop();c.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});}
+  R3.meshes={};let any=false;
   (plan?.Rooms||[]).forEach(r=>{
-    const fp=r.Footprint; if(!fp||fp.length<3)return;
-    const shape=new THREE.Shape(); shape.moveTo(fp[0][0],fp[0][1]); for(let i=1;i<fp.length;i++)shape.lineTo(fp[i][0],fp[i][1]); shape.closePath();
+    const fp=r.Footprint;if(!fp||fp.length<3)return;
+    const sh=new THREE.Shape();sh.moveTo(fp[0][0],fp[0][1]);for(let i=1;i<fp.length;i++)sh.lineTo(fp[i][0],fp[i][1]);sh.closePath();
     const h=Math.max(0.3,r.Height||2.8);
-    const geo=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:false}); geo.translate(0,0,r.BaseZ||0);
+    const geo=new THREE.ExtrudeGeometry(sh,{depth:h,bevelEnabled:false});geo.translate(0,0,r.BaseZ||0);
     const mesh=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:0x3b82f6,transparent:true,opacity:.85}));
     mesh.userData.id=r.RevitId;
     mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:0x0b1424})));
-    R3.group.add(mesh); R3.meshes[r.RevitId]=mesh; any=true;
+    R3.group.add(mesh);R3.meshes[r.RevitId]=mesh;any=true;
   });
-  if(any) fit3D();
-  recolor3D();
+  if(any)fit3D();recolor3D();
 }
 function fit3D(){
-  if(!R3.ready)return; const box=new THREE.Box3().setFromObject(R3.group); if(box.isEmpty())return;
-  const c=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3()); const d=Math.max(s.x,s.y,s.z,5);
-  R3.controls.target.copy(c); R3.camera.position.set(c.x+d*.75,c.y+d*.9,c.z+d*.75);
-  R3.camera.near=Math.max(.05,d/2000); R3.camera.far=d*200; R3.camera.updateProjectionMatrix(); R3.controls.update();
+  if(!R3.ready)return;const box=new THREE.Box3().setFromObject(R3.group);if(box.isEmpty())return;
+  const c=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3());const d=Math.max(s.x,s.y,s.z,5);
+  R3.controls.target.copy(c);R3.camera.position.set(c.x+d*.75,c.y+d*.9,c.z+d*.75);
+  R3.camera.near=Math.max(.05,d/2000);R3.camera.far=d*200;R3.camera.updateProjectionMatrix();R3.controls.update();
 }
 function recolor3D(){
-  if(!R3.ready||!plan) return;
+  if(!R3.ready||!plan)return;
   const hasSel=selIds.size>0;
   (plan.Rooms||[]).forEach(r=>{
-    const mesh=R3.meshes[r.RevitId]; if(!mesh) return;
-    const vis=isRoomVisible({...r,_levelName:plan.LevelName});
-    const sel=selIds.has(r.RevitId);
-    if(!vis)      { mesh.material.color.setHex(0x0a1222); mesh.material.opacity=.12; }
-    else if(sel)  { mesh.material.color.setHex(0x38bdf8); mesh.material.opacity=.92; }
-    else if(hasSel){ mesh.material.color.setHex(0x0d1a2e); mesh.material.opacity=.22; }
-    else           { mesh.material.color.setHex(0x3b82f6); mesh.material.opacity=.82; }
+    const mesh=R3.meshes[r.RevitId];if(!mesh)return;
+    const vis=isRoomVis({...r,_levelName:plan.LevelName}),sel=selIds.has(r.RevitId);
+    if(!vis){mesh.material.color.setHex(0x0a1222);mesh.material.opacity=.1;}
+    else if(sel){mesh.material.color.setHex(0x38bdf8);mesh.material.opacity=.92;}
+    else if(hasSel){mesh.material.color.setHex(0x0d1a2e);mesh.material.opacity=.2;}
+    else{mesh.material.color.setHex(0x3b82f6);mesh.material.opacity=.82;}
   });
 }
 async function update3D(){
-  if($('viewerSplit').classList.contains('m2d')) return;
-  try{ await loadThree(); }catch(e){ $('hint3d').textContent='3D indisponible: '+e.message; return; }
-  if(!R3.ready) init3D();
-  resize3D(); build3D();
+  if($('center').classList.contains('v-m2d'))return;
+  try{await loadThree();}catch(e){$('hint3d').textContent='3D indisponible';return;}
+  if(!R3.ready)init3D();resize3D();build3D();
 }
-$('mode3dBtns').onclick=e=>{ const b=e.target.closest('button'); if(!b)return; [...$('mode3dBtns').children].forEach(x=>x.classList.toggle('active',x===b)); update3D(); };
-
-/* ══ PRINT ══ */
-$('btnPrint').onclick=()=>{
-  if(!selIds.size){ alert('Sélectionnez une ou plusieurs pièces.'); return; }
-  window.print();
+$('fit3d').onclick=fit3D;
+document.querySelector('.m3d-bar').onclick=e=>{
+  const b=e.target.closest('.m3d-btn');if(!b)return;
+  [...document.querySelectorAll('.m3d-btn')].forEach(x=>x.classList.toggle('active',x===b));update3D();
 };
 
-/* ══ LANG + THEME ══ */
-const langBtn=$('langBtn'), themeBtn=$('themeBtn');
-function applyLangEl(root){
-  (root||document).querySelectorAll('[data-en]').forEach(el=>{ if(el._fr===undefined)el._fr=el.innerHTML; el.innerHTML=(document.documentElement.lang==='en')?el.getAttribute('data-en'):el._fr; });
-  (root||document).querySelectorAll('[data-en-ph]').forEach(el=>{ if(el._frph===undefined)el._frph=el.getAttribute('placeholder')||''; el.setAttribute('placeholder',(document.documentElement.lang==='en')?el.getAttribute('data-en-ph'):el._frph); });
+/* ════ FICHE DE LOCAL (A4 format) ════ */
+function renderFiche(){
+  const scroll=$('ficheScroll');
+  const selArr=allRooms.filter(r=>selIds.has(r.RevitId));
+
+  /* Update missing params button */
+  const missing=missingSchemaFields();
+  $('btnCreateParams').style.display=missing.length&&selArr.length?'':'none';
+
+  if(!selArr.length){
+    $('ficheTopSub').textContent='';
+    scroll.innerHTML=`<div class="fiche-empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 12h6M9 16h6M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M9 4h6v4H9z"/></svg><p data-en="Select a room on the plan or via the parameter palette.">Sélectionnez une pièce sur le plan ou via la palette.</p></div>`;
+    applyLangEl(scroll);return;
+  }
+  if(selArr.length===1){renderSingleFiche(selArr[0]);}
+  else{renderMultiFiche(selArr);}
 }
-function applyLang(l){ document.documentElement.lang=l; applyLangEl(); langBtn.textContent=(l==='en')?'FR':'EN'; try{localStorage.setItem('bimflow_lang',l);}catch(e){} }
-function applyTheme(t){ document.documentElement.setAttribute('data-theme',t); themeBtn.textContent=(t==='dark')?'☀':'☾'; try{localStorage.setItem('bimflow_theme',t);}catch(e){} }
+
+function fieldHtml(room,field){
+  const v=schemaVal(room,field);
+  const has=!!v;
+  const display=v||(has?v:'—');
+  return `<div class="fa4-field">
+    <div class="fa4-field-lbl">${esc(field.lbl)}</div>
+    <div class="fa4-field-val ${has?'has-val':'missing'}">${esc(display)}${has&&field.unit?' <small style="color:#94a3b8">'+field.unit+'</small>':''}</div>
+  </div>`;
+}
+
+function renderSingleFiche(room){
+  const P=room.Parameters||{};
+  const num=room.Number||'', name=room.Name||'—';
+  const lvl=room._levelName||room.LevelName||'';
+  const area=getVal(room,'surface','area','aire');
+  const areaN=parseFloat(area);
+  const phase=getVal(room,'phase');
+  const usage=getVal(room,'usage','occupation','type','fonction','function');
+  const projectName=plan?.ProjectName||'';
+
+  $('ficheTopSub').textContent=(num?num+' · ':'')+name;
+
+  const sections=SCHEMA.map(s=>{
+    if(s.group==='NOTES / COMMENTAIRES'){
+      const v=schemaVal(room,s.fields[0]);
+      return `<div class="fa4-sec">
+        <div class="fa4-sec-hd">${s.group}</div>
+        <div class="fa4-notes ${v?'':'empty'}">${esc(v||'—')}</div>
+      </div>`;
+    }
+    return `<div class="fa4-sec">
+      <div class="fa4-sec-hd">${s.group}</div>
+      <div class="fa4-grid ${s.grid}">${s.fields.map(f=>fieldHtml(room,f)).join('')}</div>
+    </div>`;
+  }).join('');
+
+  scroll.innerHTML=`
+    <div class="fiche-a4">
+      <div class="fa4-header">
+        <div><div class="fa4-brand">BIM<span>ATIKA</span></div><div style="font-size:10px;opacity:.75;margin-top:2px">BIMFlow Platform</div></div>
+        <div><div class="fa4-title">FICHE DE LOCAL</div><div class="fa4-subtitle">Room Data Sheet</div></div>
+      </div>
+      <div class="fa4-proj">
+        <div class="fa4-proj-item"><span class="fa4-proj-lbl">Projet :</span><span class="fa4-proj-val">${esc(projectName||'—')}</span></div>
+        <div class="fa4-proj-item"><span class="fa4-proj-lbl">Niveau :</span><span class="fa4-proj-val">${esc(lvl||'—')}</span></div>
+        ${phase?`<div class="fa4-proj-item"><span class="fa4-proj-lbl">Phase :</span><span class="fa4-proj-val">${esc(phase)}</span></div>`:''}
+        ${usage?`<div class="fa4-proj-item"><span class="fa4-proj-lbl">Usage :</span><span class="fa4-proj-val">${esc(usage)}</span></div>`:''}
+      </div>
+      <div class="fa4-id">
+        ${num?`<div class="fa4-num">${esc(num)}</div>`:''}
+        <div class="fa4-name">${esc(name)}</div>
+        ${!isNaN(areaN)?`<div class="fa4-area">${areaN.toFixed(2)}<span> m²</span></div>`:''}
+      </div>
+      ${sections}
+      <div class="fa4-footer">
+        <span>BIMFlow · bimatika-bimplan.pages.dev</span>
+        <span>${new Date().toLocaleDateString('fr-FR')}</span>
+      </div>
+    </div>`;
+}
+
+function renderMultiFiche(rooms){
+  const n=rooms.length;
+  let totalArea=0;rooms.forEach(r=>{const v=parseFloat(getVal(r,'surface','area','aire'));if(!isNaN(v))totalArea+=v;});
+  $('ficheTopSub').textContent=`${n} pièces`;
+
+  const rows=rooms.map(r=>{
+    const area=parseFloat(getVal(r,'surface','area','aire'));
+    const phase=getVal(r,'phase');const usage=getVal(r,'usage','occupation','type','fonction');
+    return `<tr onclick="singleJump('${r.RevitId}')" style="cursor:pointer">
+      <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0;font-weight:600">${esc(r.Number||'')}</td>
+      <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0">${esc(r.Name||'—')}</td>
+      <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0;color:#64748b">${esc(r._levelName||r.LevelName||'')}</td>
+      <td style="padding:5px 8px;border-bottom:1px solid #e2e8f0;text-align:right">${isNaN(area)?'—':area.toFixed(2)+' m²'}</td>
+      ${phase?`<td style="padding:5px 8px;border-bottom:1px solid #e2e8f0;color:#92400e">${esc(phase)}</td>`:''}
+      ${usage?`<td style="padding:5px 8px;border-bottom:1px solid #e2e8f0;color:#5b21b6">${esc(usage)}</td>`:''}
+    </tr>`;
+  }).join('');
+
+  const anyPhase=rooms.some(r=>getVal(r,'phase'));
+  const anyUsage=rooms.some(r=>getVal(r,'usage','occupation','type','fonction'));
+
+  scroll.innerHTML=`<div class="fiche-a4">
+    <div class="fa4-header">
+      <div><div class="fa4-brand">BIM<span>ATIKA</span></div></div>
+      <div><div class="fa4-title">SÉLECTION</div><div class="fa4-subtitle">${n} pièces · ${totalArea.toFixed(2)} m²</div></div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead><tr style="background:#1e293b;color:#fff">
+        <th style="padding:5px 8px;text-align:left">N°</th>
+        <th style="padding:5px 8px;text-align:left">Nom</th>
+        <th style="padding:5px 8px;text-align:left">Niveau</th>
+        <th style="padding:5px 8px;text-align:right">Surface</th>
+        ${anyPhase?'<th style="padding:5px 8px;text-align:left">Phase</th>':''}
+        ${anyUsage?'<th style="padding:5px 8px;text-align:left">Usage</th>':''}
+      </tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr style="background:#f1f5f9;font-weight:700">
+        <td colspan="${2+(anyPhase?1:0)+(anyUsage?1:0)}" style="padding:5px 8px">Total</td>
+        <td style="padding:5px 8px;text-align:right">${totalArea.toFixed(2)} m²</td>
+      </tr></tfoot>
+    </table>
+    <div class="fa4-footer"><span>BIMFlow · ${new Date().toLocaleDateString('fr-FR')}</span><span>Cliquez une ligne pour voir la fiche individuelle</span></div>
+  </div>`;
+}
+
+function singleJump(id){selIds.clear();selIds.add(id);buildValList();buildRoomList();paintRooms();renderFiche();updateSelInfo();if(R3.ready)recolor3D();}
+
+/* ════ CREATE MISSING PARAMS ════ */
+$('btnCreateParams').onclick=async()=>{
+  if(!selIds.size){alert('Sélectionnez au moins une pièce.');return;}
+  const missing=missingSchemaFields();if(!missing.length){alert('Aucun paramètre manquant.');return;}
+  const names=missing.map(f=>f.create).join(', ');
+  if(!confirm(`Créer ces paramètres dans Revit pour toutes les pièces ?\n\n${names}\n\n(valeur initiale vide — modifiez ensuite dans BIMFlow ou Revit)`))return;
+  try{
+    const updates=allRooms.filter(r=>isRoomVis({...r,_levelName:r._levelName})).map(r=>({
+      RevitId:r.RevitId,
+      Parameters:Object.fromEntries(missing.map(f=>[f.create,'']))
+    }));
+    await api('/api/updates',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({PlanKey:currentPlanKey,Updates:updates,NewParameters:missing.map(f=>({Name:f.create,Type:'text'}))})});
+    alert(`Paramètres créés !\nDans Revit : cliquez "Recevoir depuis BIMFlow".`);
+    planCache[currentPlanKey]=null;await loadPlan(currentPlanKey);
+  }catch(e){alert('Erreur: '+e.message);}
+};
+
+/* ════ PRINT ════ */
+$('btnPrint').onclick=()=>{if(!selIds.size){alert('Sélectionnez une pièce.');return;}window.print();};
+
+/* ════ LANG + THEME ════ */
+const scroll=$('ficheScroll');
+const langBtn=$('langBtn'),themeBtn=$('themeBtn');
+function applyLangEl(root){
+  (root||document).querySelectorAll('[data-en]').forEach(el=>{if(el._fr===undefined)el._fr=el.innerHTML;el.innerHTML=(document.documentElement.lang==='en')?el.getAttribute('data-en'):el._fr;});
+  (root||document).querySelectorAll('[data-en-ph]').forEach(el=>{if(el._frph===undefined)el._frph=el.getAttribute('placeholder')||'';el.setAttribute('placeholder',(document.documentElement.lang==='en')?el.getAttribute('data-en-ph'):el._frph);});
+}
+function applyLang(l){document.documentElement.lang=l;applyLangEl();langBtn.textContent=(l==='en')?'FR':'EN';try{localStorage.setItem('bimflow_lang',l);}catch(e){}}
+function applyTheme(t){document.documentElement.setAttribute('data-theme',t);themeBtn.textContent=(t==='dark')?'☀':'☾';try{localStorage.setItem('bimflow_theme',t);}catch(e){}}
 langBtn.onclick=()=>applyLang(document.documentElement.lang==='en'?'fr':'en');
 themeBtn.onclick=()=>applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');
-(()=>{ let l='fr',t='dark'; try{l=localStorage.getItem('bimflow_lang')||'fr'; t=localStorage.getItem('bimflow_theme')||'dark';}catch(e){} applyTheme(t); if(l==='en')applyLang('en'); else langBtn.textContent='EN'; })();
+(()=>{let l='fr',t='dark';try{l=localStorage.getItem('bimflow_lang')||'fr';t=localStorage.getItem('bimflow_theme')||'dark';}catch(e){}applyTheme(t);if(l==='en')applyLang('en');else langBtn.textContent='EN';})();
 
-/* ══ INIT ══ */
+/* ════ INIT ════ */
 loadAll();
 </script>
 </body>
