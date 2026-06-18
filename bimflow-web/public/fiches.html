@@ -204,6 +204,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
 [data-theme=light] .ei:hover{background:#eef2f8}
 [data-theme=light] .fa{border-color:#dde2ec}
 [data-theme=light] .rh{background:#e6e9f0;border-left-color:#dde2ec}
+[data-theme=light] .vmbar{background:#f1f5f9;border-bottom-color:#dde2ec}
+[data-theme=light] .vmbtn{color:#475569;border-right-color:#dde2ec}
+[data-theme=light] .vmbtn:hover{color:#0f172a}
+[data-theme=light] .vmbtn.on{background:#1d4ed8;color:#fff}
+[data-theme=light] #v2d,[data-theme=light] .vempty{background:#eef1f6}
+[data-theme=light] .h3d{background:rgba(230,233,240,.9);color:#475569}
 
 /* ── PRINT (single fiche) ── */
 @media print{
@@ -250,31 +256,31 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
   <!-- ══ LEFT — Filters + Palette ══ -->
   <div id="leftCol">
     <div class="lsec">
-      <div class="lhd">Filtres</div>
+      <div class="lhd" data-en="Filters">Filtres</div>
       <div class="lbody">
-        <div class="lrow"><label class="llbl">Niveau</label>
+        <div class="lrow"><label class="llbl" data-en="Level">Niveau</label>
           <select class="lsel" id="fLvl"><option value="">Tous les niveaux</option></select></div>
         <div class="lrow"><label class="llbl">Phase</label>
           <select class="lsel" id="fPh"><option value="">Toutes les phases</option></select></div>
-        <div class="lrow"><label class="llbl">Usage</label>
+        <div class="lrow"><label class="llbl" data-en="Usage">Usage</label>
           <select class="lsel" id="fTy"><option value="">Tous les usages</option></select></div>
       </div>
     </div>
 
     <div class="psec">
-      <div class="plbl">Sélectionner par paramètre — tous niveaux</div>
+      <div class="plbl" data-en="Select by parameter — all levels">Sélectionner par paramètre — tous niveaux</div>
       <select class="psel" id="palP"><option value="">— Choisir un paramètre —</option></select>
     </div>
     <div class="val-list" id="valList"><div class="val-e">Choisissez un paramètre</div></div>
 
     <div class="rsw">
-      <input class="rs" id="rSrch" type="text" placeholder="Rechercher une pièce (tous niveaux)…"/>
+      <input class="rs" id="rSrch" type="text" placeholder="Rechercher une pièce (tous niveaux)…" data-en-ph="Search a room (all levels)…"/>
     </div>
     <div class="rlist" id="rList"><div class="re">Aucune pièce</div></div>
 
     <div class="sfoot">
       <div class="si" id="selInfo">Aucune sélection</div>
-      <button class="sclr" id="selClr">Effacer</button>
+      <button class="sclr" id="selClr" data-en="Clear">Effacer</button>
     </div>
   </div>
 
@@ -290,7 +296,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
     <div id="v2d">
       <div class="vempty" id="v2dE">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-        <p>Envoyez un plan depuis Revit</p>
+        <p data-en="Send a plan from Revit">Envoyez un plan depuis Revit</p>
       </div>
       <div class="zbx">
         <button class="zb" id="zFit">⌖</button>
@@ -300,7 +306,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
     <div id="v3d">
       <canvas id="c3d"></canvas>
       <div class="zbx3"><button class="zb" id="fit3Btn">⌖</button></div>
-      <div class="h3d">Glissez · Molette = zoom · Cliquez une pièce</div>
+      <div class="h3d" data-en="Drag · Scroll = zoom · Click a room">Glissez · Molette = zoom · Cliquez une pièce</div>
     </div>
   </div>
 
@@ -309,19 +315,19 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
   <!-- ══ RIGHT — Fiche A4 ══ -->
   <div id="ficheCol">
     <div class="fbar">
-      <span class="ftitle">Fiches de Locaux</span>
+      <span class="ftitle" data-en="Room Data Sheets">Fiches de Locaux</span>
       <span class="fsub" id="ftopSub"></span>
       <div class="fbtns">
-        <button class="fb warn" id="btnCP" style="display:none">⚠ Créer params</button>
+        <button class="fb warn" id="btnCP" style="display:none" data-en="⚠ Create params">⚠ Créer params</button>
         <div class="edrop-wrap" id="edWrap">
-          <button class="edrop-btn" id="edBtn">🖨 Imprimer / Excel ▾</button>
+          <button class="edrop-btn" id="edBtn" data-en="🖨 Print / Excel ▾">🖨 Imprimer / Excel ▾</button>
           <div class="edrop" id="edDrop">
-            <div style="padding:4px 12px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid #1f2937">Imprimer (PDF)</div>
-            <div class="ei" onclick="doPrint('sel')"><b>🖨 Sélection</b><small>Fiches des pièces sélectionnées</small></div>
-            <div class="ei" onclick="doPrint('all')"><b>🖨 Tout le projet</b><small>Toutes les fiches A4</small></div>
+            <div style="padding:4px 12px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid #1f2937" data-en="Print (PDF)">Imprimer (PDF)</div>
+            <div class="ei" onclick="doPrint('sel')"><b data-en="🖨 Selection">🖨 Sélection</b><small data-en="Selected room sheets">Fiches des pièces sélectionnées</small></div>
+            <div class="ei" onclick="doPrint('all')"><b data-en="🖨 Entire project">🖨 Tout le projet</b><small data-en="All A4 sheets">Toutes les fiches A4</small></div>
             <div style="padding:4px 12px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid #1f2937;border-top:1px solid #1f2937">Excel</div>
-            <div class="ei" onclick="doExcel('sel')"><b>📊 Sélection</b><small>Pièces sélectionnées</small></div>
-            <div class="ei" onclick="doExcel('all')"><b>📊 Tout le projet</b><small>Toutes les pièces</small></div>
+            <div class="ei" onclick="doExcel('sel')"><b data-en="📊 Selection">📊 Sélection</b><small data-en="Selected rooms">Pièces sélectionnées</small></div>
+            <div class="ei" onclick="doExcel('all')"><b data-en="📊 Entire project">📊 Tout le projet</b><small data-en="All rooms">Toutes les pièces</small></div>
           </div>
         </div>
       </div>
@@ -329,7 +335,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
     <div class="fscroll" id="fScroll">
       <div class="fempty">
         <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 12h6M9 16h6M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M9 4h6v4H9z"/></svg>
-        <p>Sélectionnez une pièce sur le plan ou via la palette de paramètres.</p>
+        <p>Sélectionnez une pièce — Select a room</p>
       </div>
     </div>
   </div>
@@ -390,7 +396,9 @@ const planCache={};
 
 /* ════ UTILS ════ */
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-function setSt(m,t){$('stxt').textContent=m;$('sdot').className='sdot'+(t?' '+t:'');}
+function setSt(m,s){$('stxt').textContent=m;$('sdot').className='sdot'+(s?' '+s:'');}
+/* i18n helper */
+function t(fr,en){return document.documentElement.lang==='en'?en:fr;}
 async function apiFetch(url,opts){const r=await fetch(url,opts);if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
 
 function findP(room,...keys){
@@ -443,11 +451,11 @@ function buildFilters(){
     const p=findP(r,'phase');if(p)phs.add(p);
     const t=findP(r,'usage','occupation','type','fonction','function');if(t)tys.add(t);
   });
-  const el=$('fLvl');el.innerHTML='<option value="">Tous les niveaux</option>';
+  const el=$('fLvl');el.innerHTML=`<option value="">${t('Tous les niveaux','All levels')}</option>`;
   lvs.forEach(l=>el.appendChild(new Option(l,l)));
-  const ep=$('fPh');ep.innerHTML='<option value="">Toutes les phases</option>';
+  const ep=$('fPh');ep.innerHTML=`<option value="">${t('Toutes les phases','All phases')}</option>`;
   [...phs].sort().forEach(v=>ep.appendChild(new Option(v,v)));
-  const et=$('fTy');et.innerHTML='<option value="">Tous les usages</option>';
+  const et=$('fTy');et.innerHTML=`<option value="">${t('Tous les usages','All usages')}</option>`;
   [...tys].sort().forEach(v=>et.appendChild(new Option(v,v)));
   $('fLvl').onchange=e=>{fLvl=e.target.value;if(fLvl){const p=allPlans.find(x=>x.level===fLvl);if(p)loadPlan(p.key);}onFC();};
   $('fPh').onchange=e=>{fPh=e.target.value;onFC();};
@@ -486,7 +494,7 @@ function buildPS(){
   const base=allF();const pc={};
   base.forEach(r=>Object.entries(r.Parameters||{}).forEach(([k,v])=>{if(v!==''&&v!=null)pc[k]=(pc[k]||0)+1;}));
   const prev=$('palP').value;
-  const sel=$('palP');sel.innerHTML='<option value="">— Choisir un paramètre —</option>';
+  const sel=$('palP');sel.innerHTML=`<option value="">${t('— Choisir un paramètre —','— Choose a parameter —')}</option>`;
   Object.keys(pc).sort((a,b)=>{const ca=isCore(a),cb=isCore(b);if(ca!==cb)return ca?-1:1;return a.localeCompare(b);})
     .forEach(k=>sel.appendChild(new Option(`${k}  (${pc[k]})`,k)));
   if(prev&&Object.keys(pc).includes(prev))sel.value=prev;
@@ -496,11 +504,11 @@ $('palP').onchange=function(){palP=this.value;palV='';buildVL();};
 
 function buildVL(){
   const list=$('valList');list.innerHTML='';
-  if(!palP){list.innerHTML='<div class="val-e">Choisissez un paramètre</div>';return;}
+  if(!palP){list.innerHTML=`<div class="val-e">${t('Choisissez un paramètre','Choose a parameter')}</div>`;return;}
   const base=allF();const cnt={};
   base.forEach(r=>{const v=String((r.Parameters||{})[palP]||'');if(v)cnt[v]=(cnt[v]||0)+1;});
   const vals=Object.entries(cnt).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
-  if(!vals.length){list.innerHTML='<div class="val-e">Aucune valeur</div>';return;}
+  if(!vals.length){list.innerHTML=`<div class="val-e">${t('Aucune valeur','No values')}</div>`;return;}
   vals.forEach(([v,n])=>{
     const d=document.createElement('div');d.className='vi'+(palV===v?' on':'');
     d.innerHTML=`<span class="vdot"></span><span class="vn" title="${esc(v)}">${esc(v)}</span><span class="vc">${n}</span>`;
@@ -527,7 +535,7 @@ function buildRList(){
   const q=($('rSrch').value||'').toLowerCase();
   const rooms=allF().filter(r=>!q||(r.Name||'').toLowerCase().includes(q)||(r.Number||'').toLowerCase().includes(q)||(r._lv||'').toLowerCase().includes(q))
     .sort((a,b)=>(a._lv||'').localeCompare(b._lv||'')+(a.Number||'').localeCompare(b.Number||'',undefined,{numeric:true}));
-  if(!rooms.length){list.innerHTML='<div class="re">Aucune pièce</div>';return;}
+  if(!rooms.length){list.innerHTML=`<div class="re">${t('Aucune pièce','No rooms')}</div>`;return;}
   rooms.forEach(r=>{
     const d=document.createElement('div');d.className='rrow'+(selIds.has(r.RevitId)?' on':'');
     d.innerHTML=`<span class="rnum">${esc(r.Number||'')}</span><span class="rname">${esc(r.Name||'—')}</span><span class="rlvl">${esc(r._lv||'')}</span>`;
@@ -571,10 +579,10 @@ function fitToCurrentView(){fit3D();}
 
 function updSel(){
   const n=selIds.size;
-  if(!n){$('selInfo').textContent='Aucune sélection';return;}
+  if(!n){$('selInfo').textContent=t('Aucune sélection','No selection');return;}
   const rooms=allRooms.filter(r=>selIds.has(r.RevitId));
   let a=0;rooms.forEach(r=>{const v=parseFloat(findP(r,'surface','area','aire'));if(!isNaN(v))a+=v;});
-  $('selInfo').innerHTML=`<strong>${n}</strong> pièce${n>1?'s':''}${a>0?` · <strong>${a.toFixed(1)} m²</strong>`:''}`;
+  $('selInfo').innerHTML=`<strong>${n}</strong> ${t('pièce','room')}${n>1?'s':''}${a>0?` · <strong>${a.toFixed(1)} m²</strong>`:''}`;
 }
 
 /* ════ SVG PLAN ════ */
@@ -645,7 +653,13 @@ $('vmBar').onclick=e=>{
   const m=b.dataset.m;const cc=$('centerCol');
   cc.className=m;
   [...$('vmBar').children].forEach(x=>x.classList.toggle('on',x===b));
-  setTimeout(()=>{resetView();resize3D();if(!cc.classList.contains('vm2'))initAndBuild3D();},30);
+  /* vm3: clear inline height so CSS flex:1 gives full space */
+  if(m==='vm3'){$('v3d').style.height='';$('v3d').style.flex='';}
+  setTimeout(()=>{
+    if(m==='vmb')initSplit(); /* restore 50/50 split */
+    resetView();resize3D();
+    if(!cc.classList.contains('vm2'))initAndBuild3D();
+  },30);
 };
 
 /* ════ SPLIT H — 50/50 init + drag ════ */
@@ -845,7 +859,7 @@ function renderFiche(){
   $('btnCP').style.display=missingF().length&&selA.length?'':'none';
   if(!selA.length){
     $('ftopSub').textContent='';
-    $('fScroll').innerHTML=`<div class="fempty"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 12h6M9 16h6M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M9 4h6v4H9z"/></svg><p>Sélectionnez une pièce sur le plan ou via la palette de paramètres.</p></div>`;
+    $('fScroll').innerHTML=`<div class="fempty"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 12h6M9 16h6M7 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2M9 4h6v4H9z"/></svg><p>Sélectionnez une pièce — Select a room</p></div>`;
     return;
   }
   if(selA.length===1){
@@ -1015,11 +1029,19 @@ async function doExcel(mode){
 }
 
 /* ════ LANG + THEME ════ */
-function applyLang(l){document.documentElement.lang=l;$('langBtn').textContent=(l==='en')?'FR':'EN';document.title=l==='en'?'BIMFlow — Room Data Sheets':'BIMFlow — Fiches de Locaux';try{localStorage.setItem('bfl',l);}catch(e){}}
-function applyTheme(t){document.documentElement.setAttribute('data-theme',t);$('themeBtn').textContent=(t==='dark')?'☀':'☾';try{localStorage.setItem('bft',t);}catch(e){}}
+function applyLang(l){
+  document.documentElement.lang=l;
+  document.querySelectorAll('[data-en]').forEach(el=>{if(el._fr===undefined)el._fr=el.innerHTML;el.innerHTML=(l==='en')?el.getAttribute('data-en'):el._fr;});
+  document.querySelectorAll('[data-en-ph]').forEach(el=>{if(el._frph===undefined)el._frph=el.getAttribute('placeholder')||'';el.setAttribute('placeholder',(l==='en')?el.getAttribute('data-en-ph'):el._frph);});
+  $('langBtn').textContent=(l==='en')?'FR':'EN';
+  document.title=l==='en'?'BIMFlow — Room Data Sheets':'BIMFlow — Fiches de Locaux';
+  try{localStorage.setItem('bimflow_lang',l);}catch(e){}
+  buildFilters();buildPS();buildVL();buildRList();updSel();
+}
+function applyTheme(th){document.documentElement.setAttribute('data-theme',th);$('themeBtn').textContent=(th==='dark')?'☀':'☾';try{localStorage.setItem('bimflow_theme',th);}catch(e){}}
 $('langBtn').onclick=()=>applyLang(document.documentElement.lang==='en'?'fr':'en');
 $('themeBtn').onclick=()=>applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');
-(()=>{let l='fr',t='dark';try{l=localStorage.getItem('bfl')||'fr';t=localStorage.getItem('bft')||'dark';}catch(e){}applyTheme(t);if(l==='en')applyLang('en');else $('langBtn').textContent='EN';})();
+(()=>{let l='fr',th='dark';try{l=localStorage.getItem('bimflow_lang')||'fr';th=localStorage.getItem('bimflow_theme')||'dark';}catch(e){}applyTheme(th);if(l==='en')applyLang('en');else $('langBtn').textContent='EN';})();
 
 /* ════ INIT ════ */
 loadAll();
