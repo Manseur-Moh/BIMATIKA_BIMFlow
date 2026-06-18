@@ -300,6 +300,7 @@
   <div class="nav">
     <a href="/" class="active">🗺 Plans</a>
     <a href="/analyse.html" data-en="📊 Analysis">📊 Analyse</a>
+    <a href="/parametres.html">🔧 Paramètres</a>
   </div>
   <div class="topbar-right">
     <button class="refresh-btn" id="langBtn" title="Language / Langue">EN</button>
@@ -408,10 +409,7 @@
     <!-- PARAMÈTRES EN BAS -->
     <div class="bottom-panel" id="bottomPanel">
       <div class="bp-bar">
-        <div class="bp-tabs">
-          <button class="bp-tab active" id="tabParams" data-en="Parameters">Paramètres</button>
-          <button class="bp-tab" id="tabCreate" data-en="Create parameters">Créer paramètres</button>
-        </div>
+        <span class="bp-title">Paramètres</span>
         <span class="bp-sub" id="bpSub"></span>
         <div class="bp-spacer"></div>
         <button class="bp-btn" id="editToggle">✏ Éditer</button>
@@ -447,24 +445,6 @@
           </div>
         </div>
 
-        <!-- VUE 2 : paramètres à créer -->
-        <div class="bp-view" id="viewCreate" style="display:none">
-          <div class="ptable-hd">
-            <span>Paramètres à créer dans Revit</span>
-            <div class="htools">
-              <button class="btn-add" id="btnAddCreate">+ Ligne</button>
-              <button id="btnGenAllGuids" title="Générer un GUID pour toutes les lignes vides" style="background:#0e4429;border:1px solid #238636;color:#3fb950;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer">🔑 GUIDs</button>
-              <button id="btnTplExport" title="Télécharger modèle Excel">⬇ Excel</button>
-              <label class="filebtn" title="Importer Excel/CSV">⬆ Importer<input type="file" id="tplImport" accept=".xlsx,.xls,.csv" hidden/></label>
-              <a href="/parametres.html" style="padding:3px 8px;font-size:10px;background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:4px;text-decoration:none;display:inline-flex;align-items:center" title="Page dédiée création de paramètres">↗ Plein écran</a>
-            </div>
-          </div>
-          <div class="ptable-scroll">
-            <table class="pt"><thead><tr><th>Nom</th><th>Type</th><th>Groupe</th><th>Genre</th><th>Liaison</th><th>Défaut</th><th>GUID</th><th></th></tr></thead>
-              <tbody id="createBody"></tbody></table>
-            <div class="bp-empty" id="createEmpty">Aucun paramètre — cliquez « + Ligne » ou importez un modèle Excel</div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -482,7 +462,7 @@ const TYPE_LABELS={text:'Texte',multitext:'Texte multi',integer:'Entier',number:
 /* ═══ STATE ═══ */
 let plan=null, editMode=false, colorKey='', currentPlanKey='';
 let selIds=new Set(), lastSel=null, compareDiff=null;
-let pendingEdits={}, newParamRequests=[];
+let pendingEdits={};
 let zoom=1,panX=0,panY=0,W=0,H=0,isPan=false,panStart={x:0,y:0},isRightPan=false;
 const planCache={}; let lastLevelKeys=''; let colorMap={};
 const $=id=>document.getElementById(id);
@@ -516,8 +496,8 @@ async function loadPlan(key){
   try{
     plan=await getPlanData(key); currentPlanKey=key;
     W=plan.ImageWidth; H=plan.ImageHeight;
-    pendingEdits={}; newParamRequests=[]; colorKey=''; selIds.clear(); lastSel=null; compareDiff=null;
-    renderPlan(); populateColorBy(); populateSearchKey(); renderList(); renderCreateTable();
+    pendingEdits={}; colorKey=''; selIds.clear(); lastSel=null; compareDiff=null;
+    renderPlan(); populateColorBy(); populateSearchKey(); renderList();
     document.querySelectorAll('.thumb-sel').forEach(g=>g.innerHTML='');
     renderMatrix(); setActivePlan(key); update3D();
     setStatus(`${plan.LevelName} — ${plan.ProjectName} (${plan.Rooms.length} pièces)`,'ok');
@@ -891,83 +871,19 @@ $('colPreset').addEventListener('change',()=>{ const name=$('colPreset').value; 
   colHidden=new Set(curCols().filter(c=>!visible.includes(c))); saveColHidden(); renderMatrix(); });
 refreshPresetSelect();
 
-/* ═══ BOTTOM PANEL TABS ═══ */
-function showTab(which){
-  const p=which==='params';
-  $('tabParams').classList.toggle('active',p); $('tabCreate').classList.toggle('active',!p);
-  $('viewParams').style.display=p?'flex':'none'; $('viewCreate').style.display=p?'none':'flex';
-}
-$('tabParams').addEventListener('click',()=>showTab('params'));
-$('tabCreate').addEventListener('click',()=>showTab('create'));
-
-/* ═══ PARAMETERS TO CREATE — editable multi-row grid ═══ */
-const TYPE_OPTS=[['text','Texte'],['multitext','Texte multiligne'],['integer','Entier'],['number','Nombre'],['length','Longueur'],['area','Surface'],['volume','Volume'],['angle','Angle'],['yesno','Oui/Non'],['url','URL'],['material','Matériau'],['currency','Devise'],['mass','Masse']];
-const GROUP_OPTS=[['data','Données'],['identity','Identité'],['dimensions','Dimensions'],['constraints','Contraintes'],['text','Texte'],['graphics','Graphismes'],['materials','Matériaux et finitions'],['phasing','Phases'],['general','Général']];
-const KIND_OPTS=[['shared','Partagé'],['project','De projet']];
-const BIND_OPTS=[['instance','Occurrence'],['type','Type']];
-const optsHtml=(opts,sel)=>opts.map(([v,l])=>`<option value="${v}"${v===sel?' selected':''}>${l}</option>`).join('');
-
-function renderCreateTable(){
-  const body=$('createBody'); body.innerHTML='';
-  $('createEmpty').style.display=newParamRequests.length?'none':'';
-  newParamRequests.forEach((r,i)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=
-      `<td><input class="pv-input npc" data-i="${i}" data-f="Name" value="${escAttr(r.Name||'')}" placeholder="nom"/></td>`+
-      `<td><select class="pv-select npc" data-i="${i}" data-f="Type">${optsHtml(TYPE_OPTS,r.Type||'text')}</select></td>`+
-      `<td><select class="pv-select npc" data-i="${i}" data-f="Group">${optsHtml(GROUP_OPTS,r.Group||'data')}</select></td>`+
-      `<td><select class="pv-select npc" data-i="${i}" data-f="Kind">${optsHtml(KIND_OPTS,r.Kind||'shared')}</select></td>`+
-      `<td><select class="pv-select npc" data-i="${i}" data-f="Bind">${optsHtml(BIND_OPTS,r.Instance===false?'type':'instance')}</select></td>`+
-      `<td><input class="pv-input npc" data-i="${i}" data-f="DefaultValue" value="${escAttr(r.DefaultValue||'')}" placeholder="—"/></td>`+
-      `<td style="white-space:nowrap;min-width:140px">`+
-        `<input class="pv-input npc guid-inp" data-i="${i}" data-f="GUID" value="${escAttr(r.GUID||'')}" placeholder="—" style="width:calc(100% - 54px);min-width:60px;font-size:10px"/>`+
-        `<button class="guid-gen" data-i="${i}" title="Générer un GUID" style="padding:2px 5px;margin-left:2px;font-size:10px;background:#0e4429;border:1px solid #238636;color:#3fb950;border-radius:3px;cursor:pointer">🔑</button>`+
-        `<button class="guid-cpy" data-i="${i}" title="Copier le GUID" style="padding:2px 4px;margin-left:2px;font-size:10px;background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:3px;cursor:pointer">📋</button>`+
-      `</td>`+
-      `<td><button class="rm-btn" data-i="${i}" title="Retirer">×</button></td>`;
-    body.appendChild(tr);
-  });
-  body.querySelectorAll('.npc').forEach(el=>{
-    const h=()=>{ const i=+el.getAttribute('data-i'), f=el.getAttribute('data-f');
-      if(f==='Bind') newParamRequests[i].Instance=el.value==='instance'; else newParamRequests[i][f]=el.value; updateSendBtn(); };
-    el.addEventListener('input',h); el.addEventListener('change',h);
-  });
-  body.querySelectorAll('.guid-gen').forEach(b=>b.addEventListener('click',()=>{
-    const i=+b.getAttribute('data-i'); const g=genGUID(); newParamRequests[i].GUID=g;
-    const inp=body.querySelector(`.guid-inp[data-i="${i}"]`); if(inp) inp.value=g; updateSendBtn();
-  }));
-  body.querySelectorAll('.guid-cpy').forEach(b=>b.addEventListener('click',()=>{
-    const i=+b.getAttribute('data-i'); const g=newParamRequests[i].GUID||'';
-    if(!g){ alert('Aucun GUID — cliquez 🔑 pour en générer un.'); return; }
-    copyText(g); const orig=b.textContent; b.textContent='✓'; setTimeout(()=>b.textContent=orig,1200);
-  }));
-  body.querySelectorAll('.rm-btn').forEach(b=>b.addEventListener('click',()=>{ newParamRequests.splice(+b.getAttribute('data-i'),1); renderCreateTable(); updateSendBtn(); }));
-}
-function addCreateRow(){
-  newParamRequests.push({ Name:'', Type:'text', Group:'data', Kind:'shared', Instance:true, DefaultValue:'', GUID:'' });
-  renderCreateTable(); updateSendBtn();
-  const names=$('createBody').querySelectorAll('input.npc[data-f="Name"]'); if(names.length) names[names.length-1].focus();
-}
-$('btnAddCreate').addEventListener('click',addCreateRow);
-$('btnGenAllGuids').addEventListener('click',()=>{
-  newParamRequests.forEach(r=>{ if(!r.GUID) r.GUID=genGUID(); });
-  renderCreateTable(); updateSendBtn();
-});
-
-function updateSendBtn(){ const validNew=newParamRequests.some(r=>r.Name&&r.Name.trim()); $('btnSendRevit').disabled=!(Object.keys(pendingEdits).length||validNew); }
+function updateSendBtn(){ $('btnSendRevit').disabled=!Object.keys(pendingEdits).length; }
 
 /* ═══ SEND TO REVIT ═══ */
 async function sendToRevit(){
   if($('btnSendRevit').disabled) return;
-  const news=newParamRequests.filter(r=>r.Name&&r.Name.trim());
   const payload={ PlanKey:currentPlanKey,
     Updates:Object.entries(pendingEdits).map(([id,p])=>({RevitId:id,Parameters:p})),
-    NewParameters:news };
+    NewParameters:[] };
   try{
     await api('/api/updates',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     const btn=$('btnSendRevit'); btn.textContent='✓ Envoyé !';
     setTimeout(()=>{btn.textContent='↑ Envoyer vers Revit';},3000);
-    pendingEdits={}; newParamRequests=[]; renderCreateTable(); renderMatrix();
+    pendingEdits={}; renderMatrix();
     alert('Envoyé !\nDans Revit : cliquez "Recevoir depuis BIMFlow".');
   }catch(e){ alert('Erreur: '+e.message); }
 }
@@ -1054,51 +970,8 @@ async function importParamsUpdate(file){
   }catch(e){ alert('Erreur import: '+e.message); }
 }
 
-// Template with dropdown lists on the choice columns + autofilter + an "Aide" sheet.
-async function exportTemplate(){
-  try{
-    const ExcelJS=await loadExcelJS();
-    const wb=new ExcelJS.Workbook(); const ws=wb.addWorksheet('Paramètres');
-    ws.columns=[{header:'Name',width:26},{header:'Type',width:14},{header:'Group',width:18},{header:'Kind',width:12},{header:'Binding',width:12},{header:'Default',width:16},{header:'GUID',width:38}];
-    let rows=newParamRequests.filter(r=>r.Name&&r.Name.trim()).map(r=>[r.Name,r.Type||'text',r.Group||'data',r.Kind||'shared',r.Instance===false?'type':'instance',r.DefaultValue||'',r.GUID||'']);
-    if(!rows.length) rows=[['Sous-Projet','text','data','shared','instance','','']];
-    rows.forEach(r=>ws.addRow(r));
-    const hr=ws.getRow(1); hr.font=HDR_FONT; hr.fill=HDR_FILL;
-    const lists={ B:'"text,multitext,integer,number,length,area,volume,angle,yesno,url,material,currency,mass"',
-      C:'"data,identity,dimensions,constraints,text,graphics,materials,phasing,general"', D:'"shared,project"', E:'"instance,type"' };
-    for(let r=2;r<=300;r++) for(const col in lists) ws.getCell(col+r).dataValidation={type:'list',allowBlank:true,formulae:[lists[col]]};
-    ws.autoFilter={from:{row:1,column:1},to:{row:1,column:6}};
-    const hs=wb.addWorksheet('Aide'); hs.columns=[{header:'Colonne',width:14},{header:'Valeurs acceptées',width:92}];
-    [['Type','text, multitext, integer, number, length, area, volume, angle, yesno, url, material, currency, mass'],
-     ['Group','data, identity, dimensions, constraints, text, graphics, materials, phasing, general'],
-     ['Kind','shared (partagé), project (de projet)'],['Binding','instance (occurrence), type']].forEach(r=>hs.addRow(r));
-    hs.getRow(1).font={bold:true};
-    dlBuf(await wb.xlsx.writeBuffer(),'BIMFlow_modele_parametres.xlsx');
-  }catch(e){ alert('Erreur Excel: '+e.message); }
-}
-
-// Import .xlsx / .xls / .csv → fill the "to create" grid
-async function importTemplate(file){
-  try{
-    const rows=await sheetRows(file);
-    if(!rows.length){ alert('Fichier vide.'); return; }
-    let start=0; const h=(rows[0]||[]).map(x=>String(x).toLowerCase());
-    if(h.includes('name')||h.includes('nom')) start=1;
-    let added=0;
-    for(let i=start;i<rows.length;i++){
-      const c=(rows[i]||[]).map(x=>x==null?'':String(x).trim()); const name=c[0]; if(!name) continue;
-      newParamRequests.push({ Name:name, Type:(c[1]||'text').toLowerCase(), Group:(c[2]||'data').toLowerCase(),
-        Kind:(c[3]||'shared').toLowerCase(), Instance:(c[4]||'instance').toLowerCase()!=='type', DefaultValue:c[5]||'', GUID:c[6]||'' });
-      added++;
-    }
-    renderCreateTable(); updateSendBtn(); showTab('create');
-    alert(added+' paramètre(s) importé(s). Vérifiez la liste puis « Envoyer vers Revit ».');
-  }catch(e){ alert('Erreur import: '+e.message); }
-}
 $('btnExportParams').addEventListener('click',exportParamsXLSX);
 $('paramImport').addEventListener('change',function(){ if(this.files[0]) importParamsUpdate(this.files[0]); this.value=''; });
-$('btnTplExport').addEventListener('click',exportTemplate);
-$('tplImport').addEventListener('change',function(){ if(this.files[0]) importTemplate(this.files[0]); this.value=''; });
 
 /* ═══ COLOR-BY / FILTER PARAMETER ═══ */
 const SPECIAL_FIELDS=[{key:'__name',label:'Nom'},{key:'__number',label:'Numéro'},{key:'__level',label:'Niveau'},{key:'__id',label:'ID Revit'}];
@@ -1231,7 +1104,6 @@ $('cmpRun').addEventListener('click',()=>{
 });
 function renderCompare(){
   if(!compareDiff) return;
-  showTab('params');
   $('paramScope').textContent='Comparaison : '+compareDiff.aLabel+'  ⇆  '+compareDiff.bLabel+'  ('+compareDiff.rooms.length+' pièce(s) modifiée(s))';
   $('bpSub').innerHTML='<span id="cmpExit" style="color:#f59e0b;cursor:pointer;font-weight:700">✕ Quitter la comparaison</span>';
   const cols=[...new Set(compareDiff.rooms.flatMap(r=>r.changes.map(c=>c.key)))].sort((a,b)=>a.localeCompare(b));
@@ -1379,17 +1251,6 @@ $('btnSendRevit').addEventListener('click',sendToRevit);
 $('btnRefresh').addEventListener('click',()=>{ lastLevelKeys=''; loadIndex(); });
 window.addEventListener('resize',()=>{ const s=$('mainSvg'); if(s&&plan){ const w=$('viewerWrap'); panX=w.clientWidth/2-W/2*zoom; panY=w.clientHeight/2-H/2*zoom; applyTx(s); } resize3D(); });
 
-/* ═══ GUID ═══ */
-function genGUID(){
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{
-    const r=Math.random()*16|0,v=c==='x'?r:(r&0x3|0x8); return v.toString(16);
-  });
-}
-function copyText(t){
-  try{ navigator.clipboard.writeText(t); }catch(e){
-    const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
-  }
-}
 
 /* ═══ SPLITTERS REDIMENSIONNABLES ═══ */
 function setupSplitLeft(id,el,min){
