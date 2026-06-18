@@ -104,10 +104,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
 /* 3D */
 #v3d{flex-shrink:0;position:relative;background:#060e1f;overflow:hidden;min-height:60px}
 #c3d{display:block;width:100%;height:100%}
-.m3bar{position:absolute;top:8px;right:10px;z-index:10;display:flex;background:rgba(15,23,42,.92);border:1px solid #1f2937;border-radius:6px;overflow:hidden}
-.m3btn{background:transparent;border:none;color:#94a3b8;font-size:11px;font-weight:600;padding:4px 9px;cursor:pointer;border-right:1px solid #1f2937}
-.m3btn:last-child{border-right:none}
-.m3btn.on{background:#1d4ed8;color:#fff}
 .zbx3{position:absolute;top:8px;left:10px;z-index:10}
 .h3d{position:absolute;left:10px;bottom:8px;font-size:10px;color:#475569;background:rgba(13,21,38,.7);padding:3px 7px;border-radius:4px;pointer-events:none}
 /* View modes: hide/show 2D or 3D */
@@ -306,10 +302,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
     <div class="hspl" id="hspl"></div>
     <div id="v3d">
       <canvas id="c3d"></canvas>
-      <div class="m3bar" id="m3bar">
-        <button class="m3btn on" data-v="level">Niveau</button>
-        <button class="m3btn" data-v="all">Tous</button>
-      </div>
       <div class="zbx3"><button class="zb" id="fit3Btn">⌖</button></div>
       <div class="h3d">Glissez · Molette = zoom · Cliquez une pièce</div>
     </div>
@@ -572,28 +564,13 @@ function afterSel(id,panTo){
 /* Click outside rooms → deselect + auto-center */
 $('v2d').addEventListener('click',e=>{
   if(e.target.classList.contains('bfr'))return;
-  if(selIds.size){selIds.clear();palV='';buildVL();buildRList();paintRooms();renderFiche();updSel();if(R3.ready){recolor3D();fitToCurrentView();}autoCenter();}
+  if(selIds.size){selIds.clear();palV='';buildVL();buildRList();paintRooms();renderFiche();updSel();if(R3.ready)recolor3D();}
+  autoCenter();
 });
 $('selClr').onclick=()=>{selIds.clear();palV='';palP='';$('palP').value='';buildVL();buildRList();paintRooms();renderFiche();updSel();if(R3.ready){recolor3D();fitToCurrentView();}autoCenter();};
 
-function autoCenter(){resetView();if(R3.ready)fitToCurrentView();}
-
-/* Fit 3D to the current view mode: level or all project */
-function fitToCurrentView(){
-  if(!R3.ready)return;
-  const lvlBtn=document.querySelector('.m3btn.on');
-  if(lvlBtn&&lvlBtn.dataset.v==='level')fitToLevel();else fit3D();
-}
-function fitToLevel(){
-  if(!R3.ready||!plan)return;
-  const lvIds=new Set((plan.Rooms||[]).map(r=>r.RevitId));
-  const box=new THREE.Box3();
-  Object.entries(R3.meshes).forEach(([id,mesh])=>{if(lvIds.has(id))box.expandByObject(mesh);});
-  if(box.isEmpty()){fit3D();return;}
-  const c=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3());const d=Math.max(s.x,s.y,s.z,5);
-  R3.oc.target.copy(c);R3.c.position.set(c.x+d*.8,c.y+d*1.0,c.z+d*.8);
-  R3.c.near=Math.max(.05,d/2000);R3.c.far=d*200;R3.c.updateProjectionMatrix();R3.oc.update();
-}
+function autoCenter(){resetView();if(R3.ready)fit3D();}
+function fitToCurrentView(){fit3D();}
 
 function updSel(){
   const n=selIds.size;
@@ -749,7 +726,7 @@ function init3D(){
     const hits=ray.intersectObjects(R3.g.children,true);
     let o=hits[0]&&hits[0].object;while(o&&!o.userData.id)o=o.parent;
     if(o&&o.userData.id){roomClick(o.userData.id,false,o.userData.pk);}
-    else{if(selIds.size){selIds.clear();palV='';buildVL();buildRList();paintRooms();renderFiche();updSel();recolor3D();fitToCurrentView();}}
+    else{if(selIds.size){selIds.clear();palV='';buildVL();buildRList();paintRooms();renderFiche();updSel();recolor3D();}fit3D();}
   };
 }
 
@@ -770,7 +747,6 @@ function buildAll3D(){
       const mat=new THREE.MeshLambertMaterial({color:0x3b82f6,transparent:true,opacity:.78});
       const mesh=new THREE.Mesh(geo,mat);
       mesh.userData.id=r.RevitId;mesh.userData.pk=pl.key;
-      mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:0x0b1424})));
       R3.g.add(mesh);R3.meshes[r.RevitId]=mesh;any=true;
     });
   });
@@ -824,8 +800,7 @@ function recolor3D(){
   });
 }
 
-$('fit3Btn').onclick=()=>{if(selIds.size)focus3D();else fitToCurrentView();};
-$('m3bar').onclick=e=>{const b=e.target.closest('.m3btn');if(!b)return;[...$('m3bar').children].forEach(x=>x.classList.toggle('on',x===b));buildAll3D();};
+$('fit3Btn').onclick=()=>{if(selIds.size)focus3D();else fit3D();};
 
 const _today=new Date().toLocaleDateString('fr-FR');
 /* ════ FICHE HTML (pure function) ════ */
