@@ -7,9 +7,13 @@ using System.Collections.Generic;
 namespace BIMFlowPlugin.Commands
 {
     /// <summary>
-    /// Envoi rapide — sends the favourite plans directly, WITHOUT enumerating/counting
-    /// every view in the project or showing the selection dialog. Favourites are saved
-    /// from the normal "Envoyer vers BIMFlow" dialog via the ⭐ Favori button.
+    /// Envoi rapide — pushes only the rooms whose parameters changed since the
+    /// last successful send. No PNG re-export, no geometry upload. Relies on the
+    /// local diff cache (%AppData%\BIMFlow\cache\*) populated by any previous
+    /// "Envoyer vers BIMFlow" or "Envoyer paramètres" operation.
+    ///
+    /// Use "Envoyer vers BIMFlow" the first time (or after geometry changes).
+    /// Use "Envoi rapide" whenever you only change parameter values.
     /// </summary>
     [Transaction(TransactionMode.Manual)]
     [Regeneration(RegenerationOption.Manual)]
@@ -25,12 +29,15 @@ namespace BIMFlowPlugin.Commands
                 if (favIds.Count == 0)
                 {
                     TaskDialog.Show("BIMFlow — Envoi rapide",
-                        "Aucun favori enregistré.\n\nCliquez « Envoyer vers BIMFlow », cochez vos plans habituels, puis « ⭐ Favori ». " +
-                        "L'envoi rapide les renverra ensuite en un clic, sans attendre le chargement de toutes les vues.");
+                        "Aucun favori enregistré.\n\n" +
+                        "Cliquez « Envoyer vers BIMFlow », cochez vos plans habituels, " +
+                        "puis cliquez « ⭐ Favori ».\n\n" +
+                        "L'envoi rapide mettra ensuite à jour uniquement les paramètres modifiés, " +
+                        "sans réexporter l'image du plan.");
                     return Result.Cancelled;
                 }
 
-                // Resolve favourite UniqueIds directly — no project-wide view enumeration.
+                // Resolve favourite UniqueIds — no project-wide view enumeration.
                 var views = new List<ViewPlan>();
                 foreach (var uid in favIds)
                 {
@@ -50,13 +57,28 @@ namespace BIMFlowPlugin.Commands
                     return Result.Cancelled;
                 }
 
-                var (sent, failed, errors) = BimFlowSender.Send(doc, views);
+                // Send only rooms whose parameters changed since the last snapshot.
+                // No PNG export — much faster than a full send.
+                var (sent, failed, unchanged, errors) = BimFlowSender.SendParams(doc, views);
 
-                string summary = $"Envoi rapide terminé.\n\n✓ {sent} plan{(sent > 1 ? "s" : "")} envoyé{(sent > 1 ? "s" : "")}.";
-                if (failed > 0)
-                    summary += $"\n\n✗ {failed} erreur{(failed > 1 ? "s" : "")} :\n" + string.Join("\n", errors);
+                string summary;
+                if (sent == 0 && failed == 0)
+                {
+                    summary = $"Aucune modification détectée.\n\n" +
+                              $"Les {unchanged} plan{(unchanged > 1 ? "s" : "")} sont déjà à jour — " +
+                              $"aucune valeur de paramètre n'a changé depuis le dernier envoi.";
+                }
+                else
+                {
+                    summary = $"Envoi rapide terminé (paramètres seulement).\n\n" +
+                              $"✓ {sent} plan{(sent > 1 ? "s" : "")} mis à jour.";
+                    if (unchanged > 0)
+                        summary += $"\n• {unchanged} plan{(unchanged > 1 ? "s" : "")} inchangé{(unchanged > 1 ? "s" : "")} — ignoré{(unchanged > 1 ? "s" : "")}.";
+                    if (failed > 0)
+                        summary += $"\n\n✗ {failed} erreur{(failed > 1 ? "s" : "")} :\n" + string.Join("\n", errors);
+                }
+
                 summary += "\n\nOuvrez https://bimatika-bimplan.pages.dev/ pour voir les plans.";
-
                 TaskDialog.Show("BIMFlow — Envoi rapide " + (failed == 0 ? "✓" : "partiel"), summary);
                 return Result.Succeeded;
             }

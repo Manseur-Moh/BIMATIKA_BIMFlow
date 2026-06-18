@@ -19,12 +19,14 @@ namespace BIMFlowPlugin.Exporters
         private readonly ViewPlan _view;
         private readonly string   _outputDir;
 
-        public SvgPlanExporter(Document doc, ViewPlan view, string outputDir)
+        // outputDir may be null when only RunParamsOnly() will be called (no files written).
+        public SvgPlanExporter(Document doc, ViewPlan view, string outputDir = null)
         {
             _doc       = doc;
             _view      = view;
             _outputDir = outputDir;
-            Directory.CreateDirectory(outputDir);
+            if (!string.IsNullOrEmpty(outputDir))
+                Directory.CreateDirectory(outputDir);
         }
 
         public PlanExport Run()
@@ -120,7 +122,7 @@ namespace BIMFlowPlugin.Exporters
                 HLRandWFViewsFileType = ImageFileType.PNG,
                 ImageResolution      = ImageResolution.DPI_150,
                 ZoomType             = ZoomFitType.FitToPage,
-                PixelSize            = 2048,
+                PixelSize            = 1400,   // 2048→1400: ~55% smaller file, still sharp
                 ShadowViewsFileType  = ImageFileType.PNG,
             };
             options.SetViewsAndSheets(new List<ElementId> { _view.Id });

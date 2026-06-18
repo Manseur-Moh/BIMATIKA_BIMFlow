@@ -9,9 +9,13 @@ using System.Linq;
 namespace BIMFlowPlugin.Commands
 {
     /// <summary>
-    /// Envoyer paramètres — fast update of room parameters only (no image/geometry).
-    /// Requires the plan(s) to have been sent at least once. Uses favourites if set,
-    /// otherwise shows the plan picker.
+    /// Envoyer paramètres — fast differential update.
+    /// Collects the current parameter values for every room, compares them against
+    /// the locally-cached snapshot from the last successful send, and uploads ONLY
+    /// the rooms that have at least one changed parameter value.
+    ///
+    /// No image re-export, no geometry upload.  Server merges the payload into the
+    /// existing plan (polygons + image are kept).
     /// </summary>
     [Transaction(TransactionMode.Manual)]
     [Regeneration(RegenerationOption.Manual)]
@@ -29,33 +33,73 @@ namespace BIMFlowPlugin.Commands
                 if (favIds.Count > 0)
                 {
                     foreach (var uid in favIds)
-                        try { if (doc.GetElement(uid) is ViewPlan vp && !vp.IsTemplate) views.Add(vp); } catch { }
+                        try { if (doc.GetElement(uid) is ViewPlan vp && !vp.IsTemplate) views.Add(vp); }
+                        catch { }
                 }
 
-                // 2. No favourites → let the user pick.
+                // 2. No favourites → ask the user.
                 if (views.Count == 0)
                 {
-                    var allPlans = new FilteredElementCollector(doc).OfClass(typeof(ViewPlan)).Cast<ViewPlan>()
-                        .Where(v => v.ViewType == ViewType.FloorPlan && !v.IsTemplate).ToList();
-                    if (allPlans.Count == 0) { TaskDialog.Show("BIMFlow", "Aucun plan d'étage."); return Result.Cancelled; }
-                    var withCount = allPlans.Select(v => (v, new FilteredElementCollector(doc, v.Id)
-                        .OfCategory(BuiltInCategory.OST_Rooms).WhereElementIsNotElementType().GetElementCount())).ToList();
+                    var allPlans = new FilteredElementCollector(doc)
+                        .OfClass(typeof(ViewPlan))
+                        .Cast<ViewPlan>()
+                        .Where(v => v.ViewType == ViewType.FloorPlan && !v.IsTemplate)
+                        .ToList();
+
+                    if (allPlans.Count == 0)
+                    {
+                        TaskDialog.Show("BIMFlow", "Aucun plan d'étage.");
+                        return Result.Cancelled;
+                    }
+
+                    var withCount = allPlans.Select(v =>
+                        (v, new FilteredElementCollector(doc, v.Id)
+                              .OfCategory(BuiltInCategory.OST_Rooms)
+                              .WhereElementIsNotElementType()
+                              .GetElementCount()))
+                        .ToList();
+
                     var dialog = new PlanSelectionDialog(withCount);
-                    if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return Result.Cancelled;
+                    if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+                        return Result.Cancelled;
+
                     views = dialog.SelectedPlans;
                 }
 
-                if (views.Count == 0) { TaskDialog.Show("BIMFlow", "Aucun plan sélectionné."); return Result.Cancelled; }
+                if (views.Count == 0)
+                {
+                    TaskDialog.Show("BIMFlow", "Aucun plan sélectionné.");
+                    return Result.Cancelled;
+                }
 
-                var (sent, failed, errors) = BimFlowSender.SendParams(doc, views);
+                // 3. Differential send — only rooms with changed parameters.
+                var (sent, failed, unchanged, errors) = BimFlowSender.SendParams(doc, views);
 
-                string summary = $"Paramètres envoyés (mise à jour rapide).\n\n✓ {sent} plan{(sent > 1 ? "s" : "")} mis à jour.";
-                if (failed > 0)
-                    summary += $"\n\n✗ {failed} erreur{(failed > 1 ? "s" : "")} :\n" + string.Join("\n", errors)
-                             + "\n\nAstuce : envoyez d'abord le plan complet (Envoyer vers BIMFlow) si le niveau n'existe pas encore en ligne.";
-                summary += "\n\nLes plans/pièces ne sont pas réexportés — seules les valeurs de paramètres sont mises à jour.";
+                string title = "BIMFlow — Paramètres " + (failed == 0 ? "✓" : "partiel");
+                string summary;
 
-                TaskDialog.Show("BIMFlow — Paramètres " + (failed == 0 ? "✓" : "partiel"), summary);
+                if (sent == 0 && failed == 0)
+                {
+                    summary = $"Aucune modification détectée.\n\n" +
+                              $"Les {unchanged} plan{(unchanged > 1 ? "s" : "")} sont déjà à jour — " +
+                              $"aucune valeur de paramètre n'a changé depuis le dernier envoi.\n\n" +
+                              $"Pour forcer une mise à jour complète, utilisez « Envoyer vers BIMFlow ».";
+                }
+                else
+                {
+                    summary = $"Mise à jour différentielle terminée.\n\n";
+                    if (sent > 0)
+                        summary += $"✓ {sent} plan{(sent > 1 ? "s" : "")} mis à jour (pièces modifiées seulement).\n";
+                    if (unchanged > 0)
+                        summary += $"• {unchanged} plan{(unchanged > 1 ? "s" : "")} inchangé{(unchanged > 1 ? "s" : "")} — ignoré{(unchanged > 1 ? "s" : "")}.\n";
+                    if (failed > 0)
+                        summary += $"\n✗ {failed} erreur{(failed > 1 ? "s" : "")} :\n" + string.Join("\n", errors) +
+                                   "\n\nAstuce : utilisez « Envoyer vers BIMFlow » si le plan n'a pas encore été envoyé.";
+
+                    summary += "\n\nSeules les pièces modifiées ont été transmises — l'image et la géométrie sont conservées.";
+                }
+
+                TaskDialog.Show(title, summary);
                 return Result.Succeeded;
             }
             catch (Exception ex)
