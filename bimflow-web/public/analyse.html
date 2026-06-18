@@ -104,10 +104,15 @@ main{display:flex;flex:1;overflow:hidden}
 .fin-prices-hd{font-size:10px;color:var(--c-text5);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;display:flex;align-items:center;gap:5px}
 .fin-val-row{display:flex;align-items:center;gap:5px;margin-bottom:4px}
 .fin-val-tag{flex:1;font-size:11px;color:var(--c-text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 6px;background:var(--c-surf);border-radius:3px;border:1px solid var(--c-border);min-width:0}
-.fin-val-tag.empty{color:var(--c-text5);font-style:italic}
 .fin-val-price{width:60px;flex-shrink:0;background:var(--c-inp);color:var(--c-text);border:1px solid var(--c-border2);border-radius:4px;padding:3px 5px;font-size:11px;text-align:right;outline:none}
 .fin-val-price:focus{border-color:var(--c-accent)}
+.fin-val-price:disabled{opacity:.3;cursor:not-allowed}
 .fin-unit{font-size:10px;color:var(--c-text5);flex-shrink:0;width:30px}
+.fin-val-row.ign .fin-val-tag{text-decoration:line-through;opacity:.45}
+.fin-val-row.ign .fin-val-price{opacity:.25}
+.ign-btn{width:18px;height:18px;border-radius:3px;cursor:pointer;border:1px solid var(--c-border2);background:transparent;color:var(--c-text5);font-size:9px;flex-shrink:0;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;outline:none;transition:all .12s}
+.ign-btn:hover{background:var(--c-border);color:var(--c-text)}
+.ign-btn.active{background:#ef444420;border-color:#ef4444;color:#ef4444}
 
 /* SYNOPTIC */
 .synoptic{flex:1;position:relative;overflow:hidden;background:var(--c-syn);cursor:grab;min-width:0}
@@ -351,16 +356,16 @@ const VAL_PALETTE=['#3b82f6','#f59e0b','#10b981','#ef4444','#a855f7','#06b6d4','
 function finColor(i){return FIN_COLORS[i%FIN_COLORS.length];}
 
 const DEFAULT_FINISHES=[
-  {name:'Sol',     formula:'area',           param:'',prices:{'':45}},
-  {name:'Plafond', formula:'area',           param:'',prices:{'':30}},
-  {name:'Murs',    formula:'perim * height', param:'',prices:{'':25}},
+  {name:'Sol',     formula:'area',           param:'',prices:{'':45},ignored:[]},
+  {name:'Plafond', formula:'area',           param:'',prices:{'':30},ignored:[]},
+  {name:'Murs',    formula:'perim * height', param:'',prices:{'':25},ignored:[]},
 ];
 let finishes=loadFinishes();
 function loadFinishes(){
   try{const a=JSON.parse(localStorage.getItem('bimflow_finishes'));
-    if(Array.isArray(a)&&a.length) return a.map(f=>({name:f.name||'',formula:f.formula||'area',param:f.param||'',prices:f.prices||{'':+(f.price)||0}}));
+    if(Array.isArray(a)&&a.length) return a.map(f=>({name:f.name||'',formula:f.formula||'area',param:f.param||'',prices:f.prices||{'':+(f.price)||0},ignored:f.ignored||[]}));
   }catch(e){}
-  return DEFAULT_FINISHES.map(f=>({...f,prices:{...f.prices}}));
+  return DEFAULT_FINISHES.map(f=>({...f,prices:{...f.prices},ignored:[...f.ignored]}));
 }
 function saveRates(){
   localStorage.setItem('bimflow_finishes',JSON.stringify(finishes));
@@ -403,14 +408,24 @@ function buildFinishEditor(){
     const dlOpts=params.map(n=>`<option value="${n}">`).join('');
     let priceRows='';
     if(f.param){
-      const vals=getParamValues(f.param);
-      priceRows=vals.map(v=>{
-        const p=(f.prices||{})[v]!=null?(f.prices||{})[v]:((f.prices||{})['']||0);
-        return `<div class="fin-val-row">`+
-          `<span class="fin-val-tag${v?'':' empty'}">${v||'(non défini)'}</span>`+
-          `<input class="fin-val-price" type="number" min="0" step="0.01" data-i="${i}" data-v="${v.replace(/"/g,'&quot;')}" value="${p}"/>`+
-          `<span class="fin-unit">${curSel.value}</span></div>`;
-      }).join('');
+      // Empty param values are silently ignored — only show non-empty values
+      const vals=getParamValues(f.param).filter(v=>v);
+      if(!vals.length){
+        priceRows=`<div style="font-size:10px;color:var(--c-text5);font-style:italic;padding:2px 0">Aucune valeur détectée</div>`;
+      }else{
+        priceRows=vals.map(v=>{
+          const isIgnored=(f.ignored||[]).includes(v);
+          const p=(f.prices||{})[v]!=null?(f.prices||{})[v]:((f.prices||{})['']||0);
+          const vEnc=v.replace(/"/g,'&quot;');
+          const unit=isIgnored?'':curSel.value;
+          return `<div class="fin-val-row${isIgnored?' ign':''}">`+
+            `<span class="fin-val-tag" title="${vEnc}">${v}</span>`+
+            `<input class="fin-val-price" type="number" min="0" step="0.01" data-i="${i}" data-v="${vEnc}" value="${p}"${isIgnored?' disabled':''}/>`+
+            `<span class="fin-unit">${unit}</span>`+
+            `<button class="ign-btn${isIgnored?' active':''}" data-i="${i}" data-v="${vEnc}" title="${isIgnored?'Réactiver':'Ignorer cette valeur'}">`+
+            `${isIgnored?'&#x21A9;':'&#x2715;'}</button></div>`;
+        }).join('');
+      }
     }else{
       const p=(f.prices||{})['']||0;
       priceRows=`<div class="fin-val-row"><span class="fin-val-tag">Prix unitaire</span>`+
@@ -449,6 +464,13 @@ function buildFinishEditor(){
     if(!finishes[i].prices)finishes[i].prices={};
     finishes[i].prices[v]=+inp.value||0; recompute();
   }));
+  box.querySelectorAll('.ign-btn').forEach(btn=>btn.addEventListener('click',()=>{
+    const i=+btn.dataset.i,v=btn.dataset.v;
+    if(!finishes[i].ignored)finishes[i].ignored=[];
+    const idx=finishes[i].ignored.indexOf(v);
+    if(idx>=0)finishes[i].ignored.splice(idx,1);else finishes[i].ignored.push(v);
+    buildFinishEditor();buildFilterChips();recolorSynoptic();recompute();
+  }));
 }
 
 /* ── toolbar tabs ── */
@@ -473,7 +495,7 @@ function buildFilterChips(){
   const box=$('filterChips');if(!box)return;box.innerHTML='';
   if(activeFinIdx<0||!finishes[activeFinIdx]?.param)return;
   const f=finishes[activeFinIdx];
-  const vals=getParamValues(f.param).filter(v=>v);
+  const vals=getParamValues(f.param).filter(v=>v&&!(f.ignored||[]).includes(v));
   if(!vals.length){box.innerHTML='<span style="font-size:11px;color:var(--c-text5);font-style:italic">Aucune valeur détectée</span>';return;}
   const all=document.createElement('button');all.className='fchip'+(!activeFilterVal?' active':'');
   all.style.borderColor='var(--c-border2)';if(!activeFilterVal)all.style.background='var(--c-border2)';
@@ -570,6 +592,9 @@ function computeRoom(r){
   const fin=finishes.map(f=>{
     const q=evalFormula(f.formula,{area,perim,height}),qty=isFinite(q)?q:0;
     const paramVal=f.param?String((r.Parameters||{})[f.param]||''):'';
+    // Empty param value or explicitly ignored → exclude from cost
+    if(f.param&&(paramVal===''||(f.ignored||[]).includes(paramVal)))
+      return {name:f.name,qty:0,price:0,cost:0,paramVal};
     const prices=f.prices||{};
     const price=prices[paramVal]!=null?prices[paramVal]:(prices['']!=null?prices['']:0);
     return {name:f.name,qty,price,cost:qty*price,paramVal};
@@ -774,20 +799,23 @@ function recolorSynoptic(){
   if(!curPlan)return;
   const activeFin=activeFinIdx>=0?finishes[activeFinIdx]:null;
   if(activeFin?.param){
-    const paramVals=getParamValues(activeFin.param).filter(v=>v);
+    const ign=activeFin.ignored||[];
+    // Only color non-empty, non-ignored values
+    const paramVals=getParamValues(activeFin.param).filter(v=>v&&!ign.includes(v));
     const valIdx=Object.fromEntries(paramVals.map((v,i)=>[v,i]));
     (curPlan.Rooms||[]).forEach(r=>{
       const poly=document.getElementById('syn-'+r.RevitId);if(!poly)return;
       const val=String((r.Parameters||{})[activeFin.param]||'');
+      const isIgnoredVal=!val||ign.includes(val);
       const dimmed=activeFilterVal&&val!==activeFilterVal;
-      if(dimmed){poly.style.fill='#0f172a';poly.style.fillOpacity='0.08';}
-      else if(val&&valIdx[val]!=null){poly.style.fill=VAL_PALETTE[valIdx[val]%VAL_PALETTE.length];poly.style.fillOpacity='0.84';}
+      if(isIgnoredVal){poly.style.fill='#475569';poly.style.fillOpacity='0.1';}
+      else if(dimmed){poly.style.fill='#0f172a';poly.style.fillOpacity='0.08';}
+      else if(valIdx[val]!=null){poly.style.fill=VAL_PALETTE[valIdx[val]%VAL_PALETTE.length];poly.style.fillOpacity='0.84';}
       else{poly.style.fill='#475569';poly.style.fillOpacity='0.2';}
     });
     const leg=$('synLegend');leg.style.display='';
     leg.innerHTML=`<div class="ll-hd">${activeFin.name} — ${activeFin.param}</div>`+
-      paramVals.map((v,vi)=>`<div class="cat-item"><span class="cat-sw" style="background:${VAL_PALETTE[vi%VAL_PALETTE.length]}"></span>${v}</div>`).join('')+
-      (getParamValues(activeFin.param).some(v=>!v)?`<div class="cat-item"><span class="cat-sw" style="background:#475569"></span><i>(non défini)</i></div>`:'');
+      paramVals.map((v,vi)=>`<div class="cat-item"><span class="cat-sw" style="background:${VAL_PALETTE[vi%VAL_PALETTE.length]}"></span>${v}</div>`).join('');
     return;
   }
   const metric=activeFinIdx>=0?'fin'+activeFinIdx:'total';
