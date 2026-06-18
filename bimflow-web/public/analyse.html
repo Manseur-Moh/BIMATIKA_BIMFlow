@@ -1,151 +1,195 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="dark">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>BIMFlow — Analyse & Coûts</title>
 <style>
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+/* ── CSS Variables ── */
+:root{
+  --c-bg:#0a1120;--c-surf:#111827;--c-surf2:#0d1526;--c-surf3:#0b1322;
+  --c-card:#111c33;--c-border:#1f2937;--c-border2:#1e2b45;
+  --c-text:#e2e8f0;--c-text2:#cbd5e1;--c-text3:#94a3b8;--c-text4:#64748b;--c-text5:#475569;
+  --c-accent:#38bdf8;--c-accent2:#7dd3fc;--c-nav-act:#0c1a2e;
+  --c-inp:#0f172a;--c-syn:#060e1f;
+}
+[data-theme="light"]{
+  --c-bg:#f0f4f8;--c-surf:#ffffff;--c-surf2:#f8fafc;--c-surf3:#f1f5f9;
+  --c-card:#ffffff;--c-border:#e2e8f0;--c-border2:#d1d5db;
+  --c-text:#0f172a;--c-text2:#1e293b;--c-text3:#475569;--c-text4:#64748b;--c-text5:#94a3b8;
+  --c-accent:#0284c7;--c-accent2:#0ea5e9;--c-nav-act:#eff6ff;
+  --c-inp:#f8fafc;--c-syn:#dbeafe;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--c-bg);color:var(--c-text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
 
-  /* TOP BAR */
-  .topbar{display:flex;align-items:center;background:#111827;border-bottom:1px solid #1f2937;flex-shrink:0;height:48px}
-  .logo{padding:0 16px;font-size:16px;font-weight:800;color:#38bdf8;letter-spacing:-.5px;white-space:nowrap;height:100%;display:flex;align-items:center;border-right:1px solid #1f2937}
-  .logo span{color:#7dd3fc}
-  .nav{display:flex;height:100%}
-  .nav a{display:flex;align-items:center;padding:0 16px;font-size:13px;font-weight:600;color:#64748b;text-decoration:none;border-right:1px solid #1f2937}
-  .nav a:hover{background:#1f2937;color:#e2e8f0}
-  .nav a.active{color:#38bdf8;background:#0c1a2e;box-shadow:inset 0 -2px 0 #38bdf8}
-  .tb-ctrl{display:flex;align-items:center;gap:7px;padding:0 14px;border-right:1px solid #1f2937;height:100%}
-  .tb-ctrl label{font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
-  .tb-ctrl select{background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:5px 9px;font-size:13px;cursor:pointer;outline:none}
-  .tb-ctrl select:focus{border-color:#3b82f6}
-  .topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px;padding:0 16px}
-  .status-dot{width:7px;height:7px;border-radius:50%;background:#334155}
-  .status-dot.ok{background:#22c55e}.status-dot.err{background:#ef4444}.status-dot.loading{background:#f59e0b;animation:pulse 1s infinite}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-  .status-txt{font-size:12px;color:#64748b}
+/* TOPBAR */
+.topbar{display:flex;align-items:center;background:var(--c-surf);border-bottom:1px solid var(--c-border);flex-shrink:0;height:48px}
+.logo{padding:0 16px;font-size:16px;font-weight:800;color:var(--c-accent);letter-spacing:-.5px;white-space:nowrap;height:100%;display:flex;align-items:center;border-right:1px solid var(--c-border)}
+.logo span{color:var(--c-accent2)}
+.nav{display:flex;height:100%}
+.nav a{display:flex;align-items:center;padding:0 16px;font-size:13px;font-weight:600;color:var(--c-text4);text-decoration:none;border-right:1px solid var(--c-border)}
+.nav a:hover{background:var(--c-border);color:var(--c-text)}
+.nav a.active{color:var(--c-accent);background:var(--c-nav-act);box-shadow:inset 0 -2px 0 var(--c-accent)}
+.tb-ctrl{display:flex;align-items:center;gap:7px;padding:0 14px;border-right:1px solid var(--c-border);height:100%}
+.tb-ctrl label{font-size:10px;font-weight:600;color:var(--c-text4);text-transform:uppercase;letter-spacing:.05em}
+.tb-ctrl select{background:var(--c-inp);color:var(--c-text);border:1px solid var(--c-border2);border-radius:6px;padding:5px 9px;font-size:13px;cursor:pointer;outline:none}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:6px;padding:0 14px}
+.tb-btn{background:var(--c-border);border:1px solid var(--c-border2);color:var(--c-text2);border-radius:6px;padding:4px 11px;font-size:12px;font-weight:600;cursor:pointer;height:28px;line-height:1;outline:none}
+.tb-btn:hover{background:var(--c-border2);color:var(--c-text)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--c-text5);flex-shrink:0}
+.status-dot.ok{background:#22c55e}.status-dot.err{background:#ef4444}.status-dot.loading{background:#f59e0b;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.status-txt{font-size:12px;color:var(--c-text4)}
 
-  main{display:flex;flex:1;overflow:hidden}
+/* FULL-WIDTH TOOLBAR */
+.main-toolbar{background:var(--c-surf2);border-bottom:1px solid var(--c-border2);padding:5px 10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-shrink:0;min-height:40px;width:100%}
+.fin-tab{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--c-border2);color:var(--c-text4);background:var(--c-surf);transition:all .15s;white-space:nowrap;outline:none}
+.fin-tab:hover{color:var(--c-text)}
+.fin-tab.active{color:#fff;border-color:transparent}
+.fchip{padding:3px 10px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid;color:var(--c-text3);background:transparent;transition:all .15s;white-space:nowrap;outline:none}
+.fchip:hover{color:var(--c-text)}
+.fchip.active{color:#fff;font-weight:700}
+.toolbar-sep{width:1px;height:20px;background:var(--c-border2);flex-shrink:0}
 
-  /* SETTINGS PANEL */
-  .settings{width:228px;flex-shrink:0;background:#111827;border-right:1px solid #1f2937;overflow-y:auto;padding:10px}
-  .set-group{margin-bottom:16px}
-  .set-hd{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px;display:flex;align-items:center;gap:5px}
-  .set-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
-  .set-row label{font-size:12px;color:#94a3b8;flex:1}
-  .set-row .unit{font-size:10px;color:#475569}
-  .set-input{width:78px;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:4px 7px;font-size:12px;outline:none;text-align:right}
-  .set-input:focus{border-color:#3b82f6}
-  .set-select{width:100%;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:5px 8px;font-size:12px;cursor:pointer;outline:none}
-  .set-select:focus{border-color:#3b82f6}
-  .swatch{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:2px}
-  .btn{width:100%;padding:7px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:#1d4ed8;color:#e0f2fe;margin-top:4px}
-  .btn:hover{background:#2563eb}
-  .btn.ghost{background:transparent;border:1px solid #334155;color:#94a3b8}
-  .btn.ghost:hover{background:#1f2937;color:#e2e8f0}
-  /* ── finish cards (new param-based editor) ── */
-  .fin-card{border:1px solid #1e2b45;border-radius:8px;margin-bottom:10px;overflow:hidden;background:#0b1322}
-  .fin-header{display:flex;align-items:center;gap:7px;padding:7px 9px;background:#111c33;border-bottom:1px solid #1e2b45}
-  .fin-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
-  .fin-name{flex:1;background:transparent;color:#f1f5f9;border:none;font-size:13px;font-weight:700;outline:none;min-width:0}
-  .fin-name:focus{color:#38bdf8}
-  .fin-fields{padding:8px;display:flex;flex-direction:column;gap:6px}
-  .fin-field-row{display:flex;flex-direction:column;gap:3px}
-  .fin-field-row > label{font-size:10px;color:#475569;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
-  .fin-formula{width:100%;background:#0b1424;color:#7dd3fc;border:1px solid #374151;border-radius:4px;padding:4px 7px;font-size:11px;font-family:ui-monospace,Menlo,Consolas,monospace;outline:none}
-  .fin-formula:focus{border-color:#3b82f6}
-  .fin-formula.bad{border-color:#ef4444;color:#fca5a5}
-  .fin-prices-box{background:#0d1526;border-radius:5px;padding:6px;border:1px solid #1e2b45}
-  .fin-prices-hd{font-size:10px;color:#475569;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;display:flex;align-items:center;gap:5px}
-  .fin-val-row{display:flex;align-items:center;gap:5px;margin-bottom:4px}
-  .fin-val-tag{flex:1;font-size:11px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 6px;background:#111827;border-radius:3px;border:1px solid #1f2937;min-width:0}
-  .fin-val-tag.empty{color:#475569;font-style:italic}
-  .fin-val-price{width:60px;flex-shrink:0;background:#0b1424;color:#e2e8f0;border:1px solid #374151;border-radius:4px;padding:3px 5px;font-size:11px;text-align:right;outline:none}
-  .fin-val-price:focus{border-color:#3b82f6}
-  .fin-unit{font-size:10px;color:#475569;flex-shrink:0;width:28px}
+/* MAIN LAYOUT */
+main{display:flex;flex:1;overflow:hidden}
+.vsplit{width:5px;flex-shrink:0;cursor:col-resize;background:var(--c-border);position:relative;transition:background .15s}
+.vsplit:hover,.vsplit.dragging{background:var(--c-accent)}
+.vsplit::after{content:"";position:absolute;left:1px;top:50%;transform:translateY(-50%);width:3px;height:32px;background:var(--c-border2);border-radius:2px}
 
-  /* SYNOPTIC AREA */
-  .syn-area{flex:1;display:flex;flex-direction:column;min-width:280px;overflow:hidden}
-  .syn-toolbar{background:#0c1526;border-bottom:1px solid #1e2b45;padding:5px 10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-shrink:0;min-height:40px}
-  .fin-tab{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid #334155;color:#64748b;background:#111827;transition:all .15s;white-space:nowrap;outline:none}
-  .fin-tab:hover{color:#e2e8f0}
-  .fin-tab.active{color:#fff;border-color:transparent}
-  .fchip{padding:3px 10px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid;color:#94a3b8;background:transparent;transition:all .15s;white-space:nowrap;outline:none}
-  .fchip:hover{color:#e2e8f0}
-  .fchip.active{color:#fff;font-weight:700}
-  .fchip-sep{width:1px;height:16px;background:#1f2937;flex-shrink:0}
-  .cat-item{display:flex;align-items:center;gap:6px;font-size:11px;color:#94a3b8;margin-bottom:3px;cursor:pointer}
-  .cat-item:hover .cat-sw{outline:2px solid #fff}
-  .cat-sw{width:10px;height:10px;border-radius:2px;flex-shrink:0;transition:outline .1s}
-  .synoptic{flex:1;position:relative;overflow:hidden;background:#060e1f;cursor:grab;min-width:0}
-  .synoptic:active{cursor:grabbing}
-  #synSvg{position:absolute;will-change:transform}
-  .syn-room{cursor:pointer;stroke:rgba(15,23,42,.65);stroke-width:1;stroke-linejoin:round;transition:opacity .1s}
-  .syn-room:hover{stroke:#fff;stroke-width:2}
-  .syn-room.dim{opacity:.18}
-  .zoom-wrap{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:3px;z-index:10}
-  .zbtn{width:28px;height:28px;background:#1f2937;border:1px solid #374151;color:#d1d5db;border-radius:5px;font-size:15px;cursor:pointer}
-  .zbtn:hover{background:#374151}
-  .syn-legend{position:absolute;bottom:12px;left:12px;z-index:10;background:rgba(15,23,42,.93);border:1px solid #1f2937;border-radius:7px;padding:9px 11px;box-shadow:0 4px 16px rgba(0,0,0,.5);display:none}
-  .syn-legend .ll-hd{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
-  .grad-bar{width:170px;height:11px;border-radius:3px;background:linear-gradient(90deg,#22c55e,#eab308,#ef4444)}
-  .grad-lbls{display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;margin-top:3px}
-  .syn-tip{position:fixed;pointer-events:none;background:#0b1424;border:1px solid #334155;border-radius:6px;padding:7px 9px;font-size:11px;z-index:50;display:none;box-shadow:0 4px 14px rgba(0,0,0,.6);max-width:230px}
-  .syn-tip .t-name{font-weight:700;color:#f1f5f9;margin-bottom:3px}
-  .syn-tip .t-row{display:flex;justify-content:space-between;gap:14px;color:#94a3b8}
-  .syn-tip .t-row b{color:#e2e8f0;font-weight:600}
-  .syn-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#374151;font-size:13px;text-align:center;padding:20px}
+/* SIDE PANELS */
+.side-panel{flex-shrink:0;position:relative;display:flex;flex-direction:column;overflow:hidden;background:var(--c-surf)}
+.side-panel.left-p{border-right:1px solid var(--c-border)}
+.side-panel.right-p{border-left:1px solid var(--c-border)}
+.panel-body{flex:1;overflow-y:auto;padding:10px}
+.side-panel.collapsed .panel-body{display:none}
+.side-panel.collapsed{width:20px!important}
+.side-panel.collapsed .vsplit{display:none}
+.panel-collapser{position:absolute;top:50%;transform:translateY(-50%);width:16px;height:44px;background:var(--c-surf);border:1px solid var(--c-border2);cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--c-text4);outline:none}
+.panel-collapser:hover{background:var(--c-border);color:var(--c-text)}
+.left-p .panel-collapser{right:-16px;border-left:none;border-radius:0 4px 4px 0}
+.right-p .panel-collapser{left:-16px;border-right:none;border-radius:4px 0 0 4px}
+.panel-lbl{writing-mode:vertical-rl;font-size:11px;font-weight:700;color:var(--c-text4);text-align:center;padding:12px 3px;display:none;text-transform:uppercase;letter-spacing:.08em;user-select:none}
+.side-panel.collapsed .panel-lbl{display:block}
 
-  /* DASHBOARD (right) */
-  .dash{width:340px;flex-shrink:0;background:#0d1526;border-left:1px solid #1f2937;overflow-y:auto;padding:12px}
-  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-  .kpi{background:#111c33;border:1px solid #1e2b45;border-radius:8px;padding:9px 11px}
-  .kpi.wide{grid-column:1 / -1;background:linear-gradient(135deg,#0f2a4a,#10233f)}
-  .kpi-lbl{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.04em}
-  .kpi-val{font-size:18px;font-weight:800;color:#f1f5f9;margin-top:2px;line-height:1.1}
-  .kpi.wide .kpi-val{font-size:22px;color:#7dd3fc}
-  .kpi-sub{font-size:10px;color:#475569;margin-top:2px}
+/* SETTINGS */
+.set-group{margin-bottom:14px}
+.set-hd{font-size:10px;font-weight:700;color:var(--c-text4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px}
+.set-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.set-row label{font-size:12px;color:var(--c-text3);flex:1}
+.set-row .unit{font-size:10px;color:var(--c-text5)}
+.set-input{background:var(--c-inp);color:var(--c-text);border:1px solid var(--c-border2);border-radius:5px;padding:4px 7px;font-size:12px;outline:none;text-align:right;width:78px}
+.set-input:focus{border-color:var(--c-accent)}
+.set-select{width:100%;background:var(--c-inp);color:var(--c-text);border:1px solid var(--c-border2);border-radius:5px;padding:5px 8px;font-size:12px;cursor:pointer;outline:none}
+.set-select:focus{border-color:var(--c-accent)}
+.btn{width:100%;padding:7px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:#1d4ed8;color:#e0f2fe;margin-top:4px}
+.btn:hover{background:#2563eb}
+.btn.ghost{background:transparent;border:1px solid var(--c-border2);color:var(--c-text3)}
+.btn.ghost:hover{background:var(--c-border);color:var(--c-text)}
 
-  .card{background:#111c33;border:1px solid #1e2b45;border-radius:8px;padding:11px;margin-bottom:12px}
-  .card-hd{font-size:11px;font-weight:700;color:#cbd5e1;margin-bottom:9px;display:flex;align-items:center;justify-content:space-between}
-  .card-hd .sub{font-size:10px;color:#475569;font-weight:500}
+/* FINISH CARDS */
+.fin-card{border:1px solid var(--c-border2);border-radius:8px;margin-bottom:10px;overflow:hidden;background:var(--c-surf3)}
+.fin-header{display:flex;align-items:center;gap:7px;padding:7px 9px;background:var(--c-card);border-bottom:1px solid var(--c-border2)}
+.fin-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+.fin-name{flex:1;background:transparent;color:var(--c-text);border:none;font-size:13px;font-weight:700;outline:none;min-width:0}
+.fin-name:focus{color:var(--c-accent)}
+.fin-fields{padding:8px;display:flex;flex-direction:column;gap:6px}
+.fin-field-row{display:flex;flex-direction:column;gap:3px}
+.fin-field-row>label{font-size:10px;color:var(--c-text5);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.fin-formula{width:100%;background:var(--c-inp);color:#7dd3fc;border:1px solid var(--c-border2);border-radius:4px;padding:4px 7px;font-size:11px;font-family:ui-monospace,Menlo,monospace;outline:none}
+.fin-formula:focus{border-color:var(--c-accent)}
+.fin-formula.bad{border-color:#ef4444;color:#fca5a5}
+.fin-prices-box{background:var(--c-surf2);border-radius:5px;padding:6px;border:1px solid var(--c-border2)}
+.fin-prices-hd{font-size:10px;color:var(--c-text5);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.fin-val-row{display:flex;align-items:center;gap:5px;margin-bottom:4px}
+.fin-val-tag{flex:1;font-size:11px;color:var(--c-text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 6px;background:var(--c-surf);border-radius:3px;border:1px solid var(--c-border);min-width:0}
+.fin-val-tag.empty{color:var(--c-text5);font-style:italic}
+.fin-val-price{width:60px;flex-shrink:0;background:var(--c-inp);color:var(--c-text);border:1px solid var(--c-border2);border-radius:4px;padding:3px 5px;font-size:11px;text-align:right;outline:none}
+.fin-val-price:focus{border-color:var(--c-accent)}
+.fin-unit{font-size:10px;color:var(--c-text5);flex-shrink:0;width:30px}
 
-  /* donut */
-  .donut-wrap{display:flex;align-items:center;gap:12px}
-  .donut-legend{flex:1;display:flex;flex-direction:column;gap:5px}
-  .dl-row{display:flex;align-items:center;gap:6px;font-size:11px;color:#cbd5e1}
-  .dl-sw{width:10px;height:10px;border-radius:2px;flex-shrink:0}
-  .dl-val{margin-left:auto;color:#94a3b8;font-variant-numeric:tabular-nums}
+/* SYNOPTIC */
+.synoptic{flex:1;position:relative;overflow:hidden;background:var(--c-syn);cursor:grab;min-width:0}
+.synoptic:active{cursor:grabbing}
+#synSvg{position:absolute;will-change:transform}
+.syn-room{cursor:pointer;stroke:rgba(15,23,42,.6);stroke-width:1;stroke-linejoin:round;transition:opacity .1s}
+[data-theme="light"] .syn-room{stroke:rgba(200,220,240,.7)}
+.syn-room:hover{stroke:#fff;stroke-width:2}
+.syn-room.dim{opacity:.1}
+.zoom-wrap{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:3px;z-index:10}
+.zbtn{width:28px;height:28px;background:var(--c-surf);border:1px solid var(--c-border2);color:var(--c-text2);border-radius:5px;font-size:15px;cursor:pointer;outline:none}
+.zbtn:hover{background:var(--c-border)}
+.syn-legend{position:absolute;bottom:12px;left:12px;z-index:10;background:rgba(10,17,32,.94);border:1px solid var(--c-border2);border-radius:7px;padding:9px 11px;box-shadow:0 4px 16px rgba(0,0,0,.5);display:none;max-width:190px}
+[data-theme="light"] .syn-legend{background:rgba(248,250,252,.96)}
+.syn-legend .ll-hd{font-size:10px;font-weight:700;color:var(--c-text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.grad-bar{width:150px;height:10px;border-radius:3px;background:linear-gradient(90deg,#22c55e,#eab308,#ef4444)}
+.grad-lbls{display:flex;justify-content:space-between;font-size:10px;color:var(--c-text3);margin-top:3px}
+.cat-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--c-text3);margin-bottom:3px}
+.cat-sw{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.syn-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--c-text5);font-size:13px;text-align:center;padding:20px}
+.syn-tip{position:fixed;pointer-events:none;background:var(--c-surf3);border:1px solid var(--c-border2);border-radius:6px;padding:7px 9px;font-size:11px;z-index:50;display:none;box-shadow:0 4px 14px rgba(0,0,0,.6);max-width:230px}
+.syn-tip .t-name{font-weight:700;color:var(--c-text);margin-bottom:3px}
+.syn-tip .t-row{display:flex;justify-content:space-between;gap:14px;color:var(--c-text3)}
+.syn-tip .t-row b{color:var(--c-text2);font-weight:600}
 
-  /* bars */
-  .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:11px}
-  .bar-name{width:84px;flex-shrink:0;color:#cbd5e1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .bar-track{flex:1;height:14px;background:#0c1730;border-radius:3px;overflow:hidden}
-  .bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#3b82f6,#60a5fa)}
-  .bar-val{width:74px;flex-shrink:0;text-align:right;color:#94a3b8;font-variant-numeric:tabular-nums}
+/* DASHBOARD */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.kpi{background:var(--c-card);border:1px solid var(--c-border2);border-radius:8px;padding:9px 11px}
+.kpi.wide{grid-column:1/-1;background:linear-gradient(135deg,var(--c-surf2),var(--c-surf3))}
+.kpi-lbl{font-size:10px;color:var(--c-text4);text-transform:uppercase;letter-spacing:.04em}
+.kpi-val{font-size:18px;font-weight:800;color:var(--c-text);margin-top:2px;line-height:1.1}
+.kpi.wide .kpi-val{font-size:22px;color:var(--c-accent2)}
+.kpi-sub{font-size:10px;color:var(--c-text5);margin-top:2px}
+.card{background:var(--c-card);border:1px solid var(--c-border2);border-radius:8px;padding:11px;margin-bottom:12px}
+.card-hd{font-size:11px;font-weight:700;color:var(--c-text2);margin-bottom:9px;display:flex;align-items:center;justify-content:space-between}
+.card-hd .sub{font-size:10px;color:var(--c-text5);font-weight:500}
 
-  /* table */
-  table{width:100%;border-collapse:collapse;font-size:11px}
-  th,td{text-align:right;padding:4px 5px;border-bottom:1px solid #1a2740;white-space:nowrap}
-  th{color:#64748b;font-weight:600;cursor:pointer;user-select:none;position:sticky;top:0;background:#111c33}
-  th:hover{color:#e2e8f0}
-  td:first-child,th:first-child{text-align:left}
-  tbody tr{cursor:pointer}
-  tbody tr:hover{background:#16233f}
-  tbody tr.sel{background:#1e3a5f}
-  .tbl-scroll{max-height:280px;overflow-y:auto}
-  .empty-hint{color:#374151;font-size:12px;text-align:center;padding:30px 14px;line-height:1.7}
+/* Dash finish filter buttons */
+.dash-fin-btns{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.dash-fin-btn{padding:4px 10px;border-radius:16px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--c-border2);color:var(--c-text4);background:var(--c-surf);transition:all .15s;outline:none}
+.dash-fin-btn:hover{color:var(--c-text)}
+.dash-fin-btn.active{color:#fff;border-color:transparent}
 
-  /* bill of quantities */
-  table.boq{width:100%;border-collapse:collapse;font-size:11px}
-  table.boq th{position:static;color:#64748b;font-weight:600;text-align:right;padding:3px 5px;border-bottom:1px solid #1e2b45;cursor:default}
-  table.boq th:first-child{text-align:left}
-  table.boq td{text-align:right;padding:4px 5px;border-bottom:1px solid #16233f;white-space:nowrap}
-  table.boq td:first-child{text-align:left;color:#cbd5e1}
-  table.boq tfoot td{border-top:2px solid #1e2b45;border-bottom:none;font-weight:800;color:#7dd3fc;padding-top:6px}
-  table.boq tfoot tr:last-child td{font-weight:600;color:#94a3b8}
-  .boq-sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle}
+/* Donut */
+.donut-wrap{display:flex;align-items:center;gap:12px}
+.donut-legend{flex:1;display:flex;flex-direction:column;gap:4px}
+.dl-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--c-text2);cursor:pointer;padding:2px 4px;border-radius:4px;transition:background .1s}
+.dl-row:hover{background:var(--c-border)}
+.dl-row.hi{background:var(--c-border2)}
+.dl-sw{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.dl-val{margin-left:auto;color:var(--c-text3);font-variant-numeric:tabular-nums;font-size:10px}
+
+/* Bars */
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11px;cursor:pointer;padding:2px 3px;border-radius:4px;transition:background .1s}
+.bar-row:hover{background:var(--c-border)}
+.bar-row.hi{background:var(--c-border2)}
+.bar-name{width:78px;flex-shrink:0;color:var(--c-text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{flex:1;height:13px;background:var(--c-surf2);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#3b82f6,#60a5fa);transition:width .3s}
+.bar-val{width:72px;flex-shrink:0;text-align:right;color:var(--c-text3);font-variant-numeric:tabular-nums;font-size:10px}
+
+/* Table */
+table{width:100%;border-collapse:collapse;font-size:11px}
+th,td{text-align:right;padding:4px 5px;border-bottom:1px solid var(--c-border);white-space:nowrap}
+th{color:var(--c-text4);font-weight:600;cursor:pointer;user-select:none;position:sticky;top:0;background:var(--c-card)}
+th:hover{color:var(--c-text)}
+td:first-child,th:first-child{text-align:left}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--c-border)}
+tbody tr.sel{background:var(--c-border2)}
+.tbl-scroll{max-height:250px;overflow-y:auto}
+.empty-hint{color:var(--c-text5);font-size:12px;text-align:center;padding:24px 12px;line-height:1.7}
+
+/* BOQ */
+table.boq{width:100%;border-collapse:collapse;font-size:11px}
+table.boq th{position:static;color:var(--c-text4);font-weight:600;text-align:right;padding:3px 5px;border-bottom:1px solid var(--c-border2);cursor:default}
+table.boq th:first-child{text-align:left}
+table.boq td{text-align:right;padding:4px 5px;border-bottom:1px solid var(--c-border);white-space:nowrap}
+table.boq td:first-child{text-align:left;color:var(--c-text2)}
+table.boq tfoot td{border-top:2px solid var(--c-border2);border-bottom:none;font-weight:800;color:var(--c-accent2);padding-top:6px}
+table.boq tfoot tr:last-child td{font-weight:600;color:var(--c-text3)}
+.boq-sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -153,574 +197,497 @@
 <div class="topbar">
   <div class="logo">BIM<span>Flow</span></div>
   <div class="nav">
-    <a href="/">🗺 Plans</a>
-    <a href="/analyse.html" class="active">📊 Analyse</a>
-    <a href="/parametres.html">🔧 Paramètres</a>
+    <a href="/" data-en="🗺 Plans">🗺 Plans</a>
+    <a href="/analyse.html" class="active" data-en="📊 Analysis">📊 Analyse</a>
+    <a href="/parametres.html" data-en="🔧 Parameters">🔧 Paramètres</a>
   </div>
   <div class="tb-ctrl">
-    <label>Niveau</label>
+    <label data-en="Level">Niveau</label>
     <select id="levelSel"></select>
   </div>
   <div class="tb-ctrl">
-    <label>Portée</label>
+    <label data-en="Scope">Portée</label>
     <select id="scopeSel">
-      <option value="current">Niveau actuel</option>
-      <option value="all">Tous les niveaux</option>
+      <option value="current" data-en="Current level">Niveau actuel</option>
+      <option value="all" data-en="All levels">Tous les niveaux</option>
     </select>
   </div>
   <div class="topbar-right">
+    <button class="tb-btn" id="langBtn">EN</button>
+    <button class="tb-btn" id="themeBtn">☀</button>
     <div class="status-dot loading" id="statusDot"></div>
     <div class="status-txt" id="statusTxt">Chargement…</div>
   </div>
 </div>
 
+<!-- FULL-WIDTH TOOLBAR: finish tabs + filter chips -->
+<div class="main-toolbar">
+  <div id="finTabs" style="display:flex;gap:5px;align-items:center;flex-shrink:0"></div>
+  <div class="toolbar-sep"></div>
+  <div id="filterChips" style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;flex:1"></div>
+</div>
+
 <main>
-  <!-- SETTINGS -->
-  <div class="settings">
-    <div class="set-group">
-      <div class="set-hd">🧱 Finitions</div>
-      <div id="finishEditor"></div>
-      <div class="set-row" style="margin-top:4px"><span class="unit">Formules : <b>area</b> m², <b>perim</b> m, <b>height</b> m — Choisissez un paramètre Revit pour des prix par valeur</span></div>
-    </div>
-
-    <div class="set-group">
-      <div class="set-hd">📐 Hypothèses</div>
-      <div class="set-row"><label>Hauteur sous plafond</label><input class="set-input" id="wallH" type="number" min="0" step="0.1" value="2.8"/></div>
-      <div class="set-row"><span class="unit">mètres — sert au calcul des murs (périmètre × hauteur)</span></div>
-      <div class="set-row" style="margin-top:8px"><label>Devise</label>
-        <select class="set-select" id="curSel" style="width:84px">
-          <option value="€">€</option>
-          <option value="DA">DA</option>
-          <option value="MAD">MAD</option>
-          <option value="$">$</option>
-          <option value="£">£</option>
-        </select>
+  <!-- LEFT PANEL -->
+  <div class="side-panel left-p" id="leftPanel" style="width:228px">
+    <button class="panel-collapser" id="leftCollapser" title="Masquer">◀</button>
+    <div class="panel-lbl" data-en="Settings">Réglages</div>
+    <div class="panel-body">
+      <div class="set-group">
+        <div class="set-hd" data-en="🧱 Finishes">🧱 Finitions</div>
+        <div id="finishEditor"></div>
+        <div class="set-row" style="margin-top:2px"><span class="unit">Variables : <b>area</b> m², <b>perim</b> m, <b>height</b> m</span></div>
       </div>
-    </div>
-
-    <div class="set-group">
-      <div class="set-hd">💱 Conversion</div>
-      <div class="set-row"><label>Vers</label>
-        <select class="set-select" id="curSel2" style="width:84px">
-          <option value="">—</option>
-          <option value="€">€</option>
-          <option value="DA">DA</option>
-          <option value="MAD">MAD</option>
-          <option value="$">$</option>
-          <option value="£">£</option>
-        </select>
+      <div class="set-group">
+        <div class="set-hd" data-en="📐 Assumptions">📐 Hypothèses</div>
+        <div class="set-row"><label data-en="Floor height">Hauteur sous plafond</label><input class="set-input" id="wallH" type="number" min="0" step="0.1" value="2.8"/></div>
+        <div class="set-row"><span class="unit" data-en="metres">mètres</span></div>
+        <div class="set-row" style="margin-top:6px"><label data-en="Currency">Devise</label>
+          <select class="set-select" id="curSel" style="width:84px">
+            <option>€</option><option>DA</option><option>MAD</option><option>$</option><option>£</option>
+          </select>
+        </div>
       </div>
-      <div class="set-row"><label>Taux (1 = ? )</label><input class="set-input" id="convRate" type="number" min="0" step="0.0001" value="145"/></div>
-      <div class="set-row"><span class="unit">ex. 1 € = 145 DA → affiche le total converti</span></div>
+      <div class="set-group">
+        <div class="set-hd" data-en="💱 Conversion">💱 Conversion</div>
+        <div class="set-row"><label data-en="Convert to">Vers</label>
+          <select class="set-select" id="curSel2" style="width:84px">
+            <option value="">—</option><option>€</option><option>DA</option><option>MAD</option><option>$</option><option>£</option>
+          </select>
+        </div>
+        <div class="set-row"><label data-en="Rate (1 = ?)">Taux (1 = ?)</label><input class="set-input" id="convRate" type="number" min="0" step="0.0001" value="145"/></div>
+      </div>
+      <div class="set-group">
+        <div class="set-hd" data-en="📊 Group by">📊 Répartition par</div>
+        <select class="set-select" id="groupSel"><option value="__level" data-en="Level">Niveau</option></select>
+      </div>
+      <button class="btn" id="btnExport" data-en="⬇ Export CSV">⬇ Exporter CSV</button>
+      <button class="btn ghost" id="btnReset" style="margin-top:6px" data-en="↺ Reset prices">↺ Réinitialiser les prix</button>
     </div>
-
-    <div class="set-group">
-      <div class="set-hd">🔎 Filtre (slicer)</div>
-      <select class="set-select" id="filtParam" style="margin-bottom:5px"><option value="">— Aucun filtre —</option></select>
-      <select class="set-select" id="filtVal"><option value="">Toutes les valeurs</option></select>
-    </div>
-
-    <div class="set-group">
-      <div class="set-hd">🎨 Synoptique — colorer par</div>
-      <select class="set-select" id="metricSel"></select>
-    </div>
-
-    <div class="set-group">
-      <div class="set-hd">📊 Répartition par</div>
-      <select class="set-select" id="groupSel">
-        <option value="__level">Niveau</option>
-      </select>
-    </div>
-
-    <button class="btn" id="btnExport">⬇ Exporter CSV</button>
-    <button class="btn ghost" id="btnReset" style="margin-top:6px">↺ Réinitialiser les prix</button>
   </div>
 
-  <!-- SYNOPTIC AREA -->
-  <div class="syn-area">
-    <div class="syn-toolbar">
-      <div id="finTabs" style="display:flex;gap:5px;align-items:center;flex-shrink:0"></div>
-      <div class="fchip-sep"></div>
-      <div id="filterChips" style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;flex:1"></div>
+  <div class="vsplit" id="vSplitLeft"></div>
+
+  <!-- SYNOPTIC -->
+  <div class="synoptic" id="synoptic">
+    <div class="syn-empty" id="synEmpty" data-en="No plan — send a level from Revit then select it above.">Aucun plan — envoyez un niveau depuis Revit puis sélectionnez-le ci-dessus.</div>
+    <div class="syn-legend" id="synLegend">
+      <div class="ll-hd">Coût total</div>
+      <div class="grad-bar"></div>
+      <div class="grad-lbls"><span id="legMin">0</span><span id="legMax">0</span></div>
     </div>
-    <div class="synoptic" id="synoptic">
-      <div class="syn-empty" id="synEmpty">Aucun plan — envoyez un niveau depuis Revit puis sélectionnez-le ci-dessus.</div>
-      <div class="syn-legend" id="synLegend">
-        <div class="ll-hd" id="legHd">Coût total</div>
-        <div class="grad-bar"></div>
-        <div class="grad-lbls"><span id="legMin">0</span><span id="legMax">0</span></div>
-      </div>
-      <div class="zoom-wrap">
-        <button class="zbtn" id="zIn">+</button>
-        <button class="zbtn" id="zOut">−</button>
-        <button class="zbtn" id="zReset" title="Ajuster">⌖</button>
-      </div>
+    <div class="zoom-wrap">
+      <button class="zbtn" id="zIn">+</button>
+      <button class="zbtn" id="zOut">−</button>
+      <button class="zbtn" id="zReset" title="Ajuster">⌖</button>
     </div>
   </div>
-  <div class="syn-tip" id="synTip"></div>
 
-  <!-- DASHBOARD -->
-  <div class="dash">
-    <div class="kpis">
-      <div class="kpi wide"><div class="kpi-lbl">Coût total finitions</div><div class="kpi-val" id="kTotal">—</div><div class="kpi-sub" id="kScope"></div></div>
-      <div class="kpi"><div class="kpi-lbl">Surface totale</div><div class="kpi-val" id="kArea">—</div><div class="kpi-sub">m²</div></div>
-      <div class="kpi"><div class="kpi-lbl">Pièces</div><div class="kpi-val" id="kRooms">—</div><div class="kpi-sub" id="kPerim"></div></div>
-      <div class="kpi"><div class="kpi-lbl">Coût moyen</div><div class="kpi-val" id="kPerM2">—</div><div class="kpi-sub">par m²</div></div>
-      <div class="kpi"><div class="kpi-lbl">Coût pièce moy.</div><div class="kpi-val" id="kPerRoom">—</div><div class="kpi-sub">par pièce</div></div>
-    </div>
+  <div class="vsplit" id="vSplitRight"></div>
 
-    <div class="card">
-      <div class="card-hd">Répartition du coût par finition</div>
-      <div class="donut-wrap">
-        <svg id="donut" width="96" height="96" viewBox="0 0 96 96"></svg>
-        <div class="donut-legend" id="donutLegend"></div>
+  <!-- RIGHT PANEL -->
+  <div class="side-panel right-p" id="rightPanel" style="width:320px">
+    <button class="panel-collapser" id="rightCollapser" title="Masquer">▶</button>
+    <div class="panel-lbl" data-en="Analysis">Analyse</div>
+    <div class="panel-body">
+      <!-- Finish filter buttons -->
+      <div class="dash-fin-btns" id="dashFinBtns"></div>
+      <!-- KPIs -->
+      <div class="kpis">
+        <div class="kpi wide"><div class="kpi-lbl" data-en="Total Finish Cost">Coût total finitions</div><div class="kpi-val" id="kTotal">—</div><div class="kpi-sub" id="kScope"></div></div>
+        <div class="kpi"><div class="kpi-lbl" data-en="Total Area">Surface totale</div><div class="kpi-val" id="kArea">—</div><div class="kpi-sub">m²</div></div>
+        <div class="kpi"><div class="kpi-lbl" data-en="Rooms">Pièces</div><div class="kpi-val" id="kRooms">—</div><div class="kpi-sub" id="kPerim"></div></div>
+        <div class="kpi"><div class="kpi-lbl" data-en="Avg / m²">Coût moyen</div><div class="kpi-val" id="kPerM2">—</div><div class="kpi-sub" data-en="per m²">par m²</div></div>
+        <div class="kpi"><div class="kpi-lbl" data-en="Avg / room">Pièce moy.</div><div class="kpi-val" id="kPerRoom">—</div><div class="kpi-sub" data-en="per room">par pièce</div></div>
       </div>
-    </div>
-
-    <div class="card">
-      <div class="card-hd"><span>Quantitatif / Devis</span><span class="sub" id="boqScope"></span></div>
-      <table class="boq">
-        <thead><tr><th>Poste</th><th>Quantité</th><th>P.U.</th><th>Total</th></tr></thead>
-        <tbody id="boqBody"></tbody>
-        <tfoot><tr><td>Total</td><td></td><td></td><td id="boqTotal">—</td></tr>
-        <tr id="boqConvRow" style="display:none"><td colspan="3" id="boqConvLbl"></td><td id="boqConv">—</td></tr></tfoot>
-      </table>
-    </div>
-
-    <div class="card">
-      <div class="card-hd"><span id="grpTitle">Coût par niveau</span><span class="sub" id="grpSub"></span></div>
-      <div id="grpBars"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-hd">Top pièces (coût)</div>
-      <div id="topBars"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-hd"><span>Détail des pièces</span><span class="sub" id="tblScopeLbl"></span></div>
-      <div class="tbl-scroll">
-        <table id="tbl">
-          <thead id="tblHead"></thead>
-          <tbody id="tblBody"></tbody>
+      <div class="card">
+        <div class="card-hd" data-en="Cost breakdown by finish">Répartition par finition</div>
+        <div class="donut-wrap">
+          <svg id="donut" width="88" height="88" viewBox="0 0 96 96" style="cursor:pointer"></svg>
+          <div class="donut-legend" id="donutLegend"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span id="grpTitle" data-en="Cost by level">Coût par niveau</span><span class="sub" id="grpSub"></span></div>
+        <div id="grpBars"></div>
+      </div>
+      <div class="card">
+        <div class="card-hd" data-en="Top rooms (cost)">Top pièces (coût)</div>
+        <div id="topBars"></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span data-en="BOQ / Quantities">Quantitatif / Devis</span><span class="sub" id="boqScope"></span></div>
+        <table class="boq">
+          <thead><tr>
+            <th data-en="Item">Poste</th><th data-en="Qty">Qté</th>
+            <th data-en="Unit">P.U.</th><th data-en="Total">Total</th>
+          </tr></thead>
+          <tbody id="boqBody"></tbody>
+          <tfoot>
+            <tr><td data-en="Total">Total</td><td></td><td></td><td id="boqTotal">—</td></tr>
+            <tr id="boqConvRow" style="display:none"><td colspan="3" id="boqConvLbl"></td><td id="boqConv">—</td></tr>
+          </tfoot>
         </table>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span data-en="Room detail">Détail des pièces</span><span class="sub" id="tblScopeLbl"></span></div>
+        <div class="tbl-scroll"><table id="tbl"><thead id="tblHead"></thead><tbody id="tblBody"></tbody></table></div>
       </div>
     </div>
   </div>
 </main>
+<div class="syn-tip" id="synTip"></div>
 
 <script>
 /* ════════ STATE ════════ */
 const $=id=>document.getElementById(id);
-let index=[], plans={}, levelKey='', curPlan=null;
+let index=[],plans={},levelKey='',curPlan=null;
 let zoom=1,panX=0,panY=0,W=0,H=0,isPan=false,pStart={x:0,y:0};
-let sortKey='total', sortDir=-1, selRoomId=null;
+let sortKey='total',sortDir=-1,selRoomId=null;
+let activeFinIdx=0,activeFilterVal='',dashFinFilter=-1;
 
 const FIN_COLORS=['#3b82f6','#a855f7','#f59e0b','#10b981','#ef4444'];
 const VAL_PALETTE=['#3b82f6','#f59e0b','#10b981','#ef4444','#a855f7','#06b6d4','#f97316','#84cc16','#ec4899','#14b8a6'];
-let activeFinIdx=0, activeFilterVal=''; // which finish tab is active + chip filter
+function finColor(i){return FIN_COLORS[i%FIN_COLORS.length];}
 
 const DEFAULT_FINISHES=[
-  {name:'Sol',     formula:'area',           param:'', prices:{'':45}},
-  {name:'Plafond', formula:'area',           param:'', prices:{'':30}},
-  {name:'Murs',    formula:'perim * height', param:'', prices:{'':25}},
+  {name:'Sol',     formula:'area',           param:'',prices:{'':45}},
+  {name:'Plafond', formula:'area',           param:'',prices:{'':30}},
+  {name:'Murs',    formula:'perim * height', param:'',prices:{'':25}},
 ];
-let finishes = loadFinishes();
+let finishes=loadFinishes();
 function loadFinishes(){
-  try{
-    const a=JSON.parse(localStorage.getItem('bimflow_finishes'));
-    if(Array.isArray(a)&&a.length) return a.map(f=>({
-      name:f.name||'', formula:f.formula||'area', param:f.param||'',
-      prices: f.prices || {'': +(f.price)||0}
-    }));
+  try{const a=JSON.parse(localStorage.getItem('bimflow_finishes'));
+    if(Array.isArray(a)&&a.length) return a.map(f=>({name:f.name||'',formula:f.formula||'area',param:f.param||'',prices:f.prices||{'':+(f.price)||0}}));
   }catch(e){}
-  return DEFAULT_FINISHES.map(f=>({...f, prices:{...f.prices}}));
+  return DEFAULT_FINISHES.map(f=>({...f,prices:{...f.prices}}));
 }
 function saveRates(){
   localStorage.setItem('bimflow_finishes',JSON.stringify(finishes));
   localStorage.setItem('bimflow_cfg',JSON.stringify({height:+wallH.value,cur:curSel.value,cur2:$('curSel2').value,rate:+$('convRate').value}));
 }
 function applySavedRates(){
-  let c={}; try{ c=JSON.parse(localStorage.getItem('bimflow_cfg'))||{}; }catch(e){}
-  if(c.height!=null) wallH.value=c.height;
-  if(c.cur)          curSel.value=c.cur;
-  if(c.cur2!=null)   $('curSel2').value=c.cur2;
-  if(c.rate!=null)   $('convRate').value=c.rate;
+  let c={};try{c=JSON.parse(localStorage.getItem('bimflow_cfg'))||{};}catch(e){}
+  if(c.height!=null)wallH.value=c.height;
+  if(c.cur)curSel.value=c.cur;
+  if(c.cur2!=null)$('curSel2').value=c.cur2;
+  if(c.rate!=null)$('convRate').value=c.rate;
 }
-const curSel=$('curSel'), wallH=$('wallH');
-function finColor(i){ return FIN_COLORS[i%FIN_COLORS.length]; }
+const curSel=$('curSel'),wallH=$('wallH');
 
-/* ── helpers : all parameter names / distinct values from loaded plans ── */
+/* ── helpers ── */
 function allParamNames(){
   const s=new Set();
   Object.values(plans).forEach(pl=>(pl.Rooms||[]).forEach(r=>Object.keys(r.Parameters||{}).forEach(k=>s.add(k))));
   return [...s].sort((a,b)=>a.localeCompare(b));
 }
-function getParamValues(paramName){
+function getParamValues(pn){
   const s=new Set();
-  Object.values(plans).forEach(pl=>(pl.Rooms||[]).forEach(r=>{
-    const v=(r.Parameters||{})[paramName]; s.add(v!=null&&v!==''?String(v):'');
-  }));
-  return [...s].sort((a,b)=>{ if(!a)return 1; if(!b)return -1; return a.localeCompare(b); });
+  Object.values(plans).forEach(pl=>(pl.Rooms||[]).forEach(r=>{const v=(r.Parameters||{})[pn];s.add(v!=null&&v!==''?String(v):'');}));
+  return [...s].sort((a,b)=>{if(!a)return 1;if(!b)return -1;return a.localeCompare(b);});
 }
-
-/* ── formula evaluator — variables: area, perim, height ── */
 function evalFormula(expr,vars){
-  if(!/^[0-9a-zA-Z_+\-*/().,\s]*$/.test(expr||'')) return NaN;
-  try{
-    const f=new Function('area','perim','height','"use strict";return ('+(expr&&expr.trim()?expr:'0')+');');
-    const v=f(vars.area||0,vars.perim||0,vars.height||0);
-    return (typeof v==='number'&&isFinite(v))?v:NaN;
-  }catch(e){ return NaN; }
+  if(!/^[0-9a-zA-Z_+\-*/().,\s]*$/.test(expr||''))return NaN;
+  try{const f=new Function('area','perim','height','"use strict";return ('+(expr&&expr.trim()?expr:'0')+');');
+    const v=f(vars.area||0,vars.perim||0,vars.height||0);return(typeof v==='number'&&isFinite(v))?v:NaN;
+  }catch(e){return NaN;}
 }
 
-/* ── finish editor : param selector + per-value price grid ── */
+/* ── finish editor ── */
 function buildFinishEditor(){
-  const box=$('finishEditor'); box.innerHTML='';
+  const box=$('finishEditor');box.innerHTML='';
   const params=allParamNames();
-
   finishes.forEach((f,i)=>{
-    const card=document.createElement('div'); card.className='fin-card';
-
-    // datalist for free-typing + dropdown
+    const card=document.createElement('div');card.className='fin-card';
     const dlId=`pdl-${i}`;
     const dlOpts=params.map(n=>`<option value="${n}">`).join('');
-
-    // price rows
     let priceRows='';
     if(f.param){
       const vals=getParamValues(f.param);
       priceRows=vals.map(v=>{
         const p=(f.prices||{})[v]!=null?(f.prices||{})[v]:((f.prices||{})['']||0);
-        const lbl=v||'(non défini)';
         return `<div class="fin-val-row">`+
-          `<span class="fin-val-tag${v?'':' empty'}" title="${v}">${lbl}</span>`+
+          `<span class="fin-val-tag${v?'':' empty'}">${v||'(non défini)'}</span>`+
           `<input class="fin-val-price" type="number" min="0" step="0.01" data-i="${i}" data-v="${v.replace(/"/g,'&quot;')}" value="${p}"/>`+
-          `<span class="fin-unit">${curSel.value}/m²</span>`+
-          `</div>`;
+          `<span class="fin-unit">${curSel.value}</span></div>`;
       }).join('');
-    } else {
+    }else{
       const p=(f.prices||{})['']||0;
-      priceRows=`<div class="fin-val-row">`+
-        `<span class="fin-val-tag">Prix unitaire</span>`+
+      priceRows=`<div class="fin-val-row"><span class="fin-val-tag">Prix unitaire</span>`+
         `<input class="fin-val-price" type="number" min="0" step="0.01" data-i="${i}" data-v="" value="${p}"/>`+
-        `<span class="fin-unit">${curSel.value}/m²</span>`+
-        `</div>`;
+        `<span class="fin-unit">${curSel.value}</span></div>`;
     }
-
     card.innerHTML=
-      `<div class="fin-header">`+
-        `<span class="fin-dot" style="background:${finColor(i)}"></span>`+
-        `<input class="fin-name" data-i="${i}" value="${(f.name||'').replace(/"/g,'&quot;')}"/>`+
-      `</div>`+
+      `<datalist id="${dlId}">${dlOpts}</datalist>`+
+      `<div class="fin-header"><span class="fin-dot" style="background:${finColor(i)}"></span>`+
+      `<input class="fin-name" data-i="${i}" value="${(f.name||'').replace(/"/g,'&quot;')}"/></div>`+
       `<div class="fin-fields">`+
-        `<datalist id="${dlId}">${dlOpts}</datalist>`+
-        `<div class="fin-field-row">`+
-          `<label>Paramètre Revit${params.length?'':' <span style="color:#f59e0b;font-size:9px">⚠ Chargez un plan Revit</span>'}</label>`+
-          `<input class="set-input fin-param-inp" list="${dlId}" style="width:100%;text-align:left" data-i="${i}" value="${(f.param||'').replace(/"/g,'&quot;')}" placeholder="${params.length?'Tapez ou choisissez…':'Envoyez un plan depuis Revit…'}"/>`+
-        `</div>`+
-        `<div class="fin-field-row">`+
-          `<label>Formule quantité</label>`+
-          `<input class="fin-formula" data-i="${i}" value="${(f.formula||'').replace(/"/g,'&quot;')}" placeholder="area, perim*height…"/>`+
-        `</div>`+
+        `<div class="fin-field-row"><label>Paramètre Revit${params.length?'':' <span style="color:#f59e0b;font-size:9px">⚠ Chargez un plan</span>'}</label>`+
+        `<input class="set-input fin-param-inp" list="${dlId}" style="width:100%;text-align:left" data-i="${i}" value="${(f.param||'').replace(/"/g,'&quot;')}" placeholder="${params.length?'Tapez ou choisissez…':'Envoyez un plan…'}"/></div>`+
+        `<div class="fin-field-row"><label>Formule quantité</label>`+
+        `<input class="fin-formula" data-i="${i}" value="${(f.formula||'').replace(/"/g,'&quot;')}" placeholder="area, perim*height…"/></div>`+
         `<div class="fin-prices-box">`+
-          `<div class="fin-prices-hd">`+
-            `<span class="fin-dot" style="background:${finColor(i)};width:8px;height:8px"></span>`+
-            `${f.param?`Valeurs de « ${f.param} »`:'Prix'}`+
-          `</div>`+
-          priceRows+
-        `</div>`+
-      `</div>`;
-
+          `<div class="fin-prices-hd"><span class="fin-dot" style="background:${finColor(i)};width:8px;height:8px"></span>${f.param?`Valeurs « ${f.param} »`:'Prix'}</div>`+
+          priceRows+`</div></div>`;
     box.appendChild(card);
   });
-
-  // ── events ──
   box.querySelectorAll('.fin-name').forEach(inp=>inp.addEventListener('input',()=>{
-    finishes[+inp.getAttribute('data-i')].name=inp.value;
-    buildMetricOptions(); recompute();
+    finishes[+inp.dataset.i].name=inp.value; buildFinTabs(); buildDashFinBtns(); recompute();
   }));
   box.querySelectorAll('.fin-formula').forEach(inp=>inp.addEventListener('input',()=>{
-    const i=+inp.getAttribute('data-i'); finishes[i].formula=inp.value;
-    inp.classList.toggle('bad',!isFinite(evalFormula(inp.value,{area:1,perim:1,height:1})));
-    recompute();
+    const i=+inp.dataset.i; finishes[i].formula=inp.value;
+    inp.classList.toggle('bad',!isFinite(evalFormula(inp.value,{area:1,perim:1,height:1}))); recompute();
   }));
   box.querySelectorAll('.fin-param-inp').forEach(inp=>inp.addEventListener('change',()=>{
-    const i=+inp.getAttribute('data-i'); finishes[i].param=inp.value.trim();
-    if(finishes[i].param){ const fb=(finishes[i].prices||{})['']||0;
-      getParamValues(finishes[i].param).forEach(v=>{ if(finishes[i].prices[v]==null) finishes[i].prices[v]=fb; }); }
+    const i=+inp.dataset.i; finishes[i].param=inp.value.trim();
+    if(finishes[i].param){const fb=(finishes[i].prices||{})['']||0;
+      getParamValues(finishes[i].param).forEach(v=>{if(finishes[i].prices[v]==null)finishes[i].prices[v]=fb;});}
     buildFinishEditor(); buildFinTabs(); buildFilterChips(); recompute();
   }));
   box.querySelectorAll('.fin-val-price').forEach(inp=>inp.addEventListener('input',()=>{
-    const i=+inp.getAttribute('data-i'), v=inp.getAttribute('data-v');
-    if(!finishes[i].prices) finishes[i].prices={};
-    finishes[i].prices[v]=+inp.value||0;
-    recompute();
+    const i=+inp.dataset.i,v=inp.dataset.v;
+    if(!finishes[i].prices)finishes[i].prices={};
+    finishes[i].prices[v]=+inp.value||0; recompute();
   }));
 }
 
-/* ── finish tabs (above synoptic) ── */
+/* ── toolbar tabs ── */
 function buildFinTabs(){
-  const box=$('finTabs'); if(!box) return;
-  box.innerHTML='';
-  // "Coût total" tab
-  const t0=document.createElement('button'); t0.className='fin-tab'+(activeFinIdx===-1?' active':'');
-  t0.textContent='💰 Coût'; t0.title='Gradient de coût total';
-  t0.addEventListener('click',()=>{ activeFinIdx=-1; activeFilterVal=''; buildFinTabs(); buildFilterChips(); recolorSynoptic(); });
+  const box=$('finTabs');if(!box)return;box.innerHTML='';
+  const t0=document.createElement('button');t0.className='fin-tab'+(activeFinIdx===-1?' active':'');
+  t0.textContent='💰 Coût';
+  t0.onclick=()=>{activeFinIdx=-1;activeFilterVal='';buildFinTabs();buildFilterChips();recolorSynoptic();};
   box.appendChild(t0);
-  // one tab per finish
   finishes.forEach((f,i)=>{
-    const tab=document.createElement('button');
-    tab.className='fin-tab'+(activeFinIdx===i?' active':'');
-    tab.style.borderColor=activeFinIdx===i?finColor(i):'#334155';
-    if(activeFinIdx===i){ tab.style.background=finColor(i)+'22'; tab.style.color=finColor(i); }
+    const tab=document.createElement('button');tab.className='fin-tab'+(activeFinIdx===i?' active':'');
+    tab.style.borderColor=activeFinIdx===i?finColor(i):'';
+    if(activeFinIdx===i){tab.style.background=finColor(i)+'22';tab.style.color=finColor(i);}
     tab.innerHTML=`<span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${finColor(i)};margin-right:4px;vertical-align:middle"></span>${f.name||('F'+(i+1))}`;
-    tab.addEventListener('click',()=>{
-      activeFinIdx=i; activeFilterVal='';
-      $('metricSel').value='fin'+i;
-      buildFinTabs(); buildFilterChips(); recolorSynoptic();
-    });
+    tab.onclick=()=>{activeFinIdx=i;activeFilterVal='';buildFinTabs();buildFilterChips();recolorSynoptic();};
     box.appendChild(tab);
   });
 }
 
-/* ── filter chips (slicers) per finish value ── */
+/* ── filter chips ── */
 function buildFilterChips(){
-  const box=$('filterChips'); if(!box) return;
-  box.innerHTML='';
-  if(activeFinIdx<0 || !finishes[activeFinIdx]?.param) return;
+  const box=$('filterChips');if(!box)return;box.innerHTML='';
+  if(activeFinIdx<0||!finishes[activeFinIdx]?.param)return;
   const f=finishes[activeFinIdx];
   const vals=getParamValues(f.param).filter(v=>v);
-  if(!vals.length){ box.innerHTML='<span style="font-size:11px;color:#475569;font-style:italic">Aucune valeur — les pièces Revit ont-elles ce paramètre ?</span>'; return; }
-  // "Toutes" chip
-  const all=document.createElement('button');
-  all.className='fchip'+(!activeFilterVal?' active':'');
-  all.style.borderColor='#334155'; if(!activeFilterVal) all.style.background='#334155';
-  all.textContent='Toutes'; all.title='Afficher toutes les pièces';
-  all.addEventListener('click',()=>{ activeFilterVal=''; buildFilterChips(); recolorSynoptic(); });
+  if(!vals.length){box.innerHTML='<span style="font-size:11px;color:var(--c-text5);font-style:italic">Aucune valeur détectée</span>';return;}
+  const all=document.createElement('button');all.className='fchip'+(!activeFilterVal?' active':'');
+  all.style.borderColor='var(--c-border2)';if(!activeFilterVal)all.style.background='var(--c-border2)';
+  all.textContent='Toutes';
+  all.onclick=()=>{activeFilterVal='';buildFilterChips();recolorSynoptic();recompute();};
   box.appendChild(all);
-  // one chip per value
   vals.forEach((v,vi)=>{
     const color=VAL_PALETTE[vi%VAL_PALETTE.length];
-    const chip=document.createElement('button');
-    chip.className='fchip'+(activeFilterVal===v?' active':'');
-    chip.style.borderColor=color;
-    if(activeFilterVal===v) chip.style.background=color;
-    chip.textContent=v; chip.title=`Filtrer : ${v}`;
-    chip.addEventListener('click',()=>{ activeFilterVal=v; buildFilterChips(); recolorSynoptic(); });
+    const chip=document.createElement('button');chip.className='fchip'+(activeFilterVal===v?' active':'');
+    chip.style.borderColor=color;if(activeFilterVal===v)chip.style.background=color;
+    chip.textContent=v;
+    chip.onclick=()=>{activeFilterVal=v;buildFilterChips();recolorSynoptic();recompute();};
     box.appendChild(chip);
   });
 }
 
-/* ── synoptic metric options ── */
+/* ── dashboard finish filter buttons ── */
+function buildDashFinBtns(){
+  const box=$('dashFinBtns');if(!box)return;box.innerHTML='';
+  const all=document.createElement('button');all.className='dash-fin-btn'+(dashFinFilter===-1?' active':'');
+  if(dashFinFilter===-1){all.style.background='#334155';all.style.borderColor='#475569';all.style.color='#fff';}
+  all.textContent='Toutes';
+  all.onclick=()=>{dashFinFilter=-1;buildDashFinBtns();recompute();};
+  box.appendChild(all);
+  finishes.forEach((f,i)=>{
+    const btn=document.createElement('button');btn.className='dash-fin-btn'+(dashFinFilter===i?' active':'');
+    btn.style.borderColor=finColor(i);
+    if(dashFinFilter===i){btn.style.background=finColor(i)+'33';btn.style.color=finColor(i);}
+    btn.innerHTML=`<span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${finColor(i)};margin-right:4px;vertical-align:middle"></span>${f.name||('F'+(i+1))}`;
+    btn.onclick=()=>{dashFinFilter=dashFinFilter===i?-1:i;buildDashFinBtns();recompute();};
+    box.appendChild(btn);
+  });
+}
+
 function metricLabel(m){
-  if(m==='total')return 'Coût total'; if(m==='perm2')return 'Coût au m²'; if(m==='area')return 'Surface (m²)';
-  if(m.startsWith('fin')){ const f=finishes[+m.slice(3)]; return f?('Coût '+f.name):m; } return m;
+  if(m==='total')return 'Coût total';if(m==='perm2')return 'Coût/m²';if(m==='area')return 'Surface';
+  if(m.startsWith('fin')){const f=finishes[+m.slice(3)];return f?('Coût '+f.name):m;}return m;
 }
 function metricVal(c,m){
-  if(m==='total')return c.total; if(m==='perm2')return c.perm2; if(m==='area')return c.area;
-  if(m.startsWith('fin')){ const f=c.fin[+m.slice(3)]; return f?f.cost:0; } return 0;
-}
-function buildMetricOptions(){
-  const sel=$('metricSel'), cur=sel.value;
-  sel.innerHTML='';
-  sel.appendChild(new Option('Coût total finitions','total'));
-  sel.appendChild(new Option('Coût au m²','perm2'));
-  sel.appendChild(new Option('Surface (m²)','area'));
-  finishes.forEach((f,i)=>sel.appendChild(new Option('Coût '+(f.name||('Finition '+(i+1))),'fin'+i)));
-  sel.value = [...sel.options].some(o=>o.value===cur) ? cur : 'total';
+  if(m==='total')return c.total;if(m==='perm2')return c.perm2;if(m==='area')return c.area;
+  if(m.startsWith('fin')){const f=c.fin[+m.slice(3)];return f?f.cost:0;}return 0;
 }
 
 /* ════════ DATA ════════ */
-async function api(u){ const r=await fetch(u); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }
-function setStatus(m,t){ $('statusTxt').textContent=m; $('statusDot').className='status-dot'+(t?' '+t:''); }
+async function api(u){const r=await fetch(u);if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
+function setStatus(m,t){$('statusTxt').textContent=m;$('statusDot').className='status-dot'+(t?' '+t:'');}
 
 async function init(){
-  applySavedRates();
-  buildFinishEditor();
-  buildMetricOptions();
+  applySavedRates(); buildFinishEditor(); buildFinTabs(); buildDashFinBtns();
   try{
     index=await api('/api/plans');
-    const sel=$('levelSel'); sel.innerHTML='';
-    index.forEach(p=>{ const o=document.createElement('option'); o.value=p.key; o.textContent=`${p.level} (${p.rooms})`; sel.appendChild(o); });
-    if(!index.length){ setStatus('Aucun plan','err'); return; }
-    // Load every plan WITHOUT its image (light mode) — charts/costs only need room data.
-    // The full image is fetched on demand for the level you actually view (saves bandwidth).
-    setStatus('Chargement des niveaux…','loading');
-    await Promise.all(index.map(async p=>{ try{ plans[p.key]=await api('/api/plans?key='+encodeURIComponent(p.key)+'&light=1'); }catch(e){} }));
-    levelKey=index[index.length-1].key; sel.value=levelKey;
-    buildGroupOptions();
-    buildFinishEditor();   // rebuild now that params are known from loaded plans
-    buildFinTabs();
-    buildFilterChips();
+    const sel=$('levelSel');sel.innerHTML='';
+    index.forEach(p=>{const o=document.createElement('option');o.value=p.key;o.textContent=`${p.level} (${p.rooms})`;sel.appendChild(o);});
+    if(!index.length){setStatus('Aucun plan','err');return;}
+    setStatus('Chargement…','loading');
+    await Promise.all(index.map(async p=>{try{plans[p.key]=await api('/api/plans?key='+encodeURIComponent(p.key)+'&light=1');}catch(e){}}));
+    levelKey=index[index.length-1].key;sel.value=levelKey;
+    buildGroupOptions(); buildFinishEditor(); buildFinTabs(); buildFilterChips(); buildDashFinBtns();
     selectLevel(levelKey);
     setStatus(`${index.length} niveau(x) chargé(s)`,'ok');
-  }catch(e){ setStatus('Erreur: '+e.message,'err'); }
+  }catch(e){setStatus('Erreur: '+e.message,'err');}
 }
 
 function buildGroupOptions(){
   const names=new Set();
   Object.values(plans).forEach(pl=>(pl.Rooms||[]).forEach(r=>Object.keys(r.Parameters||{}).forEach(k=>{
-    const t=(r.ParameterTypes||{})[k]||'text';
-    if(t==='text'||t==='choice') names.add(k);
+    const t=(r.ParameterTypes||{})[k]||'text';if(t==='text'||t==='choice')names.add(k);
   })));
-  const sorted=[...names].sort((a,b)=>a.localeCompare(b));
-  const g=$('groupSel'), f=$('filtParam');
-  sorted.forEach(n=>{
-    g.appendChild(new Option(n,n));
-    f.appendChild(new Option(n,n));
-  });
+  const g=$('groupSel');
+  [...names].sort((a,b)=>a.localeCompare(b)).forEach(n=>g.appendChild(new Option(n,n)));
 }
-// Populate the slicer's value list from the chosen parameter (across all loaded plans)
-function buildFilterValues(){
-  const p=$('filtParam').value, fv=$('filtVal');
-  fv.innerHTML='<option value="">Toutes les valeurs</option>';
-  if(!p) return;
-  const vals=new Set();
-  Object.values(plans).forEach(pl=>(pl.Rooms||[]).forEach(r=>{ const v=(r.Parameters||{})[p]; if(v) vals.add(v); }));
-  [...vals].sort((a,b)=>a.localeCompare(b)).forEach(v=>fv.appendChild(new Option(v,v)));
-}
+
 function passesFilter(room){
-  const p=$('filtParam').value, v=$('filtVal').value;
-  if(!p||!v) return true;
-  return ((room.Parameters||{})[p]||'')===v;
+  if(!activeFilterVal)return true;
+  const f=finishes[activeFinIdx];if(!f||!f.param)return true;
+  return String((room.Parameters||{})[f.param]||'')===activeFilterVal;
 }
 
 /* ════════ COMPUTE ════════ */
 function parseNum(s){
-  if(s==null) return 0; if(typeof s==='number') return s;
-  let t=String(s).replace(/[^0-9,.\-]/g,'').trim(); if(!t) return 0;
-  const lc=t.lastIndexOf(','), ld=t.lastIndexOf('.');
-  if(lc>-1&&ld>-1){ t = lc>ld ? t.replace(/\./g,'').replace(',','.') : t.replace(/,/g,''); }
-  else if(lc>-1){ const parts=t.replace(/,/g,'.').split('.'); t = parts.length>2 ? parts.slice(0,-1).join('')+'.'+parts[parts.length-1] : parts.join('.'); }
-  const v=parseFloat(t); return isNaN(v)?0:v;
+  if(s==null)return 0;if(typeof s==='number')return s;
+  let t=String(s).replace(/[^0-9,.\-]/g,'').trim();if(!t)return 0;
+  const lc=t.lastIndexOf(','),ld=t.lastIndexOf('.');
+  if(lc>-1&&ld>-1){t=lc>ld?t.replace(/\./g,'').replace(',','.'):t.replace(/,/g,'');}
+  else if(lc>-1){const parts=t.replace(/,/g,'.').split('.');t=parts.length>2?parts.slice(0,-1).join('')+'.'+parts[parts.length-1]:parts.join('.');}
+  const v=parseFloat(t);return isNaN(v)?0:v;
 }
-function pick(room,re){ const k=Object.keys(room.Parameters||{}).find(x=>re.test(x)); return k?room.Parameters[k]:null; }
-function roomArea(r){ if(r.AreaM2>0) return r.AreaM2; return parseNum(pick(r,/surface|area|aire|superficie/i)); }
-function roomPerim(r){ if(r.PerimeterM>0) return r.PerimeterM; return parseNum(pick(r,/p[eé]rim/i)); }
+function pick(room,re){const k=Object.keys(room.Parameters||{}).find(x=>re.test(x));return k?room.Parameters[k]:null;}
+function roomArea(r){if(r.AreaM2>0)return r.AreaM2;return parseNum(pick(r,/surface|area|aire|superficie/i));}
+function roomPerim(r){if(r.PerimeterM>0)return r.PerimeterM;return parseNum(pick(r,/p[eé]rim/i));}
 
 function computeRoom(r){
-  const area=roomArea(r), perim=roomPerim(r), height=+wallH.value||0;
+  const area=roomArea(r),perim=roomPerim(r),height=+wallH.value||0;
   const fin=finishes.map(f=>{
-    const q=evalFormula(f.formula,{area,perim,height});
-    const qty=isFinite(q)?q:0;
-    // resolve price: param value → prices map → fallback ''
+    const q=evalFormula(f.formula,{area,perim,height}),qty=isFinite(q)?q:0;
     const paramVal=f.param?String((r.Parameters||{})[f.param]||''):'';
     const prices=f.prices||{};
-    const price = prices[paramVal]!=null ? prices[paramVal] : (prices['']!=null ? prices[''] : 0);
-    return {name:f.name, qty, price, cost:qty*price, paramVal};
+    const price=prices[paramVal]!=null?prices[paramVal]:(prices['']!=null?prices['']:0);
+    return {name:f.name,qty,price,cost:qty*price,paramVal};
   });
   const total=fin.reduce((s,f)=>s+f.cost,0);
   return {area,perim,height,fin,total,perm2:area>0?total/area:0};
 }
 function roomsInScope(){
   let arr;
-  if($('scopeSel').value==='all'){
-    arr=[]; Object.entries(plans).forEach(([k,pl])=>(pl.Rooms||[]).forEach(r=>arr.push({room:r,planKey:k})));
-  } else {
-    arr=(curPlan?.Rooms||[]).map(r=>({room:r,planKey:levelKey}));
-  }
+  if($('scopeSel').value==='all'){arr=[];Object.entries(plans).forEach(([k,pl])=>(pl.Rooms||[]).forEach(r=>arr.push({room:r,planKey:k})));}
+  else arr=(curPlan?.Rooms||[]).map(r=>({room:r,planKey:levelKey}));
   return arr.filter(x=>passesFilter(x.room));
 }
 
 /* ════════ FORMAT ════════ */
 const nf=(v,d=0)=>(isFinite(v)?v:0).toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d});
 const money=(v,d=0)=>nf(v,d)+' '+curSel.value;
-// Convert a primary-currency amount to the secondary currency (manual rate)
-function convert(v){ return v*(+$('convRate').value||0); }
-function moneyConv(v,d=0){ return nf(convert(v),d)+' '+$('curSel2').value; }
+function convert(v){return v*(+$('convRate').value||0);}
+function moneyConv(v,d=0){return nf(convert(v),d)+' '+$('curSel2').value;}
 
 /* ════════ SELECT LEVEL ════════ */
 async function selectLevel(key){
-  levelKey=key; curPlan=plans[key]; selRoomId=null;
-  recompute();                        // charts/costs use light data → instant
-  // Fetch the full image once for the level being viewed (cached afterwards)
-  if(curPlan && !curPlan.ImageBase64){
-    try{ const full=await api('/api/plans?key='+encodeURIComponent(key)); plans[key]=full; if(levelKey===key) curPlan=full; }catch(e){}
+  levelKey=key;curPlan=plans[key];selRoomId=null;recompute();
+  if(curPlan&&!curPlan.ImageBase64){
+    try{const full=await api('/api/plans?key='+encodeURIComponent(key));plans[key]=full;if(levelKey===key)curPlan=full;}catch(e){}
   }
-  if(curPlan && curPlan.ImageBase64 && levelKey===key){
-    W=curPlan.ImageWidth; H=curPlan.ImageHeight; renderSynoptic(); recolorSynoptic();
-  }
+  if(curPlan&&curPlan.ImageBase64&&levelKey===key){W=curPlan.ImageWidth;H=curPlan.ImageHeight;renderSynoptic();recolorSynoptic();}
 }
 
-/* ════════ RECOMPUTE EVERYTHING ════════ */
+/* ════════ RECOMPUTE ════════ */
 function recompute(){
   saveRates();
   const scope=roomsInScope();
   const computed=scope.map(x=>({...x,c:computeRoom(x.room)}));
-
-  // KPIs
-  let area=0,perim=0,total=0; const finSum=finishes.map(()=>0);
-  computed.forEach(x=>{ area+=x.c.area;perim+=x.c.perim;total+=x.c.total; x.c.fin.forEach((f,i)=>finSum[i]+=f.cost); });
+  let area=0,perim=0,total=0;const finSum=finishes.map(()=>0);
+  computed.forEach(x=>{area+=x.c.area;perim+=x.c.perim;total+=x.c.total;x.c.fin.forEach((f,i)=>finSum[i]+=f.cost);});
   const n=computed.length;
-  $('kTotal').textContent=money(total);
+  const shown=dashFinFilter>=0?finSum[dashFinFilter]:total;
+  $('kTotal').textContent=money(shown);
   $('kArea').textContent=nf(area,1);
   $('kRooms').textContent=n;
-  $('kPerim').textContent=nf(perim,0)+' m périmètre';
-  $('kPerM2').textContent=money(area>0?total/area:0);
-  $('kPerRoom').textContent=money(n>0?total/n:0);
+  $('kPerim').textContent=nf(perim,0)+' m';
+  $('kPerM2').textContent=money(area>0?shown/area:0);
+  $('kPerRoom').textContent=money(n>0?shown/n:0);
   const scopeLbl=$('scopeSel').value==='all'?'Tous les niveaux':(curPlan?.LevelName||'');
-  const filtLbl=$('filtParam').value&&$('filtVal').value?` · ${$('filtParam').value}=${$('filtVal').value}`:'';
-  $('kScope').textContent=scopeLbl+filtLbl;
-
+  const filtLbl=activeFilterVal?` · ${activeFilterVal}`:'';
+  const finFiltLbl=dashFinFilter>=0?` · ${finishes[dashFinFilter]?.name||''}`:'';
+  $('kScope').textContent=scopeLbl+filtLbl+finFiltLbl;
   renderDonut(finSum,total);
-  renderBoQ(computed,total);
+  renderBoQ(computed,total,finSum);
   renderGroup(computed);
   renderTop(computed);
   renderTable(computed);
   recolorSynoptic();
 }
 
-/* ════════ QUANTITATIF / DEVIS ════════ */
-function renderBoQ(computed,total){
-  const qtySum=finishes.map(()=>0), costSum=finishes.map(()=>0);
-  computed.forEach(x=>x.c.fin.forEach((f,i)=>{ qtySum[i]+=f.qty; costSum[i]+=f.cost; }));
+/* ════════ BOQ ════════ */
+function renderBoQ(computed,total,finSum){
+  const qtySum=finishes.map(()=>0),costSum=finishes.map(()=>0);
+  computed.forEach(x=>x.c.fin.forEach((f,i)=>{qtySum[i]+=f.qty;costSum[i]+=f.cost;}));
   $('boqScope').textContent=$('scopeSel').value==='all'?'tous niveaux':(curPlan?.LevelName||'');
   $('boqBody').innerHTML=finishes.map((f,i)=>{
-    // weighted average P.U. = totalCost / totalQty
-    const pu = qtySum[i]>0 ? costSum[i]/qtySum[i] : ((f.prices&&f.prices[''])||0);
-    const puLabel = f.param ? `~${nf(pu)}` : nf((f.prices||{})['']||0);
-    return `<tr data-fin="${i}" style="cursor:pointer"><td><span class="boq-sw" style="background:${finColor(i)}"></span>${f.name||('Finition '+(i+1))}</td>`+
-      `<td>${nf(qtySum[i],1)}</td><td>${puLabel}</td><td>${nf(costSum[i])}</td></tr>`;
+    const pu=qtySum[i]>0?costSum[i]/qtySum[i]:((f.prices&&f.prices[''])||0);
+    const puLbl=f.param?`~${nf(pu)}`:nf((f.prices||{})['']||0);
+    const dim=dashFinFilter>=0&&dashFinFilter!==i;
+    return `<tr data-fin="${i}" style="cursor:pointer${dim?';opacity:.3':''}">` +
+      `<td><span class="boq-sw" style="background:${finColor(i)}"></span>${f.name||('F'+(i+1))}</td>`+
+      `<td>${nf(qtySum[i],1)}</td><td>${puLbl}</td><td>${nf(costSum[i])}</td></tr>`;
   }).join('');
-  $('boqTotal').textContent=money(total);
+  const tot=dashFinFilter>=0?costSum[dashFinFilter]:total;
+  $('boqTotal').textContent=money(tot);
   const c2=$('curSel2').value;
-  if(c2){ $('boqConvRow').style.display=''; $('boqConvLbl').textContent='≈ en '+c2+' (taux '+nf(+$('convRate').value,2)+')'; $('boqConv').textContent=moneyConv(total); }
-  else { $('boqConvRow').style.display='none'; }
+  if(c2){$('boqConvRow').style.display='';$('boqConvLbl').textContent='≈ en '+c2;$('boqConv').textContent=moneyConv(tot);}
+  else $('boqConvRow').style.display='none';
   $('boqBody').querySelectorAll('tr').forEach(tr=>tr.addEventListener('click',()=>{
-    $('metricSel').value='fin'+tr.getAttribute('data-fin'); recolorSynoptic();
+    const fi=+tr.dataset.fin;dashFinFilter=dashFinFilter===fi?-1:fi;buildDashFinBtns();recompute();
   }));
 }
 
 /* ════════ DONUT ════════ */
 function renderDonut(finSum,total){
-  const sum=total||1, R=40, C=2*Math.PI*R; let off=0;
-  let svg='<circle cx="48" cy="48" r="40" fill="none" stroke="#0c1730" stroke-width="14"/>';
-  finSum.forEach((v,i)=>{ const len=(v/sum)*C;
-    svg+=`<circle cx="48" cy="48" r="40" fill="none" stroke="${finColor(i)}" stroke-width="14" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 48 48)"/>`;
-    off+=len; });
+  const sum=total||1,R=40,C=2*Math.PI*R;let off=0;
+  let svg='<circle cx="48" cy="48" r="40" fill="none" stroke="var(--c-surf2)" stroke-width="14"/>';
+  finSum.forEach((v,i)=>{const len=(v/sum)*C;
+    const dim=dashFinFilter>=0&&dashFinFilter!==i;
+    svg+=`<circle cx="48" cy="48" r="40" fill="none" stroke="${finColor(i)}" stroke-width="14" `+
+      `stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 48 48)" `+
+      `opacity="${dim?.2:1}" data-fin="${i}" style="cursor:pointer;transition:opacity .2s"/>`;
+    off+=len;});
   $('donut').innerHTML=svg;
-  $('donutLegend').innerHTML=finishes.map((f,i)=>
-    `<div class="dl-row" data-fin="${i}" style="cursor:pointer"><span class="dl-sw" style="background:${finColor(i)}"></span>${f.name||('Finition '+(i+1))}<span class="dl-val">${money(finSum[i])} · ${nf(100*finSum[i]/sum,0)}%</span></div>`).join('');
+  $('donut').querySelectorAll('[data-fin]').forEach(el=>el.addEventListener('click',()=>{
+    const fi=+el.dataset.fin;dashFinFilter=dashFinFilter===fi?-1:fi;buildDashFinBtns();recompute();
+  }));
+  $('donutLegend').innerHTML=finishes.map((f,i)=>{
+    const dim=dashFinFilter>=0&&dashFinFilter!==i;
+    return `<div class="dl-row${dashFinFilter===i?' hi':''}" data-fin="${i}" style="opacity:${dim?.3:1}">`+
+      `<span class="dl-sw" style="background:${finColor(i)}"></span>${f.name||('F'+(i+1))}`+
+      `<span class="dl-val">${money(finSum[i])} · ${nf(100*finSum[i]/sum,0)}%</span></div>`;
+  }).join('');
   $('donutLegend').querySelectorAll('.dl-row').forEach(row=>row.addEventListener('click',()=>{
-    $('metricSel').value='fin'+row.getAttribute('data-fin'); recolorSynoptic();
+    const fi=+row.dataset.fin;dashFinFilter=dashFinFilter===fi?-1:fi;buildDashFinBtns();recompute();
   }));
 }
 
-/* ════════ GROUP BARS (by level or param) ════════ */
+/* ════════ GROUP BARS ════════ */
 function renderGroup(computed){
   const gk=$('groupSel').value;
   const groups={};
-  // group across ALL plans when grouping by level (so you always see every level)
-  const src = gk==='__level'
-    ? Object.entries(plans).flatMap(([k,pl])=>(pl.Rooms||[]).map(r=>({room:r,planKey:k,c:computeRoom(r)})))
-    : computed;
+  const src=gk==='__level'
+    ?Object.entries(plans).flatMap(([k,pl])=>(pl.Rooms||[]).map(r=>({room:r,planKey:k,c:computeRoom(r)})))
+    :computed;
   src.forEach(x=>{
-    const key = gk==='__level' ? (plans[x.planKey]?.LevelName||x.planKey) : ((x.room.Parameters||{})[gk]||'(vide)');
-    groups[key]=(groups[key]||0)+x.c.total;
+    const key=gk==='__level'?(plans[x.planKey]?.LevelName||x.planKey):((x.room.Parameters||{})[gk]||'(vide)');
+    const v=dashFinFilter>=0?(x.c.fin[dashFinFilter]?.cost||0):x.c.total;
+    groups[key]=(groups[key]||0)+v;
   });
-  $('grpTitle').textContent = gk==='__level'?'Coût par niveau':('Coût par '+gk);
-  $('grpSub').textContent = gk==='__level'?'tous niveaux':'';
+  $('grpTitle').textContent=gk==='__level'?'Coût par niveau':('Coût par '+gk);
+  $('grpSub').textContent=dashFinFilter>=0?`· ${finishes[dashFinFilter]?.name||''}`:'';
   const rows=Object.entries(groups).sort((a,b)=>b[1]-a[1]).slice(0,12);
   const max=Math.max(1,...rows.map(r=>r[1]));
   $('grpBars').innerHTML=rows.map(([name,v])=>
@@ -731,177 +698,162 @@ function renderGroup(computed){
 
 /* ════════ TOP ROOMS ════════ */
 function renderTop(computed){
-  const rows=[...computed].sort((a,b)=>b.c.total-a.c.total).slice(0,8);
-  const max=Math.max(1,...rows.map(r=>r.c.total));
+  const getV=x=>dashFinFilter>=0?(x.c.fin[dashFinFilter]?.cost||0):x.c.total;
+  const rows=[...computed].sort((a,b)=>getV(b)-getV(a)).slice(0,8);
+  const max=Math.max(1,...rows.map(x=>getV(x)));
   $('topBars').innerHTML=rows.map(x=>{
-    const nm=x.room.Name||x.room.Number||x.room.RevitId;
-    return `<div class="bar-row"><span class="bar-name" title="${nm}">${nm}</span>`+
-      `<div class="bar-track"><div class="bar-fill" style="width:${100*x.c.total/max}%;background:linear-gradient(90deg,#f59e0b,#fbbf24)"></div></div>`+
-      `<span class="bar-val">${money(x.c.total)}</span></div>`;
+    const nm=x.room.Name||x.room.Number||x.room.RevitId,v=getV(x);
+    return `<div class="bar-row" data-id="${x.room.RevitId}" data-pk="${x.planKey}">`+
+      `<span class="bar-name" title="${nm}">${nm}</span>`+
+      `<div class="bar-track"><div class="bar-fill" style="width:${100*v/max}%;background:linear-gradient(90deg,#f59e0b,#fbbf24)"></div></div>`+
+      `<span class="bar-val">${money(v)}</span></div>`;
   }).join('')||'<div class="empty-hint">—</div>';
+  $('topBars').querySelectorAll('.bar-row').forEach(row=>row.addEventListener('click',()=>{
+    const id=row.dataset.id,pk=row.dataset.pk;
+    if(pk!==levelKey){$('levelSel').value=pk;selectLevel(pk);}focusRoom(id);
+  }));
 }
 
 /* ════════ TABLE ════════ */
 function tableVal(c,key){
-  if(key==='area')return c.area; if(key==='total')return c.total;
-  if(key.startsWith('fin')){ const f=c.fin[+key.slice(3)]; return f?f.cost:0; } return 0;
+  if(key==='area')return c.area;if(key==='total')return c.total;
+  if(key.startsWith('fin')){const f=c.fin[+key.slice(3)];return f?f.cost:0;}return 0;
 }
-function buildTableHeader(){
+function renderTable(computed){
   let h='<tr><th data-k="name">Pièce</th><th data-k="area">m²</th>';
-  finishes.forEach((f,i)=>h+=`<th data-k="fin${i}" title="${f.name||''}">${(f.name||('F'+(i+1))).slice(0,6)}</th>`);
+  finishes.forEach((f,i)=>h+=`<th data-k="fin${i}">${(f.name||('F'+(i+1))).slice(0,5)}</th>`);
   h+='<th data-k="total">Total</th></tr>';
   $('tblHead').innerHTML=h;
   $('tblHead').querySelectorAll('th').forEach(th=>th.addEventListener('click',()=>{
-    const k=th.getAttribute('data-k'); if(sortKey===k) sortDir*=-1; else {sortKey=k;sortDir=k==='name'?1:-1;} recompute();
+    const k=th.dataset.k;if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=k==='name'?1:-1;}recompute();
   }));
-}
-function renderTable(computed){
-  buildTableHeader();
   $('tblScopeLbl').textContent=$('scopeSel').value==='all'?'tous niveaux':(curPlan?.LevelName||'');
   const rows=[...computed].sort((a,b)=>{
     const va=sortKey==='name'?(a.room.Name||''):tableVal(a.c,sortKey);
     const vb=sortKey==='name'?(b.room.Name||''):tableVal(b.c,sortKey);
-    return (va<vb?-1:va>vb?1:0)*sortDir;
+    return(va<vb?-1:va>vb?1:0)*sortDir;
   });
   $('tblBody').innerHTML=rows.map(x=>{
     const nm=x.room.Name||x.room.Number||x.room.RevitId;
     let cells=`<td title="${nm}">${nm}</td><td>${nf(x.c.area,1)}</td>`;
-    x.c.fin.forEach(f=>cells+=`<td>${nf(f.cost)}</td>`);
-    cells+=`<td><b>${nf(x.c.total)}</b></td>`;
+    x.c.fin.forEach((f,i)=>{const dim=dashFinFilter>=0&&dashFinFilter!==i;
+      cells+=`<td style="opacity:${dim?.3:1}">${nf(f.cost)}</td>`;});
+    cells+=`<td><b>${nf(dashFinFilter>=0?(x.c.fin[dashFinFilter]?.cost||0):x.c.total)}</b></td>`;
     return `<tr data-id="${x.room.RevitId}" data-pk="${x.planKey}" class="${x.room.RevitId===selRoomId?'sel':''}">${cells}</tr>`;
   }).join('');
   $('tblBody').querySelectorAll('tr').forEach(tr=>tr.addEventListener('click',()=>{
-    const id=tr.getAttribute('data-id'), pk=tr.getAttribute('data-pk');
-    if(pk!==levelKey){ $('levelSel').value=pk; selectLevel(pk); }
-    focusRoom(id);
+    const id=tr.dataset.id,pk=tr.dataset.pk;
+    if(pk!==levelKey){$('levelSel').value=pk;selectLevel(pk);}focusRoom(id);
   }));
 }
 
-/* ════════ SYNOPTIC RENDER ════════ */
+/* ════════ SYNOPTIC ════════ */
 function renderSynoptic(){
   $('synEmpty').style.display='none';
-  const old=$('synSvg'); if(old) old.remove();
+  const old=$('synSvg');if(old)old.remove();
   const ns='http://www.w3.org/2000/svg';
-  const svg=document.createElementNS(ns,'svg'); svg.id='synSvg';
-  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.style.width=W+'px'; svg.style.height=H+'px';
+  const svg=document.createElementNS(ns,'svg');svg.id='synSvg';
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.style.width=W+'px';svg.style.height=H+'px';
   const img=document.createElementNS(ns,'image');
   img.setAttribute('href','data:image/png;base64,'+curPlan.ImageBase64);
   img.setAttribute('x',0);img.setAttribute('y',0);img.setAttribute('width',W);img.setAttribute('height',H);
-  img.setAttribute('opacity','0.55');
-  svg.appendChild(img);
+  img.setAttribute('opacity','0.55');svg.appendChild(img);
   (curPlan.Rooms||[]).forEach(r=>{
-    if(!r.SvgPolygon) return;
+    if(!r.SvgPolygon)return;
     const poly=document.createElementNS(ns,'polygon');
-    poly.id='syn-'+r.RevitId; poly.setAttribute('class','syn-room'); poly.setAttribute('points',r.SvgPolygon);
+    poly.id='syn-'+r.RevitId;poly.setAttribute('class','syn-room');poly.setAttribute('points',r.SvgPolygon);
     poly.addEventListener('mousemove',e=>showTip(e,r));
     poly.addEventListener('mouseleave',hideTip);
     poly.addEventListener('click',ev=>{ev.stopPropagation();focusRoom(r.RevitId);});
     svg.appendChild(poly);
   });
-  $('synoptic').appendChild(svg);
-  resetView(); setupPanZoom();
+  $('synoptic').appendChild(svg);resetView();setupPanZoom();
 }
 
 function recolorSynoptic(){
-  if(!curPlan) return;
-  const metric=$('metricSel').value;
+  if(!curPlan)return;
   const activeFin=activeFinIdx>=0?finishes[activeFinIdx]:null;
-
-  // ── Categorical mode: finish tab active + that finish has a param ──
   if(activeFin?.param){
     const paramVals=getParamValues(activeFin.param).filter(v=>v);
     const valIdx=Object.fromEntries(paramVals.map((v,i)=>[v,i]));
     (curPlan.Rooms||[]).forEach(r=>{
-      const poly=document.getElementById('syn-'+r.RevitId); if(!poly) return;
+      const poly=document.getElementById('syn-'+r.RevitId);if(!poly)return;
       const val=String((r.Parameters||{})[activeFin.param]||'');
       const dimmed=activeFilterVal&&val!==activeFilterVal;
-      if(dimmed){ poly.style.fill='#0f172a'; poly.style.fillOpacity='0.12'; }
-      else if(val&&valIdx[val]!=null){ poly.style.fill=VAL_PALETTE[valIdx[val]%VAL_PALETTE.length]; poly.style.fillOpacity='0.84'; }
-      else { poly.style.fill='#64748b'; poly.style.fillOpacity='0.22'; }
+      if(dimmed){poly.style.fill='#0f172a';poly.style.fillOpacity='0.08';}
+      else if(val&&valIdx[val]!=null){poly.style.fill=VAL_PALETTE[valIdx[val]%VAL_PALETTE.length];poly.style.fillOpacity='0.84';}
+      else{poly.style.fill='#475569';poly.style.fillOpacity='0.2';}
     });
-    // categorical legend
-    const leg=$('synLegend'); leg.style.display='';
-    leg.innerHTML=`<div class="ll-hd" style="color:#94a3b8">${activeFin.name} — ${activeFin.param}</div>`+
+    const leg=$('synLegend');leg.style.display='';
+    leg.innerHTML=`<div class="ll-hd">${activeFin.name} — ${activeFin.param}</div>`+
       paramVals.map((v,vi)=>`<div class="cat-item"><span class="cat-sw" style="background:${VAL_PALETTE[vi%VAL_PALETTE.length]}"></span>${v}</div>`).join('')+
-      (getParamValues(activeFin.param).some(v=>!v)?'<div class="cat-item"><span class="cat-sw" style="background:#475569"></span><i>(non défini)</i></div>':'');
+      (getParamValues(activeFin.param).some(v=>!v)?`<div class="cat-item"><span class="cat-sw" style="background:#475569"></span><i>(non défini)</i></div>`:'');
     return;
   }
-
-  // ── Gradient mode: cost or metric heatmap ──
-  const vals=(curPlan.Rooms||[]).map(r=>{
-    const c=computeRoom(r);
-    const dimmed=activeFin&&activeFilterVal?String((r.Parameters||{})[activeFin?.param||'']||'')!==activeFilterVal:false;
-    return {id:r.RevitId, v:metricVal(c,metric), dimmed};
-  });
+  const metric=activeFinIdx>=0?'fin'+activeFinIdx:'total';
+  const vals=(curPlan.Rooms||[]).map(r=>({id:r.RevitId,v:metricVal(computeRoom(r),metric)}));
   const nums=vals.map(x=>x.v).filter(v=>isFinite(v));
-  const min=Math.min(...nums,0), max=Math.max(...nums,1);
+  const min=Math.min(...nums,0),max=Math.max(...nums,1);
   vals.forEach(x=>{
-    const poly=document.getElementById('syn-'+x.id); if(!poly) return;
+    const poly=document.getElementById('syn-'+x.id);if(!poly)return;
     const t=max>min?(x.v-min)/(max-min):0;
-    poly.style.fill=heat(t); poly.style.fillOpacity=x.dimmed?'0.12':'0.78';
+    poly.style.fill=heat(t);poly.style.fillOpacity='0.78';
   });
-  // gradient legend
-  const leg=$('synLegend'); leg.style.display='';
+  const leg=$('synLegend');leg.style.display='';
   const isMoney=metric!=='area';
-  leg.innerHTML=`<div class="ll-hd" id="legHd">${metricLabel(metric)}</div>`+
+  leg.innerHTML=`<div class="ll-hd">${metricLabel(metric)}</div>`+
     `<div class="grad-bar"></div>`+
     `<div class="grad-lbls"><span>${isMoney?money(min):nf(min,1)}</span><span>${isMoney?money(max):nf(max,1)}</span></div>`;
 }
-
 function heat(t){
   t=Math.max(0,Math.min(1,t));
   const stops=[[0,[34,197,94]],[0.5,[234,179,8]],[1,[239,68,68]]];
-  let a=stops[0],b=stops[1];
-  if(t>0.5){a=stops[1];b=stops[2];}
+  let a=stops[0],b=stops[1];if(t>0.5){a=stops[1];b=stops[2];}
   const lt=(t-a[0])/(b[0]-a[0]);
   const c=a[1].map((v,i)=>Math.round(v+(b[1][i]-v)*lt));
   return `rgb(${c[0]},${c[1]},${c[2]})`;
 }
-
 function focusRoom(id){
   selRoomId=id;
-  document.querySelectorAll('.syn-room').forEach(p=>p.classList.toggle('dim', p.id!=='syn-'+id));
-  document.querySelectorAll('#tblBody tr').forEach(tr=>tr.classList.toggle('sel',tr.getAttribute('data-id')===id));
+  document.querySelectorAll('.syn-room').forEach(p=>p.classList.toggle('dim',p.id!=='syn-'+id));
+  document.querySelectorAll('#tblBody tr').forEach(tr=>tr.classList.toggle('sel',tr.dataset.id===id));
   const r=(curPlan?.Rooms||[]).find(x=>x.RevitId===id);
-  if(r){ const w=$('synoptic'); panX=w.clientWidth/2-r.CentroidX*zoom; panY=w.clientHeight/2-r.CentroidY*zoom; applyTx(true); }
+  if(r){const w=$('synoptic');panX=w.clientWidth/2-r.CentroidX*zoom;panY=w.clientHeight/2-r.CentroidY*zoom;applyTx(true);}
   setTimeout(()=>document.querySelectorAll('.syn-room').forEach(p=>p.classList.remove('dim')),1400);
 }
-
-/* ════════ TOOLTIP ════════ */
 function showTip(e,r){
-  const c=computeRoom(r), tip=$('synTip');
+  const c=computeRoom(r),tip=$('synTip');
   const finRows=c.fin.map(f=>{
-    const val=f.paramVal?` <span style="color:#38bdf8;font-style:italic">${f.paramVal}</span>`:'';
+    const val=f.paramVal?` <span style="color:var(--c-accent);font-style:italic">${f.paramVal}</span>`:'';
     return `<div class="t-row">${f.name}${val} <b>${money(f.cost)}</b></div>`;
   }).join('');
-  tip.innerHTML=
-    `<div class="t-name">${r.Name||r.Number||r.RevitId}</div>`+
+  tip.innerHTML=`<div class="t-name">${r.Name||r.Number||r.RevitId}</div>`+
     `<div class="t-row">Surface <b>${nf(c.area,1)} m²</b></div>`+
     `<div class="t-row">Périmètre <b>${nf(c.perim,1)} m</b></div>`+
     finRows+
-    `<div class="t-row" style="margin-top:3px;border-top:1px solid #1f2937;padding-top:3px">Total <b style="color:#7dd3fc">${money(c.total)}</b></div>`;
+    `<div class="t-row" style="margin-top:3px;border-top:1px solid var(--c-border);padding-top:3px">Total <b style="color:var(--c-accent2)">${money(c.total)}</b></div>`;
   tip.style.display='block';
-  let x=e.clientX+14, y=e.clientY+14;
-  if(x+240>innerWidth) x=e.clientX-240; if(y+150>innerHeight) y=e.clientY-150;
-  tip.style.left=x+'px'; tip.style.top=y+'px';
+  let x=e.clientX+14,y=e.clientY+14;
+  if(x+240>innerWidth)x=e.clientX-240;if(y+160>innerHeight)y=e.clientY-160;
+  tip.style.left=x+'px';tip.style.top=y+'px';
 }
-function hideTip(){ $('synTip').style.display='none'; }
+function hideTip(){$('synTip').style.display='none';}
 
-/* ════════ PAN / ZOOM ════════ */
+/* ════════ PAN/ZOOM ════════ */
 function resetView(){
-  const w=$('synoptic'); if(!W) return;
+  const w=$('synoptic');if(!W)return;
   zoom=Math.min((w.clientWidth-30)/W,(w.clientHeight-30)/H);
-  panX=w.clientWidth/2-W/2*zoom; panY=w.clientHeight/2-H/2*zoom; applyTx();
+  panX=w.clientWidth/2-W/2*zoom;panY=w.clientHeight/2-H/2*zoom;applyTx();
 }
 function applyTx(anim){
-  const svg=$('synSvg'); if(!svg) return;
-  svg.style.transition=anim?'transform .35s ease':''; svg.style.transformOrigin='0 0';
+  const svg=$('synSvg');if(!svg)return;
+  svg.style.transition=anim?'transform .35s ease':'';svg.style.transformOrigin='0 0';
   svg.style.left='0';svg.style.top='0';
   svg.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`;
-  if(anim) setTimeout(()=>{const s=$('synSvg');if(s)s.style.transition='';},380);
+  if(anim)setTimeout(()=>{const s=$('synSvg');if(s)s.style.transition='';},380);
 }
-function zoomAt(f){ const w=$('synoptic').getBoundingClientRect(),cx=w.width/2,cy=w.height/2;
-  const nz=Math.min(Math.max(zoom*f,.05),30); panX=cx-(cx-panX)*(nz/zoom); panY=cy-(cy-panY)*(nz/zoom); zoom=nz; applyTx(); }
+function zoomAt(f){const w=$('synoptic').getBoundingClientRect(),cx=w.width/2,cy=w.height/2;
+  const nz=Math.min(Math.max(zoom*f,.05),30);panX=cx-(cx-panX)*(nz/zoom);panY=cy-(cy-panY)*(nz/zoom);zoom=nz;applyTx();}
 function setupPanZoom(){
   const wrap=$('synoptic');
   wrap.onwheel=e=>{e.preventDefault();zoomAt(e.deltaY<0?1.13:1/1.13);};
@@ -909,39 +861,88 @@ function setupPanZoom(){
   window.addEventListener('mouseup',()=>isPan=false);
   window.addEventListener('mousemove',e=>{if(!isPan)return;panX=e.clientX-pStart.x;panY=e.clientY-pStart.y;applyTx();});
 }
-$('zIn').onclick=()=>zoomAt(1.2); $('zOut').onclick=()=>zoomAt(1/1.2); $('zReset').onclick=resetView;
+$('zIn').onclick=()=>zoomAt(1.2);$('zOut').onclick=()=>zoomAt(1/1.2);$('zReset').onclick=resetView;
+
+/* ════════ PANEL COLLAPSE + RESIZE ════════ */
+function setupPanels(){
+  $('leftCollapser').addEventListener('click',()=>{
+    const p=$('leftPanel');p.classList.toggle('collapsed');
+    $('leftCollapser').textContent=p.classList.contains('collapsed')?'▶':'◀';
+    $('vSplitLeft').style.display=p.classList.contains('collapsed')?'none':'';
+    setTimeout(()=>{if($('synSvg'))resetView();},20);
+  });
+  $('rightCollapser').addEventListener('click',()=>{
+    const p=$('rightPanel');p.classList.toggle('collapsed');
+    $('rightCollapser').textContent=p.classList.contains('collapsed')?'◀':'▶';
+    $('vSplitRight').style.display=p.classList.contains('collapsed')?'none':'';
+    setTimeout(()=>{if($('synSvg'))resetView();},20);
+  });
+  let resizing=null,startX=0,startW=0;
+  $('vSplitLeft').addEventListener('mousedown',e=>{resizing='left';startX=e.clientX;startW=$('leftPanel').clientWidth;e.preventDefault();$('vSplitLeft').classList.add('dragging');});
+  $('vSplitRight').addEventListener('mousedown',e=>{resizing='right';startX=e.clientX;startW=$('rightPanel').clientWidth;e.preventDefault();$('vSplitRight').classList.add('dragging');});
+  window.addEventListener('mousemove',e=>{
+    if(!resizing)return;
+    if(resizing==='left'){const w=Math.max(160,Math.min(500,startW+(e.clientX-startX)));$('leftPanel').style.width=w+'px';}
+    else{const w=Math.max(240,Math.min(540,startW-(e.clientX-startX)));$('rightPanel').style.width=w+'px';}
+    if($('synSvg'))resetView();
+  });
+  window.addEventListener('mouseup',()=>{if(resizing){$('vSplitLeft').classList.remove('dragging');$('vSplitRight').classList.remove('dragging');resizing=null;}});
+}
 
 /* ════════ CSV EXPORT ════════ */
 function exportCSV(){
   const scope=roomsInScope();
   const finCols=finishes.map(f=>'Cout_'+(f.name||'fin').replace(/[^a-zA-Z0-9]/g,'_'));
-  const head=['Niveau','Numero','Nom','Surface_m2','Perimetre_m',...finCols,'Cout_total','Cout_par_m2','Devise'];
+  const head=['Niveau','Numero','Nom','Surface_m2','Perimetre_m',...finCols,'Cout_total','Devise'];
   const lines=[head.join(';')];
-  scope.forEach(x=>{ const c=computeRoom(x.room);
+  scope.forEach(x=>{const c=computeRoom(x.room);
     lines.push([plans[x.planKey]?.LevelName||'',x.room.Number||'',(x.room.Name||'').replace(/;/g,','),
       c.area.toFixed(2),c.perim.toFixed(2),
       ...c.fin.map(f=>f.cost.toFixed(0)),
-      c.total.toFixed(0),c.perm2.toFixed(0),curSel.value].join(';')); });
+      c.total.toFixed(0),curSel.value].join(';'));});
   const blob=new Blob(['﻿'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download='BIMFlow_couts_'+($('scopeSel').value==='all'?'tous':(curPlan?.LevelName||'niveau'))+'.csv'; a.click();
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='BIMFlow_couts_'+($('scopeSel').value==='all'?'tous':(curPlan?.LevelName||'niveau'))+'.csv';a.click();
+}
+
+/* ════════ LANG + THEME ════════ */
+function applyLang(l){
+  document.documentElement.lang=l;
+  document.querySelectorAll('[data-en]').forEach(el=>{if(el._fr===undefined)el._fr=el.innerHTML;el.innerHTML=(l==='en')?el.getAttribute('data-en'):el._fr;});
+  $('langBtn').textContent=(l==='en')?'FR':'EN';
+  try{localStorage.setItem('bimflow_lang',l);}catch(e){}
+}
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  $('themeBtn').textContent=(t==='dark')?'☀':'☾';
+  try{localStorage.setItem('bimflow_theme',t);}catch(e){}
 }
 
 /* ════════ EVENTS ════════ */
 wallH.addEventListener('input',recompute);
-curSel.addEventListener('change',recompute);
+curSel.addEventListener('change',()=>{buildFinishEditor();recompute();});
 $('levelSel').addEventListener('change',e=>selectLevel(e.target.value));
 $('scopeSel').addEventListener('change',recompute);
-$('metricSel').addEventListener('change',recolorSynoptic);
 $('groupSel').addEventListener('change',recompute);
 $('curSel2').addEventListener('change',recompute);
 $('convRate').addEventListener('input',recompute);
-$('filtParam').addEventListener('change',()=>{ buildFilterValues(); recompute(); });
-$('filtVal').addEventListener('change',recompute);
 $('btnExport').addEventListener('click',exportCSV);
-$('btnReset').addEventListener('click',()=>{ finishes=DEFAULT_FINISHES.map(f=>({...f,prices:{...f.prices}})); activeFinIdx=0; activeFilterVal=''; wallH.value=2.8; buildFinishEditor(); buildMetricOptions(); buildFinTabs(); buildFilterChips(); recompute(); });
-window.addEventListener('resize',()=>{ if($('synSvg')){ resetView(); } });
+$('btnReset').addEventListener('click',()=>{
+  finishes=DEFAULT_FINISHES.map(f=>({...f,prices:{...f.prices}}));
+  activeFinIdx=0;activeFilterVal='';dashFinFilter=-1;wallH.value=2.8;
+  buildFinishEditor();buildFinTabs();buildFilterChips();buildDashFinBtns();recompute();
+});
+$('langBtn').addEventListener('click',()=>applyLang(document.documentElement.lang==='en'?'fr':'en'));
+$('themeBtn').addEventListener('click',()=>applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light'));
+window.addEventListener('resize',()=>{if($('synSvg'))resetView();});
 
+/* ════════ BOOT ════════ */
+setupPanels();
+(function(){
+  let l='fr',t='dark';
+  try{l=localStorage.getItem('bimflow_lang')||'fr';t=localStorage.getItem('bimflow_theme')||'dark';}catch(e){}
+  applyTheme(t);if(l==='en')applyLang('en');else $('langBtn').textContent='EN';
+})();
 init();
 </script>
 </body>
