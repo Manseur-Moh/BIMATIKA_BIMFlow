@@ -2,6 +2,7 @@ using Autodesk.Revit.UI;
 using System;
 using System.IO;
 using System.Reflection;
+using System.Windows.Media.Imaging;
 
 namespace BIMFlowPlugin
 {
@@ -16,11 +17,8 @@ namespace BIMFlowPlugin
         {
             try
             {
-                // Create ribbon tab
                 const string tabName = "BIMFlow";
                 app.CreateRibbonTab(tabName);
-
-                // Create panel
                 RibbonPanel panel = app.CreateRibbonPanel(tabName, "Export");
 
                 string assemblyPath = Assembly.GetExecutingAssembly().Location;
@@ -37,9 +35,11 @@ namespace BIMFlowPlugin
                         "Exporte les données de la vue active (pièces, surfaces, paramètres)\n" +
                         "et les envoie en un clic vers https://bimatika-bimplan.pages.dev/\n\n" +
                         "Aucun fichier local — les données vont directement au serveur.",
+                    LargeImage = LoadIcon("send_32.png"),
+                    Image      = LoadIcon("send_16.png"),
                 };
 
-                // ── Button 1b: Fast Send — sends saved favourite plans directly ──
+                // ── Button 1b: Fast Send ──
                 var quickBtn = new PushButtonData(
                     name:        "QuickSendBIMFlow",
                     text:        "Envoi\nrapide",
@@ -51,9 +51,11 @@ namespace BIMFlowPlugin
                         "Renvoie en un clic la sélection de plans enregistrée comme favori\n" +
                         "(bouton ⭐ Favori dans « Envoyer vers BIMFlow »).\n\n" +
                         "Aucune énumération des vues du projet — envoi immédiat.",
+                    LargeImage = LoadIcon("quicksend_32.png"),
+                    Image      = LoadIcon("quicksend_16.png"),
                 };
 
-                // ── Button 1c: Send room PARAMETERS only (fast update, no image) ──
+                // ── Button 1c: Send room PARAMETERS only ──
                 var paramsBtn = new PushButtonData(
                     name:        "SendParamsBIMFlow",
                     text:        "Envoyer\nparamètres",
@@ -65,9 +67,11 @@ namespace BIMFlowPlugin
                         "Envoi rapide : met à jour les valeurs de paramètres des pièces\n" +
                         "sur des plans DÉJÀ envoyés, sans réexporter l'image ni la géométrie.\n\n" +
                         "Idéal quand les plans n'ont pas changé — beaucoup plus rapide.",
+                    LargeImage = LoadIcon("params_32.png"),
+                    Image      = LoadIcon("params_16.png"),
                 };
 
-                // ── Button 2: Receive updates from BIMFlow web app ──
+                // ── Button 2: Receive updates ──
                 var receiveBtn = new PushButtonData(
                     name:        "ReceiveFromBIMFlow",
                     text:        "Recevoir\ndepuis BIMFlow",
@@ -75,6 +79,8 @@ namespace BIMFlowPlugin
                     className:   "BIMFlowPlugin.Commands.ReceiveFromBIMFlowCommand")
                 {
                     ToolTip = "Récupère les modifications faites sur le site web et les applique dans Revit.",
+                    LargeImage = LoadIcon("receive_32.png"),
+                    Image      = LoadIcon("receive_16.png"),
                 };
 
                 panel.AddItem(sendBtn);
@@ -90,6 +96,25 @@ namespace BIMFlowPlugin
                 TaskDialog.Show("BIMFlow — Erreur démarrage", ex.Message);
                 return Result.Failed;
             }
+        }
+
+        private static BitmapImage? LoadIcon(string filename)
+        {
+            try
+            {
+                var asm    = Assembly.GetExecutingAssembly();
+                var name   = $"BIMFlowPlugin.Icons.{filename}";
+                using var stream = asm.GetManifestResourceStream(name);
+                if (stream == null) return null;
+                var img = new BitmapImage();
+                img.BeginInit();
+                img.StreamSource    = stream;
+                img.CacheOption     = BitmapCacheOption.OnLoad;
+                img.EndInit();
+                img.Freeze();
+                return img;
+            }
+            catch { return null; }
         }
 
         public Result OnShutdown(UIControlledApplication app) => Result.Succeeded;

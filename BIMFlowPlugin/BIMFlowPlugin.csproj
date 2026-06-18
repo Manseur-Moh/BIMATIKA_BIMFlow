@@ -13,6 +13,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Icons\send_32.png" />
+    <EmbeddedResource Include="Icons\send_16.png" />
+    <EmbeddedResource Include="Icons\quicksend_32.png" />
+    <EmbeddedResource Include="Icons\quicksend_16.png" />
+    <EmbeddedResource Include="Icons\params_32.png" />
+    <EmbeddedResource Include="Icons\params_16.png" />
+    <EmbeddedResource Include="Icons\receive_32.png" />
+    <EmbeddedResource Include="Icons\receive_16.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Revit API references — adjust path to your Revit installation -->
     <Reference Include="RevitAPI">
       <HintPath>C:\Program Files\Autodesk\Revit 2024\RevitAPI.dll</HintPath>
@@ -24,6 +35,9 @@
     </Reference>
     <!-- WinForms for FolderBrowserDialog -->
     <Reference Include="System.Windows.Forms" />
+    <!-- WPF BitmapImage for ribbon icons -->
+    <Reference Include="PresentationCore" />
+    <Reference Include="WindowsBase" />
     <!-- HTTP client for sending data to BIMFlow web app -->
     <Reference Include="System.Net.Http" />
     <!-- Newtonsoft for JSON export -->
