@@ -349,19 +349,33 @@ async function loadAdminData(){
         ?'<span class="u-badge u-admin">👑 Admin</span>'
         :(!u.confirmed?'<span class="u-badge u-unconf">Non confirmé</span>'
           :(u.plan==='pro'?'<span class="u-badge u-pro">PRO</span>':'<span class="u-badge u-free">Gratuit</span>'));
+      const delBtn=isAdm?'':`<button onclick="deleteUser('${esc(u.email)}')" style="background:transparent;border:1px solid #374151;color:#94a3b8;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px;transition:all .15s" onmouseover="this.style.borderColor='#f87171';this.style.color='#f87171'" onmouseout="this.style.borderColor='#374151';this.style.color='#94a3b8'">🗑</button>`;
       return`<div class="user-row">
         <div class="u-av">${esc(initial)}</div>
         <div class="u-info">
           <div class="u-name">${esc(u.name)}${badge}</div>
           <div class="u-email">${esc(u.email)}</div>
         </div>
-        <div class="u-right">
-          <div class="u-proj">${u.projectCount} projet(s)</div>
-          <div class="u-date">Inscrit le ${dateStr}</div>
+        <div class="u-right" style="display:flex;align-items:center;gap:10px">
+          <div>
+            <div class="u-proj">${u.projectCount} projet(s)</div>
+            <div class="u-date">Inscrit le ${dateStr}</div>
+          </div>
+          ${delBtn}
         </div>
       </div>`;
     }).join('');
   }catch(e){$('userList').innerHTML='<div class="empty" style="color:#f87171">Erreur chargement admin: '+esc(e.message)+'</div>';}
+}
+
+async function deleteUser(email){
+  if(!confirm(`Supprimer le compte "${email}" ?\n\nSes projets seront transférés à l'admin. Cette action est irréversible.`))return;
+  try{
+    setSt('Suppression du compte…','load');
+    await apiFetch(`/api/admin?email=${encodeURIComponent(email)}`,{method:'DELETE'});
+    setSt('Compte supprimé','ok');
+    loadAdminData();
+  }catch(e){setSt('Erreur: '+e.message,'err');}
 }
 
 /* Enter code to access */
