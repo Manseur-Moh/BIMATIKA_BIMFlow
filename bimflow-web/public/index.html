@@ -36,30 +36,31 @@
     .hsplit:hover{background:#1f2937}
     .hsplit::after{content:"";position:absolute;top:3px;left:50%;transform:translateX(-50%);height:2px;width:40px;background:#374151;border-radius:2px}
     aside.rooms-aside.collapsed{display:none}
-    aside.rooms-aside.collapsed + .vsplit{display:none}
     .right-col.noplan .viewer-split{display:none}
     .right-col.noplan .bottom-panel{flex:1}
     .refresh-btn.on{background:#1d4ed8;color:#fff;border-color:#1d4ed8}
-    /* 2D / 3D split */
-    .viewer-split{flex:1;display:flex;position:relative;min-height:0;overflow:hidden}
-    .viewer-split .viewer-wrap{flex:1}
-    .pane3d{flex:1;position:relative;background:#060e1f;border-left:1px solid #1f2937;overflow:hidden;min-width:0}
+    /* VM BAR — horizontal toggle strip (same as fiches.html) */
+    .vmbar{display:flex;flex-shrink:0;background:#111827;border-bottom:1px solid #1f2937;justify-content:center;padding:2px 0}
+    .vmbtn{background:transparent;border:none;color:#94a3b8;font-size:12px;font-weight:600;padding:5px 14px;cursor:pointer;border-right:1px solid #1f2937}
+    .vmbtn:last-child{border-right:none}
+    .vmbtn:hover{color:#e2e8f0}.vmbtn.on{background:#1d4ed8;color:#fff}
+    [data-theme=light] .vmbar{background:#f1f5f9;border-bottom-color:#dde2ec}
+    [data-theme=light] .vmbtn{color:#475569;border-right-color:#dde2ec}
+    [data-theme=light] .vmbtn.on{background:#1d4ed8;color:#fff}
+
+    /* VIEWER ROW — 3 equal columns */
+    #viewerRow{flex:1;display:flex;overflow:hidden;min-height:0}
+    #viewerRow .viewer-wrap{flex:1;min-width:0}
+    #viewerRow .pane3d{flex:1;min-width:0;border-left:1px solid #1f2937}
+    #viewerRow aside.rooms-aside{flex:1;min-width:160px;width:auto!important}
+    /* m2d → hide 3D; m3d → hide 2D (rooms stays, 2 equal halves) */
+    #viewerRow.m2d .pane3d{display:none}
+    #viewerRow.m3d .viewer-wrap{display:none}
+    #viewerRow.m3d .pane3d{border-left:none}
+
+    .pane3d{position:relative;background:#060e1f;overflow:hidden}
     .pane3d canvas{display:block;width:100%;height:100%}
-    .viewer-split.m2d .pane3d{display:none}
-    .viewer-split.m3d .viewer-wrap{display:none}
-    .viewer-split.m3d .pane3d{border-left:none}
-    .pane3d-hint{position:absolute;left:12px;bottom:12px;font-size:11px;color:#475569;background:rgba(13,21,38,.7);padding:4px 8px;border-radius:5px;pointer-events:none}
-    .view-modes{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:20;display:flex;background:rgba(15,23,42,.92);border:1px solid #1f2937;border-radius:7px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.5)}
-    .view-modes button{background:transparent;border:none;color:#94a3b8;font-size:12px;font-weight:600;padding:6px 12px;cursor:pointer;border-right:1px solid #1f2937}
-    .view-modes button:last-child{border-right:none}
-    .view-modes button:hover{color:#e2e8f0}
-    .view-modes button.active{background:#1d4ed8;color:#fff}
-    .mode3d{position:absolute;top:10px;right:12px;z-index:20;display:flex;background:rgba(15,23,42,.92);border:1px solid #1f2937;border-radius:7px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.5)}
-    .mode3d button{background:transparent;border:none;color:#94a3b8;font-size:11px;font-weight:600;padding:5px 11px;cursor:pointer;border-right:1px solid #1f2937}
-    .mode3d button:last-child{border-right:none}
-    .mode3d button.active{background:#1d4ed8;color:#fff}
-    /* transparent plan: invert dark line-art so it shows on the dark viewer (no white bg) */
-    #mainSvg > image, #minimapSvg > image{filter:invert(1)}
+    .pane3d-hint{position:absolute;right:12px;bottom:12px;font-size:11px;color:#475569;background:rgba(13,21,38,.7);padding:4px 8px;border-radius:5px;pointer-events:none;text-align:right}
 
     /* LEVELS THUMBNAIL COLUMN */
     aside.levels-aside{width:132px;flex-shrink:0;background:#0d1526;border-right:1px solid #1f2937;display:flex;flex-direction:column;overflow:hidden}
@@ -114,12 +115,12 @@
     .bimflow-room{cursor:pointer;fill:rgba(56,189,248,.04);stroke:rgba(56,189,248,.5);stroke-width:1.5;stroke-linejoin:round;transition:fill .12s,stroke .12s}
     .bimflow-room:hover{fill:rgba(56,189,248,.18);stroke:#38bdf8;stroke-width:2.5}
     .bimflow-room.selected{fill:rgba(239,68,68,.42)!important;stroke:#ef4444!important;stroke-width:3}
-    .zoom-wrap{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:3px;z-index:10}
+    .zoom-wrap{position:absolute;bottom:12px;left:12px;display:flex;flex-direction:column;gap:3px;z-index:10}
     .zbtn{width:28px;height:28px;background:#1f2937;border:1px solid #374151;color:#d1d5db;border-radius:5px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center}
     .zbtn:hover{background:#374151}
 
     /* MINIMAP */
-    #minimap{position:absolute;bottom:12px;left:12px;z-index:10;border:1px solid #1f2937;border-radius:6px;overflow:hidden;background:#0f172a;box-shadow:0 4px 16px rgba(0,0,0,.6);width:150px;display:none}
+    #minimap{position:absolute;bottom:12px;right:12px;z-index:10;border:1px solid #1f2937;border-radius:6px;overflow:hidden;background:#0f172a;box-shadow:0 4px 16px rgba(0,0,0,.6);width:150px;display:none}
     #minimap-lbl{padding:3px 8px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;border-bottom:1px solid #1f2937}
     #minimapSvg{display:block}
     .mini-room{fill:rgba(56,189,248,.05);stroke:rgba(56,189,248,.25);stroke-width:.8;stroke-linejoin:round;cursor:pointer}
@@ -351,37 +352,37 @@
   <!-- COLONNE CENTRALE -->
   <div id="centerCol">
 
-    <!-- LIGNE HAUTE : viewer 2D/3D + pièces à droite -->
-    <div id="viewerRow">
-      <div class="viewer-split mboth" id="viewerSplit">
-        <div class="view-modes" id="viewModes">
-          <button data-m="m2d">🗺 2D</button><button data-m="mboth" class="active">⊞ 2D + 3D</button><button data-m="m3d">🧊 3D</button>
+    <!-- VM BAR — 2D / 2D+3D / 3D toggle (like fiches.html) -->
+    <div class="vmbar" id="vmBar">
+      <button class="vmbtn" data-m="m2d">🗺 2D</button>
+      <button class="vmbtn on" data-m="mboth">⊞ 2D+3D</button>
+      <button class="vmbtn" data-m="m3d">🧊 3D</button>
+    </div>
+
+    <!-- VIEWER ROW — 3 equal columns: 2D | 3D | Rooms -->
+    <div id="viewerRow" class="mboth">
+      <!-- 2D -->
+      <div class="viewer-wrap" id="viewerWrap">
+        <div id="emptyState" class="empty-state">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+          </svg>
+          <h2>BIMFlow Viewer</h2>
+          <p data-en="Choose a level on the left, or send from Revit via &quot;Send to BIMFlow&quot;">Choisissez un niveau à gauche, ou envoyez depuis Revit via <strong>"Envoyer vers BIMFlow"</strong></p>
         </div>
-        <div class="viewer-wrap" id="viewerWrap">
-          <div id="emptyState" class="empty-state">
-            <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-              <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
-            </svg>
-            <h2>BIMFlow Viewer</h2>
-            <p>Choisissez un niveau à gauche, ou envoyez depuis Revit via <strong>"Envoyer vers BIMFlow"</strong></p>
-          </div>
-          <div id="legend" class="legend"></div>
-          <div id="minimap"><div id="minimap-lbl">Vue d'ensemble</div><svg id="minimapSvg"></svg></div>
-          <div class="zoom-wrap">
-            <button class="zbtn" id="zReset" title="Ajuster">⌖</button>
-          </div>
-          <div style="position:absolute;left:12px;bottom:12px;font-size:11px;color:#475569;background:rgba(13,21,38,.7);padding:4px 8px;border-radius:5px;pointer-events:none">Clic molette / clic droit + glisser · Molette pour zoomer</div>
-        </div>
-        <div class="pane3d" id="pane3d">
-          <canvas id="canvas3d"></canvas>
-          <div class="mode3d" id="mode3d"><button data-v="level" class="active" data-en="Level">Niveau</button><button data-v="project" data-en="Project">Projet</button></div>
-          <div class="pane3d-hint" id="pane3dHint">Volumes 3D des pièces — glissez pour pivoter, molette pour zoomer</div>
-          <div class="zoom-wrap"><button class="zbtn" id="fit3d" title="Recadrer la vue 3D">⌖</button></div>
+        <div id="legend" class="legend"></div>
+        <div id="minimap"><div id="minimap-lbl">Vue d'ensemble</div><svg id="minimapSvg"></svg></div>
+        <div class="zoom-wrap">
+          <button class="zbtn" id="zReset" title="Ajuster">⌖</button>
         </div>
       </div>
-      <div class="split-v" id="splitRooms"></div>
-
-      <!-- PIÈCES — panneau droit -->
+      <!-- 3D -->
+      <div class="pane3d" id="pane3d">
+        <canvas id="canvas3d"></canvas>
+        <div class="pane3d-hint" id="pane3dHint" data-en="Drag to rotate · Scroll to zoom · Click a room">Glissez pour pivoter · Molette pour zoomer · Cliquez une pièce</div>
+        <div class="zoom-wrap"><button class="zbtn" id="fit3d" title="Recadrer la vue 3D">⌖</button></div>
+      </div>
+      <!-- ROOMS -->
       <aside class="rooms-aside">
         <div class="sidebar-hd"><span data-en="Rooms">Pièces</span><span class="sel-count" id="selCount"></span></div>
         <div class="ctrl-wrap">
@@ -1143,7 +1144,7 @@ $('toggleRooms').addEventListener('click',function(){
   refitPlan();
 });
 $('togglePlan').addEventListener('click',function(){
-  const v=$('viewerSplit'); const hidden=v.style.display==='none';
+  const v=$('viewerRow'); const hidden=v.style.display==='none';
   v.style.display=hidden?'':'none'; this.classList.toggle('on',!hidden);
   refitPlan(); setTimeout(()=>{ resize3D(); update3D(); },50);
 });
@@ -1182,14 +1183,7 @@ function init3D(){
 }
 function resize3D(){ if(!R3.ready)return; const p=$('pane3d'); const w=p.clientWidth||1,h=p.clientHeight||1;
   R3.renderer.setSize(w,h,false); R3.camera.aspect=w/h; R3.camera.updateProjectionMatrix(); }
-let view3dMode='level', proj3dRooms=null, proj3dKey=null;
-function rooms3D(){ return view3dMode==='project' ? (proj3dRooms||[]) : (plan?.Rooms||[]); }
-async function ensureProjectRooms(){
-  const list=await api('/api/plans'); const sig=list.map(m=>m.key).join('|');
-  if(proj3dKey===sig && proj3dRooms) return proj3dRooms;
-  const all=[]; for(const m of list){ try{ const p=await getPlanData(m.key); (p.Rooms||[]).forEach(r=>all.push(r)); }catch(e){} }
-  proj3dRooms=all; proj3dKey=sig; return all;
-}
+function rooms3D(){ return plan?.Rooms||[]; }
 function build3D(){
   if(!R3.ready)return;
   while(R3.group.children.length){ const c=R3.group.children.pop(); c.traverse(o=>{ if(o.geometry)o.geometry.dispose(); if(o.material)o.material.dispose(); }); }
@@ -1225,31 +1219,21 @@ function recolor3D(){
     mesh.material.opacity = selIds.size ? (selIds.has(r.RevitId)?.95:.32) : .85;
   });
 }
-function threeVisible(){ const vs=$('viewerSplit');
-  if(!vs||vs.style.display==='none') return false;
-  return vs.classList.contains('m3d')||vs.classList.contains('mboth'); }
+function threeVisible(){ const vr=$('viewerRow'); if(!vr)return false;
+  return vr.classList.contains('m3d')||vr.classList.contains('mboth'); }
 async function update3D(){
   if(!threeVisible()||!plan) return;
-  try{ await loadThree(); }catch(e){ $('pane3dHint').style.display=''; $('pane3dHint').textContent='3D indisponible (connexion ?) : '+e.message; return; }
+  try{ await loadThree(); }catch(e){ $('pane3dHint').style.display=''; $('pane3dHint').textContent='3D indisponible : '+e.message; return; }
   if(!R3.ready) init3D();
   resize3D();
-  if(view3dMode==='project'){
-    $('pane3dHint').style.display=''; $('pane3dHint').textContent='Chargement du projet 3D…';
-    try{ await ensureProjectRooms(); }catch(e){}
-    R3.planKey='__project__:'+proj3dKey; build3D();
-  } else {
-    const want='level:'+currentPlanKey;
-    if(R3.planKey!==want){ R3.planKey=want; build3D(); } else recolor3D();
-  }
+  const want='level:'+currentPlanKey;
+  if(R3.planKey!==want){ R3.planKey=want; build3D(); } else recolor3D();
 }
-$('viewModes').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b)return;
-  const vs=$('viewerSplit'); vs.classList.remove('m2d','m3d','mboth'); vs.classList.add(b.getAttribute('data-m'));
-  [...$('viewModes').children].forEach(x=>x.classList.toggle('active',x===b));
-  refitPlan(); update3D(); setTimeout(resize3D,60); });
+$('vmBar').addEventListener('click',e=>{ const b=e.target.closest('.vmbtn'); if(!b)return;
+  const vr=$('viewerRow'); vr.classList.remove('m2d','m3d','mboth'); vr.classList.add(b.dataset.m);
+  [...$('vmBar').children].forEach(x=>x.classList.toggle('on',x===b));
+  setTimeout(()=>{ refitPlan(); resize3D(); if(!vr.classList.contains('m2d')) update3D(); },30); });
 $('fit3d').addEventListener('click',fit3D);
-$('mode3d').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b)return;
-  view3dMode=b.getAttribute('data-v'); [...$('mode3d').children].forEach(x=>x.classList.toggle('active',x===b));
-  R3.planKey=null; update3D(); });
 
 /* ═══ EVENTS ═══ */
 $('editToggle').addEventListener('click',()=>{ editMode=!editMode; renderMatrix(); });
@@ -1290,15 +1274,13 @@ function setupSplitBottom(id,el,min){
   });
 }
 setupSplitLeft('splitLevels', document.querySelector('.levels-aside'), 80);
-setupSplitRight('splitRooms', document.querySelector('.rooms-aside'), 150);
 setupSplitBottom('splitBottom', document.getElementById('bottomPanel'), 60);
 
 /* ═══ TOGGLE PANNEAUX ═══ */
 $('toggleRooms').addEventListener('click',function(){
   const rooms=document.querySelector('.rooms-aside');
-  const sp=document.getElementById('splitRooms');
   const hidden=rooms.style.display==='none';
-  rooms.style.display=hidden?'':'none'; if(sp) sp.style.display=hidden?'':'none';
+  rooms.style.display=hidden?'':'none';
   this.classList.toggle('on',!hidden); refitPlan(); setTimeout(resize3D,30);
 });
 $('togglePlan').addEventListener('click',function(){
@@ -1316,7 +1298,6 @@ document.addEventListener('click',e=>{ const p=$('layoutPop'); if(p&&p.style.dis
 $('tplReset').addEventListener('click',()=>{
   const la=document.querySelector('.levels-aside'); if(la){la.style.width=''; la.style.flex='';}
   const ra=document.querySelector('.rooms-aside'); if(ra){ra.style.width=''; ra.style.flex=''; ra.style.display='';}
-  const sr=document.getElementById('splitRooms'); if(sr) sr.style.display='';
   const bp=document.getElementById('bottomPanel'); if(bp){bp.style.height='260px'; bp.style.flex='0 0 260px';}
   const vr=document.getElementById('viewerRow'); if(vr){vr.style.display=''; vr.style.flex='';}
   const sb=document.getElementById('splitBottom'); if(sb) sb.style.display='';
