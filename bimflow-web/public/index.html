@@ -68,7 +68,8 @@
     .level-item{border:1px solid #1f2937;border-radius:7px;overflow:hidden;cursor:pointer;margin-bottom:8px;background:#0f172a;transition:border-color .12s}
     .level-item:hover{border-color:#334155}
     .level-item.active{border-color:#3b82f6;box-shadow:0 0 0 1px #3b82f6}
-    .level-thumb{width:100%;height:84px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+    .level-thumb{width:100%;height:84px;background:#0f172a;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+    .level-thumb .thumb-svg{filter:invert(1) brightness(.85)}
     .level-thumb img{width:100%;height:100%;object-fit:contain}
     .level-thumb svg.thumb-svg{position:absolute;inset:0;width:100%;height:100%}
     .level-thumb .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#334155;font-size:10px}
@@ -90,12 +91,12 @@
     .mini-btn{flex:1;background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:5px;padding:4px;font-size:10px;font-weight:600;cursor:pointer}
     .mini-btn:hover{background:#374151;color:#fff}
     .rooms-list{flex:1;overflow-y:auto;padding:3px}
-    .room-item{display:flex;align-items:flex-start;gap:6px;padding:5px 8px;border-radius:5px;cursor:pointer;margin-bottom:1px;border-left:3px solid transparent}
+    .room-item{display:flex;align-items:flex-start;gap:6px;padding:5px 8px;border-radius:5px;cursor:pointer;margin-bottom:1px;border-left:3px solid transparent;user-select:none}
     .room-item:hover{background:#1f2937}
-    .room-item.active{background:#3f1d2e;border-left-color:#ef4444}
-    .room-item input{margin-top:2px;cursor:pointer;accent-color:#ef4444;flex-shrink:0}
+    .room-item.active{background:rgba(59,130,246,.18);border-left-color:#3b82f6}
     .ri-txt{flex:1;min-width:0}
-    .r-num{font-size:10px;color:#475569}.room-item.active .r-num{color:#fca5a5}
+    .r-num{font-size:10px;color:#475569}.room-item.active .r-num{color:#93c5fd}
+    .room-item.active .r-name{color:#bfdbfe}
     .r-name{font-size:13px;font-weight:500;line-height:1.3}
     .r-lvl{font-size:10px;color:#38bdf8;margin-top:1px}
 
@@ -240,7 +241,8 @@
     [data-theme=light] .level-item{background:#fff;border-color:#dde2ec}
     [data-theme=light] .level-item:hover{border-color:#94a3b8}
     [data-theme=light] .level-item.active{border-color:#3b82f6;box-shadow:0 0 0 1px #3b82f6}
-    [data-theme=light] .level-thumb{background:#e8edf5}
+    [data-theme=light] .level-thumb{background:#eef2f8}
+    [data-theme=light] .level-thumb .thumb-svg{filter:none}
     [data-theme=light] .level-name{color:#1e2733}
     [data-theme=light] .level-sub{color:#64748b}
     [data-theme=light] .ctrl-wrap{border-bottom-color:#dde2ec}
@@ -258,7 +260,9 @@
     [data-theme=light] .level-item{background:#fff;border-color:#dde2ec}
     [data-theme=light] .level-name{color:#1e2733}
     [data-theme=light] .room-item:hover{background:#eef2f8}
-    [data-theme=light] .room-item.active{background:#fde6e6}
+    [data-theme=light] .room-item.active{background:rgba(59,130,246,.12);border-left-color:#3b82f6}
+    [data-theme=light] .room-item.active .r-name{color:#1d4ed8}
+    [data-theme=light] .room-item.active .r-num{color:#1d4ed8}
     [data-theme=light] .viewer-wrap,[data-theme=light] .pane3d{background:#eef1f6}
     [data-theme=light] .pane3d{border-left-color:#dde2ec}
     [data-theme=light] #mainSvg > image,[data-theme=light] #minimapSvg > image{filter:none}  /* light: dark line-art */
@@ -702,18 +706,31 @@ function renderList(){
     const lvl=room._levelName||room.LevelName||'';
     let extra=lvl?`<div class="r-lvl">${esc(lvl)}</div>`:'';
     if(sk && sk!=='__name' && sk!=='__number'){ const v=roomColorValue(room,sk); if(v) extra=`<div class="r-lvl">${colorByLabel(sk)}: ${esc(v)}</div>`; }
-    div.innerHTML=`<input type="checkbox"/><div class="ri-txt"><div class="r-num">${esc(room.Number||'')}</div>`+
+    div.innerHTML=`<div class="ri-txt"><div class="r-num">${esc(room.Number||'')}</div>`+
       `<div class="r-name">${esc(room.Name||'—')}</div>${extra}</div>`;
     const pk=room._planKey||null;
-    div.querySelector('input').addEventListener('click',e=>{ e.stopPropagation(); roomClicked(room.RevitId,true,pk); });
-    div.querySelector('.ri-txt').addEventListener('click',()=>roomClicked(room.RevitId,false,pk));
+    div.addEventListener('click',e=>{
+      if(e.shiftKey && lastSel){
+        const items=[...$('roomsList').querySelectorAll('.room-item[data-id]')];
+        const ids=items.map(el=>el.getAttribute('data-id'));
+        const a=ids.indexOf(lastSel), b=ids.indexOf(room.RevitId);
+        const [from,to]=a<b?[a,b]:[b,a];
+        ids.slice(from,to+1).forEach(id=>selIds.add(id));
+        lastSel=room.RevitId;
+        markRoomSelection(); renderMatrix(); paintRooms();
+        if(typeof R3!=='undefined'&&R3.ready) recolor3D();
+        updateActiveThumbSel(); updateMinimap();
+        $('selCount').textContent=selIds.size?`${selIds.size} sélection(s)`:'';
+      } else {
+        roomClicked(room.RevitId, e.ctrlKey||e.metaKey, pk);
+      }
+    });
     list.appendChild(div);
   });
   markRoomSelection(); applyRoomSearch();
 }
 function markRoomSelection(){
-  document.querySelectorAll('.room-item').forEach(el=>{ const on=selIds.has(el.getAttribute('data-id'));
-    el.classList.toggle('active',on); const cb=el.querySelector('input'); if(cb) cb.checked=on; });
+  document.querySelectorAll('.room-item').forEach(el=>el.classList.toggle('active',selIds.has(el.getAttribute('data-id'))));
 }
 function applyRoomSearch(){
   const q=($('roomSearch').value||'').toLowerCase(), sk=$('searchKey').value;
@@ -1257,12 +1274,20 @@ function fit3D(){
 }
 function recolor3D(){
   if(!R3.ready)return;
+  const curLevel=plan?.LevelName||'';
   rooms3D().forEach(r=>{ const mesh=R3.meshes[r.RevitId]; if(!mesh)return;
     let col=0x3b82f6;
     if(selIds.has(r.RevitId)) col=0xef4444;
     else if(colorKey){ const v=roomColorValue(r,colorKey)||'(vide)'; const hex=colorMap[v]; if(hex) col=parseInt(hex.slice(1),16); }
     mesh.material.color.setHex(col);
-    mesh.material.opacity = selIds.size ? (selIds.has(r.RevitId)?.90:.07) : .75;
+    const onCurrentLevel = allLevelsMode || !curLevel || (r._levelName||r.LevelName||'')=== curLevel;
+    if(selIds.size){
+      mesh.material.opacity = selIds.has(r.RevitId) ? .90 : .06;
+    } else if(!allLevelsMode && allLevelsRooms.length){
+      mesh.material.opacity = onCurrentLevel ? .82 : .10;
+    } else {
+      mesh.material.opacity = .75;
+    }
   });
 }
 function threeVisible(){ const vr=$('viewerRow'); if(!vr)return false;
