@@ -552,7 +552,7 @@ function metricVal(c,m){
 }
 
 /* ════════ DATA ════════ */
-async function api(u){const r=await fetch(u);if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
+async function api(u,opts={}){opts.headers={...(window.BFAuth?.headers()||{}),...(opts.headers||{})};const r=await fetch(u,opts);if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
 function setStatus(m,t){$('statusTxt').textContent=m;$('statusDot').className='status-dot'+(t?' '+t:'');}
 
 async function init(){

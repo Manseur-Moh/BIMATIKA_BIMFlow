@@ -489,7 +489,7 @@ const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 function setSt(m,s){$('stxt').textContent=m;$('sdot').className='sdot'+(s?' '+s:'');}
 /* i18n helper */
 function t(fr,en){return document.documentElement.lang==='en'?en:fr;}
-async function apiFetch(url,opts){const r=await fetch(url,opts);if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
+async function apiFetch(url,opts={}){opts.headers={...(window.BFAuth?.headers()||{}),...(opts.headers||{})};const r=await fetch(url,opts);if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
 
 function findP(room,...keys){
   const P=room.Parameters||{};

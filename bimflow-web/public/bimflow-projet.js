@@ -135,6 +135,18 @@
     clear() { try { localStorage.removeItem('bimflow_user'); } catch {} },
   };
 
+  // Auth header helper — used by all API calls in app pages
+  window.BFAuth = {
+    headers() {
+      const s = (window.BFUser.current || {}).session || '';
+      return s ? { 'Authorization': 'Bearer ' + s } : {};
+    },
+    async fetch(url, opts = {}) {
+      opts.headers = { ...this.headers(), ...(opts.headers || {}) };
+      return fetch(url, opts);
+    },
+  };
+
   // ══════════════════════════════════════════════
   //  INJECT
   // ══════════════════════════════════════════════

@@ -65,7 +65,10 @@ export async function onRequestGet({ request, env }) {
       if (!session.isAdmin) {
         const owners = await loadOwners(kv);
         const owner  = owners[code] || ADMIN;
-        if (owner !== session.email) return resp({ error: "Accès non autorisé" }, 403);
+        const raw    = await kv.get("projmembers:" + code);
+        const members = raw ? JSON.parse(raw) : [];
+        if (owner !== session.email && !members.includes(session.email))
+          return resp({ error: "Accès non autorisé" }, 403);
       }
 
       const nameRec = await kv.get("projname:" + code, { type: "json" }).catch(() => null);
@@ -101,12 +104,28 @@ export async function onRequestGet({ request, env }) {
 
     let projects = Object.values(byCode).sort((a, b) => b.lastDate.localeCompare(a.lastDate));
 
-    // Admin sees everything; regular user sees only owned projects
+    // Admin sees everything; regular user sees owned projects + projects they're a member of
     if (!session.isAdmin) {
       const owners = await loadOwners(kv);
+
+      // Find codes where the user is a team member
+      const memberList = await kv.list({ prefix: "projmembers:" });
+      const memberCodes = new Set();
+      await Promise.all(memberList.keys.map(async k => {
+        const raw = await kv.get(k.name);
+        const members = raw ? JSON.parse(raw) : [];
+        if (members.includes(session.email))
+          memberCodes.add(k.name.replace("projmembers:", ""));
+      }));
+
       projects = projects.filter(p => {
         const owner = owners[p.code] || ADMIN;
-        return owner === session.email;
+        return owner === session.email || memberCodes.has(p.code);
+      });
+
+      // Tag shared projects so the UI can distinguish them
+      projects.forEach(p => {
+        if (memberCodes.has(p.code)) p.shared = true;
       });
     }
 

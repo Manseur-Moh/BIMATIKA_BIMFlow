@@ -525,7 +525,7 @@ const PALETTE=['#3b82f6','#ef4444','#22c55e','#f59e0b','#a855f7','#06b6d4','#ec4
   '#65a30d','#fb7185','#2dd4bf','#c084fc','#fbbf24','#34d399','#60a5fa','#f87171'];
 
 /* ═══ DATA ═══ */
-async function api(url,opts){ const r=await fetch(url,opts); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }
+async function api(url,opts={}){ opts.headers={...(window.BFAuth?.headers()||{}),...(opts.headers||{})}; const r=await fetch(url,opts); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }
 function setStatus(msg,type){ $('statusTxt').textContent=msg; $('statusDot').className='status-dot'+(type?' '+type:''); }
 
 async function loadIndex(){

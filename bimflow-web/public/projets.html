@@ -71,6 +71,30 @@ h1{font-size:18px;font-weight:800;color:#f1f5f9;margin-bottom:4px}
 .empty{text-align:center;padding:40px;color:#475569;font-size:13px}
 .legacy{background:#0f172a;border:1px solid #1f2937;border-left:3px solid #f59e0b;border-radius:8px;padding:12px 14px;font-size:11px;color:#94a3b8;margin-bottom:20px}
 .legacy b{color:#fbbf24}
+/* ── TEAM MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px}
+#teamModal{background:#111827;border:1px solid #1f2937;border-radius:16px;padding:28px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto}
+.tm-title{font-size:16px;font-weight:800;color:#f1f5f9;margin-bottom:4px}
+.tm-sub{font-size:12px;color:#475569;margin-bottom:20px}
+.tm-section{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#64748b;margin:16px 0 8px}
+.tm-owner{display:flex;align-items:center;gap:10px;background:#0a1120;border:1px solid #1f2937;border-radius:8px;padding:10px 12px}
+.tm-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#1d4ed8,#0ea5e9);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
+.tm-email{font-size:12px;color:#94a3b8;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tm-badge{font-size:9px;font-weight:800;padding:2px 7px;border-radius:10px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:#f59e0b}
+.tm-member{display:flex;align-items:center;gap:10px;background:#0a1120;border:1px solid #1f2937;border-radius:8px;padding:10px 12px;margin-bottom:6px}
+.tm-member-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#0f766e,#0ea5e9);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
+.tm-del{background:transparent;border:1px solid #374151;color:#94a3b8;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px;transition:all .15s;flex-shrink:0}
+.tm-del:hover{border-color:#f87171;color:#f87171}
+.tm-invite-row{display:flex;gap:8px;margin-top:12px}
+.tm-invite-inp{flex:1;background:#0a1120;border:1px solid #1f2937;border-radius:8px;padding:9px 12px;color:#e2e8f0;font-size:13px;outline:none;transition:border .2s}
+.tm-invite-inp:focus{border-color:#38bdf8}
+.tm-invite-inp::placeholder{color:#475569}
+.tm-invite-btn{background:#1d4ed8;color:#fff;border:none;border-radius:8px;padding:9px 16px;cursor:pointer;font-size:13px;font-weight:700;white-space:nowrap;transition:background .15s}
+.tm-invite-btn:hover{background:#1e40af}
+.tm-invite-btn:disabled{opacity:.5;cursor:default}
+.tm-msg{font-size:12px;margin-top:8px;min-height:16px}
+.tm-msg.ok{color:#34d399} .tm-msg.err{color:#f87171}
+.tm-empty{font-size:12px;color:#475569;padding:8px 0}
 /* ── ADMIN PANEL ── */
 .admin-panel{margin-top:48px;border-top:2px solid #f59e0b22;padding-top:28px}
 .admin-title{font-size:11px;font-weight:800;color:#f59e0b;text-transform:uppercase;letter-spacing:.12em;margin-bottom:16px;display:flex;align-items:center;gap:8px}
@@ -162,6 +186,33 @@ h1{font-size:18px;font-weight:800;color:#f1f5f9;margin-bottom:4px}
   </div>
 </div>
 
+<!-- Team modal -->
+<div id="teamModal" class="modal-overlay" style="display:none">
+  <div style="background:#111827;border:1px solid #1f2937;border-radius:16px;padding:28px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+      <div>
+        <div class="tm-title">👥 Équipe du projet</div>
+        <div id="tmProjName" class="tm-sub"></div>
+      </div>
+      <button onclick="closeTeamModal()" style="background:transparent;border:none;color:#64748b;font-size:20px;cursor:pointer;padding:0 4px">✕</button>
+    </div>
+    <div class="tm-section">Propriétaire</div>
+    <div class="tm-owner">
+      <div class="tm-av" id="tmOwnerAv">?</div>
+      <div class="tm-email" id="tmOwnerEmail">—</div>
+      <div class="tm-badge">👑 Propriétaire</div>
+    </div>
+    <div class="tm-section">Membres de l'équipe</div>
+    <div id="tmMembers"><div class="tm-empty">Aucun membre — invitez des collaborateurs ci-dessous.</div></div>
+    <div class="tm-section">Inviter un collaborateur</div>
+    <div class="tm-invite-row">
+      <input id="tmEmail" class="tm-invite-inp" type="email" placeholder="email@exemple.com"/>
+      <button id="tmInviteBtn" class="tm-invite-btn" onclick="addTeamMember()">Inviter →</button>
+    </div>
+    <div id="tmMsg" class="tm-msg"></div>
+  </div>
+</div>
+
 <script src="/bimflow-projet.js"></script>
 <script>
 'use strict';
@@ -236,7 +287,9 @@ function renderProjects(){
       <div class="pc-actions">
         <button class="pa-btn primary" onclick="selectProject(${JSON.stringify(p).replace(/"/g,'&quot;')})">→ Ouvrir</button>
         ${p.code!=='__legacy__'?`<button class="pa-btn" onclick="startRename('${p.code}')">✏ Renommer</button>`:''}
-        ${p.code!=='__legacy__'?`<button class="pa-btn danger" onclick="event.stopPropagation();deleteProject('${p.code}')">🗑 Supprimer</button>`:''}
+        ${p.code!=='__legacy__'?`<button class="pa-btn" onclick="openTeamModal('${p.code}','${esc(p.displayName||p.projectName||p.code)}')">👥 Équipe</button>`:''}
+        ${p.code!=='__legacy__'&&!p.shared?`<button class="pa-btn danger" onclick="event.stopPropagation();deleteProject('${p.code}')">🗑 Supprimer</button>`:''}
+        ${p.shared?`<span style="font-size:11px;color:#38bdf8;font-weight:700;padding:4px 8px">🤝 Partagé</span>`:''}
       </div>
     </div>`;
   });
@@ -385,6 +438,76 @@ async function submitCreate(){
 }
 $('newCode').oninput=function(){this.value=this.value.toUpperCase().replace(/\s/g,'-');};
 $('createModal').onclick=function(e){if(e.target===this)closeCreateModal();};
+$('teamModal').onclick=function(e){if(e.target===this)closeTeamModal();};
+
+/* ── Team management ── */
+let _tmCode='';
+
+function openTeamModal(code,name){
+  _tmCode=code;
+  $('tmProjName').textContent=name||code;
+  $('tmMsg').textContent='';$('tmMsg').className='tm-msg';
+  $('tmEmail').value='';
+  $('tmMembers').innerHTML='<div class="tm-empty">Chargement…</div>';
+  $('tmOwnerEmail').textContent='…';$('tmOwnerAv').textContent='?';
+  $('teamModal').style.display='flex';
+  loadTeam();
+}
+
+function closeTeamModal(){$('teamModal').style.display='none';}
+
+async function loadTeam(){
+  try{
+    const data=await apiFetch(`/api/team?code=${encodeURIComponent(_tmCode)}`);
+    // Owner row
+    $('tmOwnerEmail').textContent=data.owner||'—';
+    $('tmOwnerAv').textContent=(data.owner||'?').charAt(0).toUpperCase();
+    // Members list
+    const members=data.members||[];
+    if(!members.length){
+      $('tmMembers').innerHTML='<div class="tm-empty">Aucun membre — invitez des collaborateurs ci-dessous.</div>';
+    } else {
+      $('tmMembers').innerHTML=members.map(e=>`
+        <div class="tm-member">
+          <div class="tm-member-av">${esc(e.charAt(0).toUpperCase())}</div>
+          <div class="tm-email" style="flex:1">${esc(e)}</div>
+          <button class="tm-del" onclick="removeTeamMember('${esc(e)}')">✕ Retirer</button>
+        </div>`).join('');
+    }
+  }catch(e){
+    $('tmMembers').innerHTML=`<div class="tm-empty" style="color:#f87171">Erreur: ${esc(e.message)}</div>`;
+  }
+}
+
+async function addTeamMember(){
+  const email=$('tmEmail').value.trim();
+  $('tmMsg').textContent='';$('tmMsg').className='tm-msg';
+  if(!email){$('tmMsg').textContent='Entrez une adresse e-mail.';$('tmMsg').className='tm-msg err';return;}
+  $('tmInviteBtn').disabled=true;$('tmInviteBtn').textContent='…';
+  try{
+    const data=await apiFetch(`/api/team?code=${encodeURIComponent(_tmCode)}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})
+    });
+    if(data.alreadyMember){$('tmMsg').textContent='Cette personne est déjà membre.';$('tmMsg').className='tm-msg err';}
+    else{
+      $('tmMsg').textContent=data.userExists
+        ?'✓ Invitation ajoutée — un email de notification a été envoyé.'
+        :'✓ Invitation ajoutée — un email a été envoyé pour créer un compte.';
+      $('tmMsg').className='tm-msg ok';
+      $('tmEmail').value='';
+      loadTeam();
+    }
+  }catch(e){$('tmMsg').textContent='Erreur: '+esc(e.message);$('tmMsg').className='tm-msg err';}
+  finally{$('tmInviteBtn').disabled=false;$('tmInviteBtn').textContent='Inviter →';}
+}
+
+async function removeTeamMember(email){
+  if(!confirm(`Retirer ${email} du projet ?`))return;
+  try{
+    await apiFetch(`/api/team?code=${encodeURIComponent(_tmCode)}&email=${encodeURIComponent(email)}`,{method:'DELETE'});
+    loadTeam();
+  }catch(e){alert('Erreur: '+e.message);}
+}
 
 loadProjects();
 </script>
