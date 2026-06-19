@@ -47,6 +47,14 @@ export async function onRequestPost({ request, env }) {
       rooms:       (payload.Rooms || []).length,
       date:        payload.ExportDate || new Date().toISOString(),
     }));
+
+    // Assign new project codes to admin (Revit plugin has no user session)
+    if (code) {
+      const ownerKey = "projowner:" + code;
+      const existing = await env.BIMFLOW.get(ownerKey);
+      if (!existing) await env.BIMFLOW.put(ownerKey, "archi_moh@live.fr");
+    }
+
     return json({ ok: true, key, code, rooms: (payload.Rooms || []).length });
   } catch (err) {
     return json({ error: err.message }, 500);

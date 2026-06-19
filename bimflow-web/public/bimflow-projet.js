@@ -237,7 +237,10 @@
       if (loaded) return;
       drop.innerHTML = '<div style="padding:10px 12px;font-size:12px;color:var(--bfp-sub)">Chargement…</div>';
       try {
-        const r = await fetch('/api/projets');
+        const session = (window.BFUser.current || {}).session || '';
+        const r = await fetch('/api/projets', {
+          headers: session ? { 'Authorization': 'Bearer ' + session } : {},
+        });
         const projects = await r.json();
         loaded = true;
         renderProjDrop(drop, projects, cur);

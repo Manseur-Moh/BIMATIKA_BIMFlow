@@ -71,6 +71,23 @@ h1{font-size:18px;font-weight:800;color:#f1f5f9;margin-bottom:4px}
 .empty{text-align:center;padding:40px;color:#475569;font-size:13px}
 .legacy{background:#0f172a;border:1px solid #1f2937;border-left:3px solid #f59e0b;border-radius:8px;padding:12px 14px;font-size:11px;color:#94a3b8;margin-bottom:20px}
 .legacy b{color:#fbbf24}
+/* ── ADMIN PANEL ── */
+.admin-panel{margin-top:48px;border-top:2px solid #f59e0b22;padding-top:28px}
+.admin-title{font-size:11px;font-weight:800;color:#f59e0b;text-transform:uppercase;letter-spacing:.12em;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.user-row{background:#0a1120;border:1px solid #1f2937;border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:7px}
+.user-row:hover{border-color:#374151}
+.u-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#1d4ed8,#0ea5e9);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0}
+.u-info{flex:1;min-width:0}
+.u-name{font-size:13px;font-weight:700;color:#f1f5f9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.u-email{font-size:11px;color:#64748b}
+.u-badge{font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;margin-left:6px}
+.u-admin{background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:#f59e0b}
+.u-free{background:rgba(29,78,216,.15);border:1px solid rgba(29,78,216,.25);color:#60a5fa}
+.u-pro{background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.35);color:#a78bfa}
+.u-unconf{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#f87171}
+.u-right{text-align:right;flex-shrink:0}
+.u-proj{font-size:12px;font-weight:700;color:#94a3b8}
+.u-date{font-size:10px;color:#475569}
 </style>
 </head>
 <body>
@@ -118,6 +135,12 @@ h1{font-size:18px;font-weight:800;color:#f1f5f9;margin-bottom:4px}
     <button onclick="openCreateModal()" style="padding:5px 13px;background:#1d4ed8;border:none;color:#e0f2fe;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">＋ Créer un projet</button>
   </div>
   <div id="projList"><div class="empty">Aucun projet — envoyez des plans depuis Revit</div></div>
+
+  <!-- Admin panel — only rendered for archi_moh@live.fr -->
+  <div id="adminPanel" class="admin-panel" style="display:none">
+    <div class="admin-title">👑 Panneau Administrateur — Comptes utilisateurs</div>
+    <div id="userList"><div class="empty">Chargement…</div></div>
+  </div>
 </div>
 
 <!-- ── Create project modal ── -->
@@ -145,9 +168,22 @@ h1{font-size:18px;font-weight:800;color:#f1f5f9;margin-bottom:4px}
 const $=id=>document.getElementById(id);
 function setSt(m,s){$('stxt').textContent=m;$('sdot').className='sdot'+(s?' '+s:'');}
 
+const ADMIN_EMAIL = 'archi_moh@live.fr';
 let _projects=[];
 
-async function apiFetch(url,opts){
+function getSession(){
+  try{return JSON.parse(localStorage.getItem('bimflow_user')||'{}').session||'';}catch{return '';}
+}
+function isAdmin(){
+  try{return (JSON.parse(localStorage.getItem('bimflow_user')||'{}').email||'').toLowerCase()===ADMIN_EMAIL;}catch{return false;}
+}
+function authHeaders(extra){
+  const s=getSession();
+  return{...( s?{'Authorization':'Bearer '+s}:{}),...(extra||{})};
+}
+
+async function apiFetch(url,opts={}){
+  opts.headers=authHeaders(opts.headers);
   const r=await fetch(url,opts);
   if(!r.ok) throw new Error('HTTP '+r.status);
   return r.json();
@@ -243,6 +279,36 @@ async function loadProjects(){
     renderProjects();
     setSt(_projects.length+' projet(s)','ok');
   }catch(e){setSt('Erreur: '+e.message,'err');}
+  if(isAdmin()) loadAdminData();
+}
+
+async function loadAdminData(){
+  $('adminPanel').style.display='';
+  try{
+    const data=await apiFetch('/api/admin');
+    const ul=$('userList');
+    if(!data.users?.length){ul.innerHTML='<div class="empty">Aucun compte enregistré.</div>';return;}
+    ul.innerHTML=data.users.map(u=>{
+      const initial=(u.name||u.email||'?').charAt(0).toUpperCase();
+      const dateStr=u.createdAt?new Date(u.createdAt).toLocaleDateString('fr-FR'):'—';
+      const isAdm=u.email?.toLowerCase()===ADMIN_EMAIL;
+      const badge=isAdm
+        ?'<span class="u-badge u-admin">👑 Admin</span>'
+        :(!u.confirmed?'<span class="u-badge u-unconf">Non confirmé</span>'
+          :(u.plan==='pro'?'<span class="u-badge u-pro">PRO</span>':'<span class="u-badge u-free">Gratuit</span>'));
+      return`<div class="user-row">
+        <div class="u-av">${esc(initial)}</div>
+        <div class="u-info">
+          <div class="u-name">${esc(u.name)}${badge}</div>
+          <div class="u-email">${esc(u.email)}</div>
+        </div>
+        <div class="u-right">
+          <div class="u-proj">${u.projectCount} projet(s)</div>
+          <div class="u-date">Inscrit le ${dateStr}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){$('userList').innerHTML='<div class="empty" style="color:#f87171">Erreur chargement admin: '+esc(e.message)+'</div>';}
 }
 
 /* Enter code to access */
