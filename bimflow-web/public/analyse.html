@@ -354,6 +354,7 @@ table.boq tfoot tr:last-child td{font-weight:600;color:var(--c-text3)}
 </main>
 <div class="syn-tip" id="synTip"></div>
 
+<script src="/bimflow-projet.js"></script>
 <script>
 /* ════════ STATE ════════ */
 const $=id=>document.getElementById(id);
@@ -557,7 +558,7 @@ function setStatus(m,t){$('statusTxt').textContent=m;$('statusDot').className='s
 async function init(){
   applySavedRates(); buildFinishEditor(); buildFinTabs(); buildDashFinBtns();
   try{
-    index=await api('/api/plans');
+    index=await api(window.BFProject?.plansUrl?.() || '/api/plans');
     const sel=$('levelSel');sel.innerHTML='';
     index.forEach(p=>{const o=document.createElement('option');o.value=p.key;o.textContent=`${p.level} (${p.rooms})`;sel.appendChild(o);});
     if(!index.length){setStatus('Aucun plan','err');return;}
