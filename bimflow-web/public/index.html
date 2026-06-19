@@ -299,9 +299,9 @@
   <div class="logo">BIM<span>Flow</span></div>
   <div class="nav">
     <a href="/" class="active">🗺 Plans</a>
+    <a href="/fiches.html" data-en="📋 Data Sheets">📋 Fiches de Locaux</a>
     <a href="/analyse.html" data-en="📊 Analysis">📊 Analyse</a>
     <a href="/parametres.html" data-en="🔧 Parameters">🔧 Paramètres</a>
-    <a href="/fiches.html" data-en="📋 Data Sheets">📋 Fiches de Locaux</a>
   </div>
   <div class="topbar-right">
     <button class="refresh-btn" id="langBtn" title="Language / Langue">EN</button>
@@ -597,6 +597,12 @@ function applyTx(svg){
   svg.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`;
   updateMinimap();
 }
+function svgCentroid(poly){
+  if(!poly)return null;
+  const pts=poly.trim().split(/\s+/).map(p=>{const[x,y]=p.split(',').map(Number);return{x,y};}).filter(p=>!isNaN(p.x)&&!isNaN(p.y));
+  if(!pts.length)return null;
+  return{x:pts.reduce((s,p)=>s+p.x,0)/pts.length,y:pts.reduce((s,p)=>s+p.y,0)/pts.length};
+}
 function zoomAt(factor){
   const w=$('viewerWrap').getBoundingClientRect(); const cx=w.width/2, cy=w.height/2;
   const nz=Math.min(Math.max(zoom*factor,.07),30);
@@ -654,7 +660,8 @@ function onSelectionChanged(center){
   if(center && lastSel){
     const room=plan?.Rooms.find(r=>r.RevitId===lastSel);
     const item=document.querySelector('.room-item[data-id="'+lastSel+'"]'); if(item) item.scrollIntoView({block:'nearest'});
-    if(room){ const w=$('viewerWrap'); panX=w.clientWidth/2-room.CentroidX*zoom; panY=w.clientHeight/2-room.CentroidY*zoom;
+    const c=svgCentroid(room?.SvgPolygon);
+    if(c){ const w=$('viewerWrap'); panX=w.clientWidth/2-c.x*zoom; panY=w.clientHeight/2-c.y*zoom;
       const svg=$('mainSvg'); if(svg){svg.style.transition='transform .35s ease'; applyTx(svg); setTimeout(()=>{if(svg)svg.style.transition='';},380);} }
   }
   renderMatrix(); updateActiveThumbSel(); updateMinimap(); if(typeof R3!=='undefined'&&R3.ready) recolor3D();
