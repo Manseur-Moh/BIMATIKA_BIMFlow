@@ -175,6 +175,10 @@
     table.pt td{padding:3px 9px;border-bottom:1px solid #16233f;vertical-align:middle}
     table.pt td.k{color:#94a3b8;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
     table.pt td.t{color:#475569;font-size:10px;white-space:nowrap}
+    #matrixBody tr:hover td{background:rgba(255,255,255,.04)}
+    #matrixBody tr.row-sel td{background:rgba(59,130,246,.18)}
+    [data-theme=light] #matrixBody tr:hover td{background:rgba(0,0,0,.04)}
+    [data-theme=light] #matrixBody tr.row-sel td{background:rgba(59,130,246,.15)}
     .pv-input,.pv-select{width:100%;background:#0f172a;color:#e2e8f0;border:1px solid #2a3a55;border-radius:4px;padding:2px 6px;font-size:12px;outline:none}
     .pv-input:focus,.pv-select:focus{border-color:#3b82f6}
     .pv-input.changed,.pv-select.changed{border-color:#f59e0b;background:#1a1100}
@@ -230,7 +234,16 @@
     [data-theme=light] .refresh-btn{background:#eef2f8;border-color:#d4dae6;color:#334155}
     [data-theme=light] .refresh-btn:hover{background:#e2e8f2;color:#0f172a}
     [data-theme=light] .refresh-btn.on{background:#1d4ed8;color:#fff;border-color:#1d4ed8}
-    [data-theme=light] aside.levels-aside,[data-theme=light] aside.rooms-aside{background:#f6f8fb;border-right-color:#dde2ec}
+    [data-theme=light] aside.levels-aside{background:#f6f8fb;border-right-color:#dde2ec}
+    [data-theme=light] aside.rooms-aside{background:#f6f8fb;border-left-color:#dde2ec}
+    [data-theme=light] .sidebar-hd{border-bottom-color:#dde2ec;color:#64748b}
+    [data-theme=light] .level-item{background:#fff;border-color:#dde2ec}
+    [data-theme=light] .level-item:hover{border-color:#94a3b8}
+    [data-theme=light] .level-item.active{border-color:#3b82f6;box-shadow:0 0 0 1px #3b82f6}
+    [data-theme=light] .level-thumb{background:#e8edf5}
+    [data-theme=light] .level-name{color:#1e2733}
+    [data-theme=light] .level-sub{color:#64748b}
+    [data-theme=light] .ctrl-wrap{border-bottom-color:#dde2ec}
     [data-theme=light] .vsplit,[data-theme=light] .hsplit{background:#e6e9f0}
     [data-theme=light] .vsplit:hover,[data-theme=light] .hsplit:hover{background:#d4dae6}
     [data-theme=light] .vsplit::after,[data-theme=light] .hsplit::after{background:#b4bccb}
@@ -393,6 +406,7 @@
             <button class="mini-btn" id="btnSelectMatch" data-en="Select">Sélectionner</button>
             <button class="mini-btn" id="btnClearSel" data-en="Deselect all">Tout désélect.</button>
           </div>
+          <button class="mini-btn" id="btnSelectAllList" data-en="Select all in list" style="width:100%">Sélect. tout (liste)</button>
         </div>
         <div class="ctrl-wrap" style="border-bottom:1px solid #1f2937">
           <label data-en="🔍 Search / select by">🔍 Rechercher / sélectionner par</label>
@@ -493,6 +507,13 @@ async function getPlanData(key){
 async function loadPlan(key){
   if(!key)return;
   setStatus('Chargement…','loading');
+  /* switch to 2D+3D view when user selects a specific level/room */
+  if(allLevelsMode){ allLevelsMode=false; updateAllLevelsBtn(); }
+  const vr=$('viewerRow');
+  if(vr.classList.contains('m3d')){
+    vr.classList.replace('m3d','mboth');
+    [...$('vmBar').children].forEach(x=>x.classList.toggle('on',x.dataset.m==='mboth'));
+  }
   try{
     plan=await getPlanData(key); currentPlanKey=key;
     W=plan.ImageWidth; H=plan.ImageHeight;
@@ -734,7 +755,18 @@ function updateAllLevelsBtn(){
 }
 $('btnAllLevels').addEventListener('click',async()=>{
   allLevelsMode=!allLevelsMode; updateAllLevelsBtn();
-  if(allLevelsMode){ await loadAllLevels(); }
+  if(allLevelsMode){
+    await loadAllLevels();
+    /* switch to 3D only — no single 2D plan for all levels */
+    const vr=$('viewerRow'); vr.classList.remove('m2d','m3d','mboth'); vr.classList.add('m3d');
+    [...$('vmBar').children].forEach(x=>x.classList.toggle('on',x.dataset.m==='m3d'));
+    setTimeout(()=>{ resize3D(); update3D(); },30);
+  } else {
+    /* restore 2D+3D when a specific level is shown */
+    const vr=$('viewerRow'); vr.classList.remove('m2d','m3d','mboth'); vr.classList.add('mboth');
+    [...$('vmBar').children].forEach(x=>x.classList.toggle('on',x.dataset.m==='mboth'));
+    setTimeout(()=>{ refitPlan(); resize3D(); },30);
+  }
   renderList(); renderMatrix();
 });
 
@@ -769,6 +801,12 @@ function renderMatrix(){
   body.innerHTML='';
   rooms.forEach(room=>{
     const tr=document.createElement('tr');
+    tr.classList.toggle('row-sel',selIds.has(room.RevitId));
+    tr.style.cursor='pointer';
+    tr.addEventListener('click',e=>{ if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
+      const toggle=e.ctrlKey||e.metaKey||e.shiftKey;
+      roomClicked(room.RevitId,toggle,room._planKey||currentPlanKey);
+    });
     const tdR=document.createElement('td'); tdR.className='k';
     tdR.textContent=(room.Number?room.Number+' · ':'')+(room.Name||room.RevitId); tdR.title=tdR.textContent;
     tr.appendChild(tdR);
@@ -1026,6 +1064,15 @@ function paintRooms(){
 $('colorBy').addEventListener('change',function(){ applyColorBy(this.value); populateFiltVal(); });
 $('btnSelectMatch').addEventListener('click',selectMatching);
 $('btnClearSel').addEventListener('click',clearSelection);
+$('btnSelectAllList').addEventListener('click',()=>{
+  $('roomsList').querySelectorAll('.room-item[data-id]').forEach(el=>{
+    const id=el.getAttribute('data-id'); if(id) selIds.add(id);
+  });
+  lastSel=[...selIds][0]||null;
+  $('selCount').textContent=selIds.size?`${selIds.size} sélection(s)`:'';
+  renderList(); renderMatrix(); paintRooms(); if(typeof R3!=='undefined'&&R3.ready) recolor3D();
+  updateActiveThumbSel(); updateMinimap();
+});
 
 /* ═══ MINIMAP ═══ */
 const MINI_W=148;
@@ -1183,7 +1230,7 @@ function init3D(){
 }
 function resize3D(){ if(!R3.ready)return; const p=$('pane3d'); const w=p.clientWidth||1,h=p.clientHeight||1;
   R3.renderer.setSize(w,h,false); R3.camera.aspect=w/h; R3.camera.updateProjectionMatrix(); }
-function rooms3D(){ return plan?.Rooms||[]; }
+function rooms3D(){ return allLevelsRooms.length ? allLevelsRooms : (plan?.Rooms||[]); }
 function build3D(){
   if(!R3.ready)return;
   while(R3.group.children.length){ const c=R3.group.children.pop(); c.traverse(o=>{ if(o.geometry)o.geometry.dispose(); if(o.material)o.material.dispose(); }); }
@@ -1193,9 +1240,8 @@ function build3D(){
     const shape=new THREE.Shape(); shape.moveTo(fp[0][0],fp[0][1]); for(let i=1;i<fp.length;i++) shape.lineTo(fp[i][0],fp[i][1]); shape.closePath();
     const h=Math.max(0.3,r.Height||2.8);
     const geo=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:false}); geo.translate(0,0,(r.BaseZ||0));
-    const mesh=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:0x3b82f6,transparent:true,opacity:.85}));
+    const mesh=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:0x3b82f6,transparent:true,opacity:.75,depthWrite:false}));
     mesh.userData.id=r.RevitId;
-    const edges=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:0x0b1424})); mesh.add(edges);
     R3.group.add(mesh); R3.meshes[r.RevitId]=mesh; any=true;
   });
   if(any) fit3D();
@@ -1216,17 +1262,19 @@ function recolor3D(){
     if(selIds.has(r.RevitId)) col=0xef4444;
     else if(colorKey){ const v=roomColorValue(r,colorKey)||'(vide)'; const hex=colorMap[v]; if(hex) col=parseInt(hex.slice(1),16); }
     mesh.material.color.setHex(col);
-    mesh.material.opacity = selIds.size ? (selIds.has(r.RevitId)?.95:.32) : .85;
+    mesh.material.opacity = selIds.size ? (selIds.has(r.RevitId)?.90:.07) : .75;
   });
 }
 function threeVisible(){ const vr=$('viewerRow'); if(!vr)return false;
   return vr.classList.contains('m3d')||vr.classList.contains('mboth'); }
 async function update3D(){
-  if(!threeVisible()||!plan) return;
+  if(!threeVisible()) return;
   try{ await loadThree(); }catch(e){ $('pane3dHint').style.display=''; $('pane3dHint').textContent='3D indisponible : '+e.message; return; }
   if(!R3.ready) init3D();
   resize3D();
-  const want='level:'+currentPlanKey;
+  /* 3D always shows the full project — lazy-load all levels once */
+  if(!allLevelsRooms.length){ try{ await loadAllLevels(); }catch(e){} }
+  const want='project:'+allLevelsRooms.length;
   if(R3.planKey!==want){ R3.planKey=want; build3D(); } else recolor3D();
 }
 $('vmBar').addEventListener('click',e=>{ const b=e.target.closest('.vmbtn'); if(!b)return;
