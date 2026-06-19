@@ -91,13 +91,15 @@ export async function onRequestPost({ request, env }) {
     });
 
     if (!r.ok) {
-      const errText = await r.text().catch(() => "");
-      let errMsg = errText;
-      try { errMsg = JSON.parse(errText)?.message || errText; } catch {}
-      // Roll back the pending user so they can retry
-      await kv.delete(ekey);
+      // Resend failed — auto-confirm so registration still works
+      const session = crypto.randomUUID();
+      await kv.put(ekey, JSON.stringify({
+        name, email: emailLC, passwordHash,
+        confirmed: true, plan: "free", createdAt: now,
+      }));
       await kv.delete(`bfconfirm:${token}`);
-      return json({ error: `Impossible d'envoyer l'email de confirmation. (${r.status}: ${errMsg.substring(0, 200)})` }, 502);
+      await kv.put(`bfsession:${session}`, emailLC, { expirationTtl: 2592000 });
+      return json({ ok: true, autoConfirmed: true, emailFailed: true, session, user: { name, email: emailLC, plan: "free" } });
     }
 
     return json({ ok: true, emailSent: true });
