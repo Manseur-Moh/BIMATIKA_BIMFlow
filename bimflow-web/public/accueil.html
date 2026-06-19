@@ -36,6 +36,11 @@ body::before{content:'';position:fixed;inset:0;z-index:-1;
 .btn-outline:hover{border-color:#38bdf8;color:#38bdf8}
 .btn-blue{background:linear-gradient(135deg,#1d4ed8,#0ea5e9);border:none;color:#fff;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block;box-shadow:0 4px 20px rgba(14,165,233,.3);transition:all .2s}
 .btn-blue:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(14,165,233,.5)}
+/* ── LANG TOGGLE ── */
+.lang-toggle{display:flex;border:1px solid #334155;border-radius:8px;overflow:hidden;margin-left:8px}
+.lang-btn{background:transparent;border:none;color:#475569;font-size:12px;font-weight:700;padding:6px 10px;cursor:pointer;transition:all .2s}
+.lang-btn.active{background:#1d4ed8;color:#fff}
+.lang-btn:hover:not(.active){background:#1f2937;color:#e2e8f0}
 
 /* ── HERO ── */
 .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:100px 24px 60px;text-align:center}
@@ -179,20 +184,24 @@ footer{border-top:1px solid #0f1c30;padding:36px 32px;text-align:center;max-widt
     <a href="#pricing">Tarifs</a>
   </div>
   <div class="nav-right">
-    <a href="#login" class="btn-outline">Connexion</a>
-    <a href="#login" class="btn-blue">Commencer gratuitement</a>
+    <a href="#login" class="btn-outline" data-i18n="nav_login">Connexion</a>
+    <a href="#login" class="btn-blue" data-i18n="nav_start">Commencer gratuitement</a>
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="btnFR" onclick="setLang('fr')">FR</button>
+      <button class="lang-btn" id="btnEN" onclick="setLang('en')">EN</button>
+    </div>
   </div>
 </nav>
 
 <!-- ── HERO ── -->
 <div class="hero">
   <div class="hero-in">
-    <div class="badge"><span class="dot-pulse"></span>Plugin Revit · Plateforme Web · Collaboration</div>
-    <h1>De Revit au Web,<br>en un seul clic</h1>
-    <p class="hero-sub">BIMFlow connecte votre modèle Revit à une plateforme collaborative moderne. Partagez vos plans en 3D, suivez vos pièces et analysez vos données — directement depuis le navigateur, sans aucune installation côté client.</p>
+    <div class="badge"><span class="dot-pulse"></span><span data-i18n="badge">Plugin Revit · Plateforme Web · Collaboration</span></div>
+    <h1 data-i18n="hero_h1">De Revit au Web,<br>en un seul clic</h1>
+    <p class="hero-sub" data-i18n="hero_sub">BIMFlow connecte votre modèle Revit à une plateforme collaborative moderne. Partagez vos plans en 3D, suivez vos pièces et analysez vos données — directement depuis le navigateur, sans aucune installation côté client.</p>
     <div class="hero-btns">
-      <a href="#login" class="btn-hero blue">🚀 Commencer gratuitement</a>
-      <a href="/" class="btn-hero ghost">Voir la démo →</a>
+      <a href="#login" class="btn-hero blue" data-i18n="hero_cta1">🚀 Commencer gratuitement</a>
+      <a href="/" class="btn-hero ghost" data-i18n="hero_cta2">Voir la démo →</a>
     </div>
 
     <!-- Mockup -->
@@ -243,29 +252,29 @@ footer{border-top:1px solid #0f1c30;padding:36px 32px;text-align:center;max-widt
 
 <!-- ── FEATURES ── -->
 <div class="sec" id="features">
-  <div class="s-label">Fonctionnalités</div>
-  <div class="s-title">Tout ce dont votre équipe a besoin</div>
-  <p class="s-sub">Une suite complète, conçue pour les architectes et les BIM managers qui veulent collaborer sans friction.</p>
+  <div class="s-label" data-i18n="feat_label">Fonctionnalités</div>
+  <div class="s-title" data-i18n="feat_title">Tout ce dont votre équipe a besoin</div>
+  <p class="s-sub" data-i18n="feat_sub">Une suite complète, conçue pour les architectes et les BIM managers qui veulent collaborer sans friction.</p>
   <div class="fgrid">
     <div class="fcard" style="--c:#38bdf8">
       <div class="ficon" style="--bg:rgba(56,189,248,.1)">🗺</div>
-      <h3>Plans 3D interactifs</h3>
-      <p>Visualisez vos niveaux directement dans le navigateur. Cliquez sur une pièce pour consulter ses paramètres, sa surface et son historique.</p>
+      <h3 data-i18n="f1_h">Plans 3D interactifs</h3>
+      <p data-i18n="f1_p">Visualisez vos niveaux directement dans le navigateur. Cliquez sur une pièce pour consulter ses paramètres, sa surface et son historique.</p>
     </div>
     <div class="fcard" style="--c:#34d399">
       <div class="ficon" style="--bg:rgba(52,211,153,.1)">📋</div>
-      <h3>Fiches de locaux</h3>
-      <p>Chaque pièce, ses paramètres Revit et son statut mis à jour en temps réel. Filtrage, recherche et export PDF intégrés.</p>
+      <h3 data-i18n="f2_h">Fiches de locaux</h3>
+      <p data-i18n="f2_p">Chaque pièce, ses paramètres Revit et son statut mis à jour en temps réel. Filtrage, recherche et export PDF intégrés.</p>
     </div>
     <div class="fcard" style="--c:#818cf8">
       <div class="ficon" style="--bg:rgba(129,140,248,.1)">📊</div>
-      <h3>Analyse automatique</h3>
-      <p>Ratios, surfaces par usage, répartitions — générés automatiquement. Repérez les anomalies en un coup d'œil.</p>
+      <h3 data-i18n="f3_h">Analyse automatique</h3>
+      <p data-i18n="f3_p">Ratios, surfaces par usage, répartitions — générés automatiquement. Repérez les anomalies en un coup d'œil.</p>
     </div>
     <div class="fcard" style="--c:#f59e0b">
       <div class="ficon" style="--bg:rgba(245,158,11,.1)">👥</div>
-      <h3>Collaboration par code</h3>
-      <p>Partagez un code de 8 caractères avec votre équipe. Toutes les mises à jour Revit sont immédiatement visibles sur le web.</p>
+      <h3 data-i18n="f4_h">Collaboration par code</h3>
+      <p data-i18n="f4_p">Partagez un code de 8 caractères avec votre équipe. Toutes les mises à jour Revit sont immédiatement visibles sur le web.</p>
     </div>
   </div>
 </div>
@@ -274,24 +283,24 @@ footer{border-top:1px solid #0f1c30;padding:36px 32px;text-align:center;max-widt
 
 <!-- ── HOW IT WORKS ── -->
 <div class="sec s-center" id="how">
-  <div class="s-label">Prise en main</div>
-  <div class="s-title">Opérationnel en 3 étapes</div>
-  <p class="s-sub">De l'installation à la publication de vos plans, comptez moins de 5 minutes.</p>
+  <div class="s-label" data-i18n="how_label">Prise en main</div>
+  <div class="s-title" data-i18n="how_title">Opérationnel en 3 étapes</div>
+  <p class="s-sub" data-i18n="how_sub">De l'installation à la publication de vos plans, comptez moins de 5 minutes.</p>
   <div class="steps">
     <div class="step">
       <div class="step-n">1</div>
-      <h3>Installez le plugin Revit</h3>
-      <p>Téléchargez le plugin BIMFlow pour Revit 2024. Un onglet dédié apparaît dans votre ruban Revit, prêt à l'emploi.</p>
+      <h3 data-i18n="s1_h">Installez le plugin Revit</h3>
+      <p data-i18n="s1_p">Téléchargez le plugin BIMFlow pour Revit 2024. Un onglet dédié apparaît dans votre ruban Revit, prêt à l'emploi.</p>
     </div>
     <div class="step">
       <div class="step-n">2</div>
-      <h3>Créez votre projet</h3>
-      <p>Cliquez sur "Gérer le projet" dans Revit pour nommer votre projet et générer un code unique. Partagez-le avec votre équipe.</p>
+      <h3 data-i18n="s2_h">Créez votre projet</h3>
+      <p data-i18n="s2_p">Cliquez sur "Gérer le projet" dans Revit pour nommer votre projet et générer un code unique. Partagez-le avec votre équipe.</p>
     </div>
     <div class="step">
       <div class="step-n">3</div>
-      <h3>Envoyez et collaborez</h3>
-      <p>Sélectionnez vos niveaux et cliquez "Envoyer". Vos plans et données sont instantanément disponibles sur BIMFlow.</p>
+      <h3 data-i18n="s3_h">Envoyez et collaborez</h3>
+      <p data-i18n="s3_p">Sélectionnez vos niveaux et cliquez "Envoyer". Vos plans et données sont instantanément disponibles sur BIMFlow.</p>
     </div>
   </div>
 </div>
@@ -300,51 +309,51 @@ footer{border-top:1px solid #0f1c30;padding:36px 32px;text-align:center;max-widt
 
 <!-- ── PRICING ── -->
 <div class="sec s-center" id="pricing">
-  <div class="s-label">Tarifs</div>
-  <div class="s-title">Simple et transparent</div>
-  <p class="s-sub">Commencez gratuitement. Passez au Pro quand votre équipe en a besoin.</p>
+  <div class="s-label" data-i18n="pr_label">Tarifs</div>
+  <div class="s-title" data-i18n="pr_title">Simple et transparent</div>
+  <p class="s-sub" data-i18n="pr_sub">Commencez gratuitement. Passez au Pro quand votre équipe en a besoin.</p>
   <div class="pgrid">
     <div class="pcard">
-      <div class="p-plan">Gratuit</div>
-      <div class="p-price">0€ <em>/mois</em></div>
-      <div class="p-note">Pour découvrir la plateforme</div>
+      <div class="p-plan" data-i18n="p1_plan">Gratuit</div>
+      <div class="p-price">0€ <em data-i18n="per_month">/mois</em></div>
+      <div class="p-note" data-i18n="p1_note">Pour découvrir la plateforme</div>
       <div class="p-feats">
-        <div class="pf">1 projet actif</div>
-        <div class="pf">5 niveaux maximum</div>
-        <div class="pf">Plans interactifs 3D</div>
-        <div class="pf">Fiches de locaux</div>
-        <div class="pf">Analyse basique</div>
+        <div class="pf" data-i18n="p1_f1">1 projet actif</div>
+        <div class="pf" data-i18n="p1_f2">5 niveaux maximum</div>
+        <div class="pf" data-i18n="p1_f3">Plans interactifs 3D</div>
+        <div class="pf" data-i18n="p1_f4">Fiches de locaux</div>
+        <div class="pf" data-i18n="p1_f5">Analyse basique</div>
       </div>
-      <button class="p-btn" onclick="document.getElementById('login').scrollIntoView({behavior:'smooth'})">Commencer gratuitement</button>
+      <button class="p-btn" data-i18n="p1_btn" onclick="document.getElementById('login').scrollIntoView({behavior:'smooth'})">Commencer gratuitement</button>
     </div>
     <div class="pcard pop">
-      <div class="pop-tag">⭐ Le plus populaire</div>
+      <div class="pop-tag" data-i18n="pop_tag">⭐ Le plus populaire</div>
       <div class="p-plan">Pro</div>
-      <div class="p-price">19€ <em>/mois</em></div>
-      <div class="p-note">Pour les équipes actives</div>
+      <div class="p-price">19€ <em data-i18n="per_month">/mois</em></div>
+      <div class="p-note" data-i18n="p2_note">Pour les équipes actives</div>
       <div class="p-feats">
-        <div class="pf">Projets illimités</div>
-        <div class="pf">Niveaux illimités</div>
-        <div class="pf">Collaboration équipe</div>
-        <div class="pf">Export PDF des fiches</div>
-        <div class="pf">Historique complet</div>
-        <div class="pf">Support prioritaire</div>
+        <div class="pf" data-i18n="p2_f1">Projets illimités</div>
+        <div class="pf" data-i18n="p2_f2">Niveaux illimités</div>
+        <div class="pf" data-i18n="p2_f3">Collaboration équipe</div>
+        <div class="pf" data-i18n="p2_f4">Export PDF des fiches</div>
+        <div class="pf" data-i18n="p2_f5">Historique complet</div>
+        <div class="pf" data-i18n="p2_f6">Support prioritaire</div>
       </div>
-      <button class="p-btn" onclick="document.getElementById('login').scrollIntoView({behavior:'smooth'})">Démarrer l'essai gratuit</button>
+      <button class="p-btn" data-i18n="p2_btn" onclick="document.getElementById('login').scrollIntoView({behavior:'smooth'})">Démarrer l'essai gratuit</button>
     </div>
     <div class="pcard">
-      <div class="p-plan">Entreprise</div>
-      <div class="p-price" style="font-size:28px;padding-top:8px">Sur devis</div>
-      <div class="p-note">Pour les grandes structures</div>
+      <div class="p-plan" data-i18n="p3_plan">Entreprise</div>
+      <div class="p-price" style="font-size:28px;padding-top:8px" data-i18n="p3_price">Sur devis</div>
+      <div class="p-note" data-i18n="p3_note">Pour les grandes structures</div>
       <div class="p-feats">
-        <div class="pf">Tout le plan Pro</div>
-        <div class="pf">Déploiement sur site</div>
-        <div class="pf">API REST complète</div>
-        <div class="pf">SSO / Azure AD</div>
-        <div class="pf">Support dédié 24/7</div>
-        <div class="pf">Formation personnalisée</div>
+        <div class="pf" data-i18n="p3_f1">Tout le plan Pro</div>
+        <div class="pf" data-i18n="p3_f2">Déploiement sur site</div>
+        <div class="pf" data-i18n="p3_f3">API REST complète</div>
+        <div class="pf" data-i18n="p3_f4">SSO / Azure AD</div>
+        <div class="pf" data-i18n="p3_f5">Support dédié 24/7</div>
+        <div class="pf" data-i18n="p3_f6">Formation personnalisée</div>
       </div>
-      <button class="p-btn" onclick="window.location.href='mailto:contact@bimatika.fr'">Nous contacter</button>
+      <button class="p-btn" data-i18n="p3_btn" onclick="window.location.href='mailto:contact@bimatika.fr'">Nous contacter</button>
     </div>
   </div>
 </div>
@@ -353,30 +362,30 @@ footer{border-top:1px solid #0f1c30;padding:36px 32px;text-align:center;max-widt
 
 <!-- ── CTA + LOGIN ── -->
 <div class="cta" id="login">
-  <h2>Prêt à transformer votre workflow BIM ?</h2>
-  <p>Rejoignez les équipes qui utilisent BIMFlow pour publier, partager et analyser leurs projets Revit depuis n'importe où.</p>
+  <h2 data-i18n="cta_h2">Prêt à transformer votre workflow BIM ?</h2>
+  <p data-i18n="cta_p">Rejoignez les équipes qui utilisent BIMFlow pour publier, partager et analyser leurs projets Revit depuis n'importe où.</p>
 
   <div class="login-box">
-    <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:4px">Créer un compte / Se connecter</div>
-    <div style="font-size:12px;color:#475569;margin-bottom:20px">Entrez votre adresse e-mail pour accéder à BIMFlow</div>
+    <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:4px" data-i18n="login_title">Créer un compte / Se connecter</div>
+    <div style="font-size:12px;color:#475569;margin-bottom:20px" data-i18n="login_sub">Entrez votre adresse e-mail pour accéder à BIMFlow</div>
 
-    <label>Nom complet</label>
-    <input type="text" id="inp-name" placeholder="Ex : Mohamed Manseur" maxlength="60" autocomplete="name"/>
+    <label data-i18n="login_name_lbl">Nom complet</label>
+    <input type="text" id="inp-name" maxlength="60" autocomplete="name" data-i18n-ph="login_name_ph"/>
 
-    <label>Adresse e-mail</label>
-    <input type="email" id="inp-email" placeholder="votre@gmail.com" autocomplete="email"/>
+    <label data-i18n="login_email_lbl">Adresse e-mail</label>
+    <input type="email" id="inp-email" autocomplete="email" data-i18n-ph="login_email_ph"/>
 
     <div id="login-err"></div>
-    <button class="btn-login" onclick="doLogin()">Accéder à BIMFlow →</button>
+    <button class="btn-login" data-i18n="login_btn" onclick="doLogin()">Accéder à BIMFlow →</button>
 
     <div class="google-hint">
       <span class="google-logo">
         <span class="g-b">G</span><span class="g-r">o</span><span class="g-y">o</span><span class="g-g">g</span><span class="g-b">l</span><span class="g-r">e</span>
       </span>
-      Utilisez votre adresse Gmail
+      <span data-i18n="login_hint">Utilisez votre adresse Gmail</span>
     </div>
   </div>
-  <p style="margin-top:20px;font-size:12px;color:#1e3a5f">En vous connectant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité.</p>
+  <p style="margin-top:20px;font-size:12px;color:#1e3a5f" data-i18n="login_legal">En vous connectant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité.</p>
 </div>
 
 <!-- ── FOOTER ── -->
@@ -393,13 +402,113 @@ footer{border-top:1px solid #0f1c30;padding:36px 32px;text-align:center;max-widt
 </footer>
 
 <script>
+/* ══════════════════════════════════════════
+   TRANSLATIONS  FR / EN
+══════════════════════════════════════════ */
+const T = {
+  fr: {
+    nav_login:'Connexion', nav_start:'Commencer gratuitement',
+    badge:'Plugin Revit · Plateforme Web · Collaboration',
+    hero_h1:'De Revit au Web,<br>en un seul clic',
+    hero_sub:'BIMFlow connecte votre modèle Revit à une plateforme collaborative moderne. Partagez vos plans en 3D, suivez vos pièces et analysez vos données — directement depuis le navigateur, sans aucune installation côté client.',
+    hero_cta1:'🚀 Commencer gratuitement', hero_cta2:'Voir la démo →',
+    feat_label:'Fonctionnalités', feat_title:'Tout ce dont votre équipe a besoin',
+    feat_sub:'Une suite complète, conçue pour les architectes et les BIM managers qui veulent collaborer sans friction.',
+    f1_h:'Plans 3D interactifs', f1_p:'Visualisez vos niveaux directement dans le navigateur. Cliquez sur une pièce pour consulter ses paramètres, sa surface et son historique.',
+    f2_h:'Fiches de locaux',     f2_p:'Chaque pièce, ses paramètres Revit et son statut mis à jour en temps réel. Filtrage, recherche et export PDF intégrés.',
+    f3_h:'Analyse automatique',  f3_p:'Ratios, surfaces par usage, répartitions — générés automatiquement. Repérez les anomalies en un coup d\'œil.',
+    f4_h:'Collaboration par code',f4_p:'Partagez un code de 8 caractères avec votre équipe. Toutes les mises à jour Revit sont immédiatement visibles sur le web.',
+    how_label:'Prise en main', how_title:'Opérationnel en 3 étapes',
+    how_sub:'De l\'installation à la publication de vos plans, comptez moins de 5 minutes.',
+    s1_h:'Installez le plugin Revit', s1_p:'Téléchargez le plugin BIMFlow pour Revit 2024. Un onglet dédié apparaît dans votre ruban Revit, prêt à l\'emploi.',
+    s2_h:'Créez votre projet',       s2_p:'Cliquez sur "Gérer le projet" dans Revit pour nommer votre projet et générer un code unique. Partagez-le avec votre équipe.',
+    s3_h:'Envoyez et collaborez',    s3_p:'Sélectionnez vos niveaux et cliquez "Envoyer". Vos plans et données sont instantanément disponibles sur BIMFlow.',
+    pr_label:'Tarifs', pr_title:'Simple et transparent',
+    pr_sub:'Commencez gratuitement. Passez au Pro quand votre équipe en a besoin.',
+    per_month:'/mois',
+    p1_plan:'Gratuit', p1_note:'Pour découvrir la plateforme', p1_btn:'Commencer gratuitement',
+    p1_f1:'1 projet actif', p1_f2:'5 niveaux maximum', p1_f3:'Plans interactifs 3D', p1_f4:'Fiches de locaux', p1_f5:'Analyse basique',
+    pop_tag:'⭐ Le plus populaire',
+    p2_note:'Pour les équipes actives', p2_btn:'Démarrer l\'essai gratuit',
+    p2_f1:'Projets illimités', p2_f2:'Niveaux illimités', p2_f3:'Collaboration équipe', p2_f4:'Export PDF des fiches', p2_f5:'Historique complet', p2_f6:'Support prioritaire',
+    p3_plan:'Entreprise', p3_price:'Sur devis', p3_note:'Pour les grandes structures', p3_btn:'Nous contacter',
+    p3_f1:'Tout le plan Pro', p3_f2:'Déploiement sur site', p3_f3:'API REST complète', p3_f4:'SSO / Azure AD', p3_f5:'Support dédié 24/7', p3_f6:'Formation personnalisée',
+    cta_h2:'Prêt à transformer votre workflow BIM ?',
+    cta_p:'Rejoignez les équipes qui utilisent BIMFlow pour publier, partager et analyser leurs projets Revit depuis n\'importe où.',
+    login_title:'Créer un compte / Se connecter', login_sub:'Entrez votre adresse e-mail pour accéder à BIMFlow',
+    login_name_lbl:'Nom complet', login_name_ph:'Ex : Mohamed Manseur',
+    login_email_lbl:'Adresse e-mail', login_email_ph:'votre@gmail.com',
+    login_btn:'Accéder à BIMFlow →', login_hint:'Utilisez votre adresse Gmail',
+    login_legal:'En vous connectant, vous acceptez nos Conditions d\'utilisation et notre Politique de confidentialité.',
+    err_name:'Entrez votre nom.', err_email:'Entrez une adresse e-mail valide.',
+  },
+  en: {
+    nav_login:'Sign in', nav_start:'Get started for free',
+    badge:'Revit Plugin · Web Platform · Collaboration',
+    hero_h1:'From Revit to the Web,<br>in one click',
+    hero_sub:'BIMFlow connects your Revit model to a modern collaborative platform. Share your 3D floor plans, track your rooms and analyze your data — directly from any browser, no client-side installation needed.',
+    hero_cta1:'🚀 Get started for free', hero_cta2:'View demo →',
+    feat_label:'Features', feat_title:'Everything your team needs',
+    feat_sub:'A complete suite designed for architects and BIM managers who want to collaborate without friction.',
+    f1_h:'Interactive 3D Floor Plans', f1_p:'Visualize your levels directly in the browser. Click on any room to view its parameters, area and history.',
+    f2_h:'Room Data Sheets',          f2_p:'Every room, its Revit parameters and status updated in real time. Filtering, search and PDF export built in.',
+    f3_h:'Automatic Analysis',        f3_p:'Ratios, areas by use, breakdowns — generated automatically. Spot anomalies at a glance.',
+    f4_h:'Code-based Collaboration',  f4_p:'Share an 8-character code with your team. All Revit updates are immediately visible on the web.',
+    how_label:'Getting started', how_title:'Up and running in 3 steps',
+    how_sub:'From installation to publishing your floor plans in under 5 minutes.',
+    s1_h:'Install the Revit plugin', s1_p:'Download the BIMFlow plugin for Revit 2024. A dedicated tab appears in your Revit ribbon, ready to use.',
+    s2_h:'Create your project',      s2_p:'Click "Manage project" in Revit to name your project and generate a unique code. Share it with your team.',
+    s3_h:'Send and collaborate',     s3_p:'Select your levels and click "Send". Your plans and data are instantly available on BIMFlow.',
+    pr_label:'Pricing', pr_title:'Simple and transparent',
+    pr_sub:'Start for free. Upgrade to Pro when your team needs it.',
+    per_month:'/month',
+    p1_plan:'Free', p1_note:'To discover the platform', p1_btn:'Get started for free',
+    p1_f1:'1 active project', p1_f2:'5 levels maximum', p1_f3:'Interactive 3D plans', p1_f4:'Room data sheets', p1_f5:'Basic analytics',
+    pop_tag:'⭐ Most popular',
+    p2_note:'For active teams', p2_btn:'Start free trial',
+    p2_f1:'Unlimited projects', p2_f2:'Unlimited levels', p2_f3:'Team collaboration', p2_f4:'PDF export of sheets', p2_f5:'Full history', p2_f6:'Priority support',
+    p3_plan:'Enterprise', p3_price:'Custom pricing', p3_note:'For large organizations', p3_btn:'Contact us',
+    p3_f1:'Everything in Pro', p3_f2:'On-premise deployment', p3_f3:'Full REST API', p3_f4:'SSO / Azure AD', p3_f5:'24/7 dedicated support', p3_f6:'Custom training',
+    cta_h2:'Ready to transform your BIM workflow?',
+    cta_p:'Join the teams using BIMFlow to publish, share and analyze their Revit projects from anywhere.',
+    login_title:'Create an account / Sign in', login_sub:'Enter your email address to access BIMFlow',
+    login_name_lbl:'Full name', login_name_ph:'Ex: John Smith',
+    login_email_lbl:'Email address', login_email_ph:'your@gmail.com',
+    login_btn:'Access BIMFlow →', login_hint:'Use your Gmail address',
+    login_legal:'By signing in, you agree to our Terms of Service and Privacy Policy.',
+    err_name:'Please enter your name.', err_email:'Please enter a valid email address.',
+  }
+};
+
+let _lang = localStorage.getItem('bimflow_landing_lang') || 'fr';
+
+function setLang(lang) {
+  _lang = lang;
+  localStorage.setItem('bimflow_landing_lang', lang);
+  document.documentElement.lang = lang;
+  document.getElementById('btnFR').classList.toggle('active', lang === 'fr');
+  document.getElementById('btnEN').classList.toggle('active', lang === 'en');
+  const d = T[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.dataset.i18n;
+    if (d[k] !== undefined) el.innerHTML = d[k];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const k = el.dataset.i18nPh;
+    if (d[k] !== undefined) el.placeholder = d[k];
+  });
+}
+
+// Init on load
+document.addEventListener('DOMContentLoaded', () => setLang(_lang));
+
 function doLogin() {
   const name  = document.getElementById('inp-name').value.trim();
   const email = document.getElementById('inp-email').value.trim().toLowerCase();
   const err   = document.getElementById('login-err');
 
-  if (!name)  { err.textContent = 'Entrez votre nom.';           return; }
-  if (!email || !email.includes('@')) { err.textContent = 'Entrez une adresse e-mail valide.'; return; }
+  if (!name)  { err.textContent = T[_lang].err_name;  return; }
+  if (!email || !email.includes('@')) { err.textContent = T[_lang].err_email; return; }
   err.textContent = '';
 
   // Derive initials-based avatar letter

@@ -502,6 +502,8 @@
   </div>
 </main>
 
+<!-- bimflow-projet.js MUST load before main script so BFProject is defined when loadIndex() runs -->
+<script src="/bimflow-projet.js"></script>
 <script>
 /* ═══ CORE PARAMS shown first ═══ */
 const CORE_KEYS=['nom','name','numéro','numero','number','surface','area','aire','niveau','level',
@@ -1623,6 +1625,5 @@ themeBtn.addEventListener('click',()=>applyTheme(document.documentElement.getAtt
 /* ═══ INIT ═══ */
 loadIndex();
 </script>
-<script src="/bimflow-projet.js"></script>
 </body>
 </html>
