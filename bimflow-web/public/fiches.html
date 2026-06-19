@@ -557,10 +557,17 @@ function roomClick(id,add,pk){
   afterSel(id,!add);
 }
 
+function svgCentroid(poly){
+  if(!poly)return null;
+  const pts=poly.trim().split(/\s+/).map(p=>{const[x,y]=p.split(',').map(Number);return{x,y};}).filter(p=>!isNaN(p.x)&&!isNaN(p.y));
+  if(!pts.length)return null;
+  return{x:pts.reduce((s,p)=>s+p.x,0)/pts.length,y:pts.reduce((s,p)=>s+p.y,0)/pts.length};
+}
 function afterSel(id,panTo){
   if(panTo&&plan){
     const r=(plan.Rooms||[]).find(x=>x.RevitId===id);
-    if(r&&r.CentroidX){const w=$('v2d');panX=w.clientWidth/2-r.CentroidX*zoom;panY=w.clientHeight/2-r.CentroidY*zoom;applyTx($('mainSvg'));}
+    const c=r&&svgCentroid(r.SvgPolygon);
+    if(c){const w=$('v2d');panX=w.clientWidth/2-c.x*zoom;panY=w.clientHeight/2-c.y*zoom;applyTx($('mainSvg'));}
   }
   buildVL();buildRList();paintRooms();renderFiche();updSel();
   if(R3.ready){recolor3D();focus3D();}
