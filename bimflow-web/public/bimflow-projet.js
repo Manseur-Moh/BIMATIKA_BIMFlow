@@ -154,8 +154,19 @@
     injectNavMenu();
     const tbr = document.querySelector('.tbr, .topbar-right');
     if (!tbr) return;
+    injectReloadButton(tbr);
     injectProjectSwitcher(tbr);
     injectUserMenu(tbr);
+  }
+
+  function injectReloadButton(tbr) {
+    const btn = document.createElement('button');
+    btn.className = 'bfp-gear-btn';
+    btn.style.marginRight = '4px';
+    btn.innerHTML = `<span style="font-size:14px">🔄</span><span style="font-size:12px;font-weight:700" data-en="Reload">Actualiser</span>`;
+    btn.title = "Actualiser les données";
+    btn.addEventListener('click', () => window.location.reload());
+    tbr.insertBefore(btn, tbr.firstChild);
   }
 
   // ── Nav hamburger menu ──
