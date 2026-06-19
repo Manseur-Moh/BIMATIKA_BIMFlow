@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>BIMFlow — De Revit au Web, en un clic</title>
+<!-- Google Identity Services  →  remplacez CLIENT_ID par votre vrai ID -->
+<script src="https://accounts.google.com/gsi/client" async></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#050d1a;color:#e2e8f0;min-height:100vh;overflow-x:hidden}
+
+/* ── BACKGROUND ── */
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.12;animation:bf 9s ease-in-out infinite}
+.b1{width:700px;height:700px;background:#38bdf8;top:-250px;left:-150px;animation-delay:0s}
+.b2{width:550px;height:550px;background:#818cf8;bottom:-150px;right:-100px;animation-delay:-4s}
+.b3{width:450px;height:450px;background:#34d399;top:40%;left:45%;animation-delay:-7s}
+@keyframes bf{0%,100%{transform:translate(0,0)}40%{transform:translate(40px,-30px)}70%{transform:translate(-25px,35px)}}
+body::before{content:'';position:fixed;inset:0;z-index:-1;
+  background-image:linear-gradient(rgba(56,189,248,.025) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(56,189,248,.025) 1px,transparent 1px);
+  background-size:60px 60px}
+
+/* ── NAV ── */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;padding:0 32px;height:62px;
+  background:rgba(5,13,26,.85);backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(56,189,248,.1)}
+.logo{font-size:19px;font-weight:900;color:#38bdf8;letter-spacing:-.5px;text-decoration:none}
+.logo em{color:#7dd3fc;font-style:normal}
+.nav-links{display:flex;gap:28px;margin-left:40px}
+.nav-links a{color:#475569;text-decoration:none;font-size:13px;font-weight:600;transition:color .2s}
+.nav-links a:hover{color:#e2e8f0}
+.nav-right{margin-left:auto;display:flex;gap:10px;align-items:center}
+.btn-outline{background:transparent;border:1px solid #334155;color:#94a3b8;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block}
+.btn-outline:hover{border-color:#38bdf8;color:#38bdf8}
+.btn-blue{background:linear-gradient(135deg,#1d4ed8,#0ea5e9);border:none;color:#fff;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block;box-shadow:0 4px 20px rgba(14,165,233,.3);transition:all .2s}
+.btn-blue:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(14,165,233,.5)}
+
+/* ── HERO ── */
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:100px 24px 60px;text-align:center}
+.hero-in{max-width:880px;width:100%}
+.badge{display:inline-flex;align-items:center;gap:7px;background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.2);border-radius:20px;padding:5px 16px;font-size:12px;font-weight:700;color:#38bdf8;margin-bottom:28px}
+.dot-pulse{width:7px;height:7px;border-radius:50%;background:#38bdf8;animation:pu 2s infinite}
+@keyframes pu{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+h1{font-size:clamp(38px,6vw,70px);font-weight:900;line-height:1.08;margin-bottom:22px;
+  background:linear-gradient(140deg,#f1f5f9 0%,#7dd3fc 45%,#a78bfa 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:17px;color:#64748b;line-height:1.75;max-width:580px;margin:0 auto 40px}
+.hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:64px}
+.btn-hero{padding:14px 30px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:all .22s;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+.btn-hero.blue{background:linear-gradient(135deg,#1d4ed8,#0ea5e9);border:none;color:#fff;box-shadow:0 6px 32px rgba(14,165,233,.4)}
+.btn-hero.blue:hover{transform:translateY(-2px);box-shadow:0 10px 44px rgba(14,165,233,.55)}
+.btn-hero.ghost{background:rgba(255,255,255,.03);border:1px solid #334155;color:#94a3b8}
+.btn-hero.ghost:hover{border-color:#7dd3fc;color:#7dd3fc;background:rgba(125,211,252,.05)}
+
+/* ── APP MOCKUP ── */
+.mockup{background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:16px;
+  box-shadow:0 60px 120px rgba(0,0,0,.7),0 0 0 1px rgba(56,189,248,.04);
+  max-width:800px;margin:0 auto;position:relative}
+.mockup::before{content:'';position:absolute;inset:-1px;border-radius:17px;
+  background:linear-gradient(135deg,rgba(56,189,248,.15),transparent,rgba(129,140,248,.1));
+  pointer-events:none}
+.m-bar{display:flex;align-items:center;gap:7px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #1e3a5f}
+.m-btn{width:11px;height:11px;border-radius:50%}
+.m-tabs{display:flex;gap:5px;margin-left:8px}
+.m-tab{background:#0f1c30;border:1px solid #1e3a5f;border-radius:5px;padding:4px 10px;font-size:10px;font-weight:700;color:#334155}
+.m-tab.on{background:#0c1a2e;border-color:#1d4ed8;color:#38bdf8}
+.m-body{display:grid;grid-template-columns:170px 1fr;gap:10px;height:210px}
+.m-side{background:#060d1a;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:5px}
+.m-row{height:26px;border-radius:4px;border:1px solid #1e3a5f;background:#0a1628;display:flex;align-items:center;padding:0 8px;font-size:9px;font-weight:700;color:#334155}
+.m-row.sel{border-color:#1d4ed8;color:#38bdf8;background:#0c1a2e}
+.m-canvas{background:#060d1a;border-radius:8px;position:relative;overflow:hidden}
+.m-grid{position:absolute;inset:12px;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(3,1fr);gap:4px}
+.r{border-radius:4px;transition:opacity .3s}
+.r1{background:rgba(56,189,248,.22);border:1px solid rgba(56,189,248,.4);grid-column:1/3;grid-row:1/2}
+.r2{background:rgba(129,140,248,.22);border:1px solid rgba(129,140,248,.4);grid-column:3/6;grid-row:1/3}
+.r3{background:rgba(52,211,153,.22);border:1px solid rgba(52,211,153,.4);grid-column:1/3;grid-row:2/4}
+.r4{background:rgba(251,191,36,.22);border:1px solid rgba(251,191,36,.4);grid-column:3/5;grid-row:3}
+.r5{background:rgba(249,115,22,.22);border:1px solid rgba(249,115,22,.4);grid-column:5;grid-row:3}
+
+/* ── DIVIDER ── */
+.div{height:1px;background:linear-gradient(90deg,transparent,rgba(56,189,248,.15),transparent);margin:0 40px}
+
+/* ── SECTIONS ── */
+.sec{padding:88px 32px;max-width:1100px;margin:0 auto}
+.s-label{font-size:11px;font-weight:700;color:#38bdf8;text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px}
+.s-title{font-size:clamp(28px,3.5vw,40px);font-weight:900;color:#f1f5f9;margin-bottom:10px}
+.s-sub{color:#475569;font-size:15px;line-height:1.7;max-width:500px;margin-bottom:48px}
+.s-center{text-align:center}
+.s-center .s-sub{margin:0 auto 48px}
+
+/* ── FEATURES ── */
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px}
+.fcard{background:#0a1628;border:1px solid #1e3a5f;border-radius:14px;padding:24px;
+  transition:all .25s;cursor:default;position:relative;overflow:hidden}
+.fcard::after{content:'';position:absolute;inset:0;border-radius:14px;opacity:0;transition:opacity .25s;
+  background:linear-gradient(135deg,rgba(56,189,248,.05),transparent 60%)}
+.fcard:hover{border-color:var(--c,#38bdf8);transform:translateY(-4px);box-shadow:0 24px 50px rgba(0,0,0,.45)}
+.fcard:hover::after{opacity:1}
+.ficon{width:46px;height:46px;border-radius:12px;background:var(--bg,rgba(56,189,248,.1));
+  display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px}
+.fcard h3{font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:8px}
+.fcard p{font-size:13px;color:#475569;line-height:1.65}
+
+/* ── STEPS ── */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+.step{background:#0a1628;border:1px solid #1e3a5f;border-radius:14px;padding:28px;text-align:center;
+  transition:border-color .2s}
+.step:hover{border-color:#1d4ed8}
+.step-n{width:56px;height:56px;border-radius:50%;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:900;color:#fff;
+  background:linear-gradient(135deg,#1d4ed8,#0ea5e9);
+  box-shadow:0 8px 24px rgba(14,165,233,.35)}
+.step h3{font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:8px}
+.step p{font-size:13px;color:#475569;line-height:1.65}
+
+/* ── PRICING ── */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(275px,1fr));gap:20px;max-width:960px;margin:0 auto}
+.pcard{background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:30px;position:relative;transition:border-color .2s}
+.pcard.pop{border-color:#38bdf8;background:#091524}
+.pcard:hover{border-color:#1d4ed8}
+.pop-tag{position:absolute;top:-13px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,#1d4ed8,#0ea5e9);color:#fff;
+  font-size:11px;font-weight:800;padding:4px 18px;border-radius:20px;white-space:nowrap;
+  box-shadow:0 4px 16px rgba(14,165,233,.4)}
+.p-plan{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
+.p-price{font-size:42px;font-weight:900;color:#f1f5f9;line-height:1}
+.p-price em{font-style:normal;font-size:16px;font-weight:400;color:#475569}
+.p-note{font-size:12px;color:#475569;margin:8px 0 22px}
+.p-feats{display:flex;flex-direction:column;gap:9px;margin-bottom:26px}
+.pf{display:flex;align-items:center;gap:8px;font-size:13px;color:#94a3b8}
+.pf::before{content:'✓';color:#34d399;font-weight:700}
+.p-btn{width:100%;padding:12px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;border:1px solid #334155;background:transparent;color:#64748b}
+.pcard.pop .p-btn{background:linear-gradient(135deg,#1d4ed8,#0ea5e9);border:none;color:#fff;box-shadow:0 6px 22px rgba(14,165,233,.3)}
+.pcard.pop .p-btn:hover{transform:translateY(-1px);box-shadow:0 10px 32px rgba(14,165,233,.5)}
+.p-btn:hover{border-color:#38bdf8;color:#38bdf8}
+
+/* ── CTA/LOGIN ── */
+.cta{text-align:center;padding:90px 24px;max-width:680px;margin:0 auto}
+.cta h2{font-size:clamp(26px,4vw,42px);font-weight:900;color:#f1f5f9;margin-bottom:14px;line-height:1.15}
+.cta p{color:#475569;font-size:16px;line-height:1.7;margin-bottom:38px}
+.google-btn{display:inline-flex;align-items:center;gap:12px;background:#fff;color:#1e293b;border:none;border-radius:12px;
+  padding:13px 28px;font-size:15px;font-weight:700;cursor:pointer;
+  box-shadow:0 4px 24px rgba(0,0,0,.35);transition:all .22s}
+.google-btn:hover{transform:translateY(-2px);box-shadow:0 8px 36px rgba(0,0,0,.45)}
+.g-svg{width:22px;height:22px;flex-shrink:0}
+#login-info{font-size:12px;color:#475569;margin-top:14px;min-height:18px}
+.config-notice{background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.2);border-radius:10px;
+  padding:14px 18px;margin-bottom:28px;font-size:12px;color:#92400e;line-height:1.6;text-align:left}
+.config-notice b{color:#f59e0b}
+.config-notice code{background:rgba(245,158,11,.1);padding:1px 5px;border-radius:3px;font-family:Consolas,monospace}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid #0f1c30;padding:36px 32px;text-align:center;max-width:1100px;margin:0 auto}
+.f-links{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin-bottom:16px}
+.f-links a{color:#334155;text-decoration:none;font-size:13px;transition:color .2s}
+.f-links a:hover{color:#94a3b8}
+.f-copy{font-size:12px;color:#1e3a5f}
+</style>
+</head>
+<body>
+
+<div class="bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+
+<!-- ── NAV ── -->
+<nav class="nav">
+  <a href="/accueil.html" class="logo">BIM<em>Flow</em></a>
+  <div class="nav-links">
+    <a href="#features">Fonctionnalités</a>
+    <a href="#how">Comment ça marche</a>
+    <a href="#pricing">Tarifs</a>
+  </div>
+  <div class="nav-right">
+    <a href="#login" class="btn-outline">Connexion</a>
+    <a href="#login" class="btn-blue">Commencer gratuitement</a>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="hero-in">
+    <div class="badge"><span class="dot-pulse"></span>Plugin Revit · Plateforme Web · Collaboration</div>
+    <h1>De Revit au Web,<br>en un seul clic</h1>
+    <p class="hero-sub">BIMFlow connecte votre modèle Revit à une plateforme collaborative moderne. Partagez vos plans en 3D, suivez vos pièces et analysez vos données — directement depuis le navigateur, sans aucune installation côté client.</p>
+    <div class="hero-btns">
+      <a href="#login" class="btn-hero blue">🚀 Commencer gratuitement</a>
+      <a href="/" class="btn-hero ghost">Voir la démo →</a>
+    </div>
+
+    <!-- Mockup -->
+    <div class="mockup">
+      <div class="m-bar">
+        <div class="m-btn" style="background:#ef4444"></div>
+        <div class="m-btn" style="background:#f59e0b"></div>
+        <div class="m-btn" style="background:#22c55e"></div>
+        <div class="m-tabs">
+          <div class="m-tab on">🗺 Plans</div>
+          <div class="m-tab">📋 Fiches</div>
+          <div class="m-tab">📊 Analyse</div>
+          <div class="m-tab">📁 Projets</div>
+        </div>
+        <div style="margin-left:auto;font-size:10px;color:#1d4ed8;font-weight:700;padding-right:4px">● Niveau R+1 · 24 pièces</div>
+      </div>
+      <div class="m-body">
+        <div class="m-side">
+          <div style="font-size:9px;font-weight:700;color:#334155;margin-bottom:3px;padding:0 2px">NIVEAUX</div>
+          <div class="m-row sel">■ Sous-sol</div>
+          <div class="m-row sel">■ RDC</div>
+          <div class="m-row">■ R+1</div>
+          <div class="m-row">■ R+2</div>
+          <div class="m-row">■ Combles</div>
+          <div style="margin-top:auto;padding-top:8px;border-top:1px solid #1e3a5f">
+            <div style="font-size:9px;color:#38bdf8;font-weight:700">1 842 m² · 3 projets</div>
+          </div>
+        </div>
+        <div class="m-canvas">
+          <div class="m-grid">
+            <div class="r r1"></div>
+            <div class="r r2"></div>
+            <div class="r r3"></div>
+            <div class="r r4"></div>
+            <div class="r r5"></div>
+          </div>
+          <div style="position:absolute;bottom:10px;right:10px;display:flex;gap:5px">
+            <div style="background:#0c1a2e;border:1px solid #1d4ed8;border-radius:4px;padding:3px 7px;font-size:8px;font-weight:700;color:#38bdf8">🔍 Zoom</div>
+            <div style="background:#0c1a2e;border:1px solid #334155;border-radius:4px;padding:3px 7px;font-size:8px;font-weight:700;color:#475569">⛶ Isoler</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="div"></div>
+
+<!-- ── FEATURES ── -->
+<div class="sec" id="features">
+  <div class="s-label">Fonctionnalités</div>
+  <div class="s-title">Tout ce dont votre équipe a besoin</div>
+  <p class="s-sub">Une suite complète, conçue pour les architectes et les BIM managers qui veulent collaborer sans friction.</p>
+  <div class="fgrid">
+    <div class="fcard" style="--c:#38bdf8">
+      <div class="ficon" style="--bg:rgba(56,189,248,.1)">🗺</div>
+      <h3>Plans 3D interactifs</h3>
+      <p>Visualisez vos niveaux directement dans le navigateur. Cliquez sur une pièce pour consulter ses paramètres, sa surface et son historique.</p>
+    </div>
+    <div class="fcard" style="--c:#34d399">
+      <div class="ficon" style="--bg:rgba(52,211,153,.1)">📋</div>
+      <h3>Fiches de locaux</h3>
+      <p>Chaque pièce, ses paramètres Revit et son statut mis à jour en temps réel. Filtrage, recherche et export PDF intégrés.</p>
+    </div>
+    <div class="fcard" style="--c:#818cf8">
+      <div class="ficon" style="--bg:rgba(129,140,248,.1)">📊</div>
+      <h3>Analyse automatique</h3>
+      <p>Ratios, surfaces par usage, répartitions — générés automatiquement. Repérez les anomalies en un coup d'œil.</p>
+    </div>
+    <div class="fcard" style="--c:#f59e0b">
+      <div class="ficon" style="--bg:rgba(245,158,11,.1)">👥</div>
+      <h3>Collaboration par code</h3>
+      <p>Partagez un code de 8 caractères avec votre équipe. Toutes les mises à jour Revit sont immédiatement visibles sur le web.</p>
+    </div>
+  </div>
+</div>
+
+<div class="div"></div>
+
+<!-- ── HOW IT WORKS ── -->
+<div class="sec s-center" id="how">
+  <div class="s-label">Prise en main</div>
+  <div class="s-title">Opérationnel en 3 étapes</div>
+  <p class="s-sub">De l'installation à la publication de vos plans, comptez moins de 5 minutes.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">1</div>
+      <h3>Installez le plugin Revit</h3>
+      <p>Téléchargez le plugin BIMFlow pour Revit 2024. Un onglet dédié apparaît dans votre ruban Revit, prêt à l'emploi.</p>
+    </div>
+    <div class="step">
+      <div class="step-n">2</div>
+      <h3>Créez votre projet</h3>
+      <p>Cliquez sur "Gérer le projet" dans Revit pour nommer votre projet et générer un code unique. Partagez-le avec votre équipe.</p>
+    </div>
+    <div class="step">
+      <div class="step-n">3</div>
+      <h3>Envoyez et collaborez</h3>
+      <p>Sélectionnez vos niveaux et cliquez "Envoyer". Vos plans et données sont instantanément disponibles sur BIMFlow.</p>
+    </div>
+  </div>
+</div>
+
+<div class="div"></div>
+
+<!-- ── PRICING ── -->
+<div class="sec s-center" id="pricing">
+  <div class="s-label">Tarifs</div>
+  <div class="s-title">Simple et transparent</div>
+  <p class="s-sub">Commencez gratuitement. Passez au Pro quand votre équipe en a besoin.</p>
+  <div class="pgrid">
+    <div class="pcard">
+      <div class="p-plan">Gratuit</div>
+      <div class="p-price">0€ <em>/mois</em></div>
+      <div class="p-note">Pour découvrir la plateforme</div>
+      <div class="p-feats">
+        <div class="pf">1 projet actif</div>
+        <div class="pf">5 niveaux maximum</div>
+        <div class="pf">Plans interactifs 3D</div>
+        <div class="pf">Fiches de locaux</div>
+        <div class="pf">Analyse basique</div>
+      </div>
+      <button class="p-btn" onclick="document.getElementById('login').scrollIntoView({behavior:'smooth'})">Commencer gratuitement</button>
+    </div>
+    <div class="pcard pop">
+      <div class="pop-tag">⭐ Le plus populaire</div>
+      <div class="p-plan">Pro</div>
+      <div class="p-price">19€ <em>/mois</em></div>
+      <div class="p-note">Pour les équipes actives</div>
+      <div class="p-feats">
+        <div class="pf">Projets illimités</div>
+        <div class="pf">Niveaux illimités</div>
+        <div class="pf">Collaboration équipe</div>
+        <div class="pf">Export PDF des fiches</div>
+        <div class="pf">Historique complet</div>
+        <div class="pf">Support prioritaire</div>
+      </div>
+      <button class="p-btn" onclick="document.getElementById('login').scrollIntoView({behavior:'smooth'})">Démarrer l'essai gratuit</button>
+    </div>
+    <div class="pcard">
+      <div class="p-plan">Entreprise</div>
+      <div class="p-price" style="font-size:28px;padding-top:8px">Sur devis</div>
+      <div class="p-note">Pour les grandes structures</div>
+      <div class="p-feats">
+        <div class="pf">Tout le plan Pro</div>
+        <div class="pf">Déploiement sur site</div>
+        <div class="pf">API REST complète</div>
+        <div class="pf">SSO / Azure AD</div>
+        <div class="pf">Support dédié 24/7</div>
+        <div class="pf">Formation personnalisée</div>
+      </div>
+      <button class="p-btn" onclick="window.location.href='mailto:contact@bimatika.fr'">Nous contacter</button>
+    </div>
+  </div>
+</div>
+
+<div class="div"></div>
+
+<!-- ── CTA + LOGIN ── -->
+<div class="cta" id="login">
+  <h2>Prêt à transformer votre workflow BIM ?</h2>
+  <p>Rejoignez les équipes qui utilisent BIMFlow pour publier, partager et analyser leurs projets Revit depuis n'importe où.</p>
+
+  <!-- Notice de configuration Google -->
+  <div class="config-notice" id="configNotice" style="display:none">
+    <b>⚙ Configuration Google Sign-In requise</b><br>
+    Pour activer la connexion Google, ajoutez votre Client ID OAuth dans le fichier <code>accueil.html</code> :<br>
+    1. Allez sur <b>console.cloud.google.com</b> → API et services → Identifiants<br>
+    2. Créez un ID client OAuth 2.0 (type : Application Web)<br>
+    3. Ajoutez <code>https://bimatika-bimplan.pages.dev</code> comme origine autorisée<br>
+    4. Remplacez <code>VOTRE_CLIENT_ID</code> dans le code par votre ID
+  </div>
+
+  <button class="google-btn" id="googleBtn" onclick="doGoogleLogin()">
+    <svg class="g-svg" viewBox="0 0 24 24">
+      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+    </svg>
+    Se connecter avec Google
+  </button>
+  <div id="login-info"></div>
+  <p style="margin-top:20px;font-size:12px;color:#1e3a5f">En vous connectant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité.</p>
+</div>
+
+<!-- ── FOOTER ── -->
+<div class="div"></div>
+<footer>
+  <div class="f-links">
+    <a href="/accueil.html">Accueil</a>
+    <a href="/">Application</a>
+    <a href="/projets.html">Projets</a>
+    <a href="#pricing">Tarifs</a>
+    <a href="mailto:contact@bimatika.fr">Contact</a>
+  </div>
+  <div class="f-copy">© 2026 BIMFlow / BIMATIKA — Tous droits réservés</div>
+</footer>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  CONFIGURATION GOOGLE SIGN-IN
+//  ➜ Remplacez la valeur ci-dessous par votre Client ID
+//  Étapes :
+//  1. console.cloud.google.com → API et services → Identifiants
+//  2. Créer un ID client OAuth 2.0 (Application Web)
+//  3. Origine autorisée : https://bimatika-bimplan.pages.dev
+//  4. Copiez l'ID et remplacez VOTRE_CLIENT_ID ci-dessous
+// ══════════════════════════════════════════════════════
+const GOOGLE_CLIENT_ID = 'VOTRE_CLIENT_ID.apps.googleusercontent.com';
+
+const isConfigured = !GOOGLE_CLIENT_ID.startsWith('VOTRE_');
+
+function doGoogleLogin() {
+  if (!isConfigured) {
+    document.getElementById('configNotice').style.display = 'block';
+    document.getElementById('login-info').textContent = '';
+    return;
+  }
+  if (typeof google !== 'undefined') google.accounts.id.prompt();
+}
+
+// Called by Google after authentication
+function onGoogleLogin(response) {
+  try {
+    const parts = response.credential.split('.');
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    const user = {
+      name:    payload.name    || 'Utilisateur',
+      email:   payload.email   || '',
+      picture: payload.picture || '',
+      sub:     payload.sub     || '',
+      plan:    'free',
+      loginAt: new Date().toISOString(),
+    };
+    localStorage.setItem('bimflow_user', JSON.stringify(user));
+    document.getElementById('login-info').textContent = '✓ Connecté — redirection…';
+    setTimeout(() => window.location.href = '/', 600);
+  } catch(e) {
+    document.getElementById('login-info').textContent = 'Erreur de connexion : ' + e.message;
+  }
+}
+
+window.addEventListener('load', () => {
+  // Already logged in? Redirect to app
+  try {
+    const u = JSON.parse(localStorage.getItem('bimflow_user') || 'null');
+    if (u?.email) { window.location.href = '/'; return; }
+  } catch {}
+
+  if (isConfigured && typeof google !== 'undefined') {
+    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogleLogin });
+  }
+});
+</script>
+</body>
+</html>
