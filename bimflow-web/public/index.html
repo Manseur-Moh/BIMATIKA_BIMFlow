@@ -744,7 +744,10 @@ function roomClicked(id,additive,planKey){
 }
 function clearSelection(){
   if(compareDiff||!selIds.size)return; selIds.clear(); lastSel=null;
-  if(isolateMode){ isolateMode=false; rooms3D().forEach(r=>{ const m=R3.meshes[r.RevitId]; if(m) m.visible=true; }); $('btn3dIsolate').classList.remove('active'); }
+  if(isolateMode){
+    if(selectedLevelKeys.size>1){ recolor3D(); } // level-based isolate stays
+    else { isolateMode=false; rooms3D().forEach(r=>{ const m=R3.meshes[r.RevitId]; if(m) m.visible=true; }); $('btn3dIsolate').classList.remove('active'); }
+  }
   onSelectionChanged(false);
 }
 function selectMatching(){
@@ -1425,9 +1428,11 @@ function init3D(){
     if(o&&o.userData.id){
       roomClicked(o.userData.id, e.ctrlKey||e.metaKey||e.shiftKey);
     } else if(!e.ctrlKey&&!e.metaKey&&!e.shiftKey){
-      /* click on empty space → deselect all */
+      /* click on empty space → deselect rooms */
       selIds.clear(); lastSel=null;
-      if(isolateMode){ isolateMode=false; rooms3D().forEach(r=>{ const m=R3.meshes[r.RevitId]; if(m) m.visible=true; }); $('btn3dIsolate').classList.remove('active'); }
+      if(isolateMode && selectedLevelKeys.size<=1){
+        isolateMode=false; rooms3D().forEach(r=>{ const m=R3.meshes[r.RevitId]; if(m) m.visible=true; }); $('btn3dIsolate').classList.remove('active');
+      }
       onSelectionChanged(false); renderList(); renderMatrix();
     }
   });
@@ -1459,10 +1464,11 @@ function fit3D(){
   R3.controls.target.copy(c); R3.camera.position.set(c.x+d*.75,c.y+d*.9,c.z+d*.75);
   R3.camera.near=Math.max(.05,d/2000); R3.camera.far=d*200; R3.camera.updateProjectionMatrix(); R3.controls.update();
 }
-function fitToSelection(){
-  if(!R3.ready||!selIds.size)return;
+/* fit camera to all currently-visible (isolated) meshes */
+function fitToIsolated(){
+  if(!R3.ready)return;
   const box=new THREE.Box3();
-  rooms3D().forEach(r=>{ if(selIds.has(r.RevitId)){ const m=R3.meshes[r.RevitId]; if(m&&m.visible) box.expandByObject(m); }});
+  Object.values(R3.meshes).forEach(m=>{ if(m&&m.visible) box.expandByObject(m); });
   if(box.isEmpty())return;
   const c=box.getCenter(new THREE.Vector3()), s=box.getSize(new THREE.Vector3()); const d=Math.max(s.x,s.y,s.z,2);
   R3.controls.target.copy(c); R3.camera.position.set(c.x+d*.5,c.y+d*.7,c.z+d*.5);
@@ -1475,8 +1481,9 @@ $('btn3dShade').addEventListener('click',()=>{
   $('btn3dShade').classList.remove('active'); $('btn3dIsolate').classList.remove('active');
 });
 $('btn3dIsolate').addEventListener('click',()=>{
-  if(!selIds.size){ alert('Sélectionnez d\'abord des pièces.'); return; }
-  isolateMode=true; recolor3D(); fitToSelection();
+  const hasRooms=selIds.size>0, hasLevels=selectedLevelKeys.size>1;
+  if(!hasRooms && !hasLevels){ alert('Sélectionnez des pièces ou plusieurs niveaux.'); return; }
+  isolateMode=true; recolor3D(); fitToIsolated();
   $('btn3dIsolate').classList.add('active'); $('btn3dShade').classList.remove('active');
 });
 function recolor3D(){
@@ -1489,9 +1496,17 @@ function recolor3D(){
       || (selectedLevelKeys.size>1 ? selectedLevelKeys.has(r._planKey) : (!curLevel||rLevel===curLevel));
 
     /* ── isolate mode ── */
-    if(isolateMode && selIds.size){
-      mesh.visible=selIds.has(r.RevitId);
-      if(mesh.visible){ mesh.material.color.setHex(0xef4444); mesh.material.opacity=.92; }
+    if(isolateMode){
+      const byRoom = selIds.size>0;
+      const byLevel = !byRoom && selectedLevelKeys.size>1;
+      const visible = byRoom ? selIds.has(r.RevitId)
+                    : byLevel ? selectedLevelKeys.has(r._planKey)
+                    : true;
+      mesh.visible=visible;
+      if(visible){
+        const col = byRoom && selIds.has(r.RevitId) ? 0xef4444 : 0x3b82f6;
+        mesh.material.color.setHex(col); mesh.material.opacity=.90;
+      }
       return;
     }
     mesh.visible=true;
