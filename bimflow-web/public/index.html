@@ -323,6 +323,7 @@
     <a href="/fiches.html" data-en="📋 Data Sheets">📋 Fiches de Locaux</a>
     <a href="/analyse.html" data-en="📊 Analysis">📊 Analyse</a>
     <a href="/parametres.html" data-en="🔧 Parameters">🔧 Paramètres</a>
+    <a href="/projets.html" data-en="📁 Projects">📁 Projets</a>
   </div>
   <div class="topbar-right">
     <button class="refresh-btn" id="langBtn" title="Language / Langue">EN</button>
@@ -527,7 +528,7 @@ function setStatus(msg,type){ $('statusTxt').textContent=msg; $('statusDot').cla
 
 async function loadIndex(){
   try{
-    const list=await api('/api/plans');
+    const list=await api((window.BFProject?.plansUrl?.()||'/api/plans'));
     renderLevels(list);
     if(list.length){
       const k=list.find(p=>p.key===currentPlanKey)?currentPlanKey:list[list.length-1].key;
@@ -843,7 +844,7 @@ let isolateMode=false;           // 3D isolate — hide non-selected rooms compl
 async function loadAllLevels(){
   setStatus('Chargement tous niveaux…','loading');
   try{
-    const list=await api('/api/plans');
+    const list=await api((window.BFProject?.plansUrl?.()||'/api/plans'));
     const results=await Promise.all(list.map(p=>getPlanData(p.key)));
     allLevelsRooms=[];
     results.forEach((p,i)=>{ (p.Rooms||[]).forEach(r=>allLevelsRooms.push({...r,_levelName:p.LevelName,_planKey:list[i].key})); });
@@ -1214,7 +1215,7 @@ async function saveVersion(){
 }
 /* ── save all levels ── */
 async function saveAllVersions(){
-  const list=await api('/api/plans').catch(e=>{ alert('Erreur liste: '+e.message); return null; });
+  const list=await api((window.BFProject?.plansUrl?.()||'/api/plans')).catch(e=>{ alert('Erreur liste: '+e.message); return null; });
   if(!list?.length){ alert('Aucun plan.'); return; }
   setCmpStatus('Chargement de tous les niveaux…');
   const ts=new Date().toISOString(), label=new Date(ts).toLocaleString('fr-FR');
@@ -1316,7 +1317,7 @@ $('cmpRun').addEventListener('click',async()=>{
 $('cmpRunAll').addEventListener('click',async()=>{
   setCmpStatus('Chargement de tout le projet…'); $('cmpRunAll').disabled=true;
   try{
-    const list=await api('/api/plans');
+    const list=await api((window.BFProject?.plansUrl?.()||'/api/plans'));
     const valA=$('cmpBatchA').value, valB=$('cmpBatchB').value;
     const A={}, B={};
     for(const m of list){
@@ -1415,11 +1416,11 @@ function init3D(){
   R3.meshes={}; R3.ready=true; resize3D();
   (function loop(){ R3.raf=requestAnimationFrame(loop); R3.controls.update(); R3.renderer.render(R3.scene,R3.camera); })();
   const ray=new THREE.Raycaster(), v=new THREE.Vector2();
-  let _mouseDownPos={x:0,y:0};
-  cv.addEventListener('mousedown',e=>{ _mouseDownPos={x:e.clientX,y:e.clientY}; });
+  cv.addEventListener('pointerdown',e=>{ cv._pd={x:e.clientX,y:e.clientY}; });
   cv.addEventListener('click',e=>{
     /* ignore drags (OrbitControls rotate) — only act on short clicks */
-    if(Math.hypot(e.clientX-_mouseDownPos.x,e.clientY-_mouseDownPos.y)>5) return;
+    const pd=cv._pd||{x:e.clientX,y:e.clientY};
+    if(Math.hypot(e.clientX-pd.x,e.clientY-pd.y)>5) return;
     const r=cv.getBoundingClientRect(); v.x=((e.clientX-r.left)/r.width)*2-1; v.y=-((e.clientY-r.top)/r.height)*2+1;
     ray.setFromCamera(v,R3.camera);
     const visibleMeshes=Object.values(R3.meshes).filter(m=>m.visible);
@@ -1622,5 +1623,6 @@ themeBtn.addEventListener('click',()=>applyTheme(document.documentElement.getAtt
 /* ═══ INIT ═══ */
 loadIndex();
 </script>
+<script src="/bimflow-projet.js"></script>
 </body>
 </html>

@@ -54,11 +54,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
 .vi:hover .vn{color:#e2e8f0}.vi.on .vn{color:#38bdf8;font-weight:600}
 .vc{font-size:10px;color:#475569;background:#111827;border-radius:8px;padding:1px 6px;flex-shrink:0}
 .vi.on .vc{background:#1d4ed8;color:#e0f2fe}
+/* Palette + Room halves */
+#palHalf{flex:1;min-height:0;display:flex;flex-direction:column;border-bottom:1px solid #1f2937;overflow:hidden}
+#roomHalf{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
 /* Room list */
 .rsw{padding:5px 10px;border-top:1px solid #1f2937;flex-shrink:0}
 .rs{width:100%;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:4px;padding:4px 7px;font-size:11px;outline:none}
 .rs:focus{border-color:#3b82f6}
-.rlist{height:120px;overflow-y:auto;flex-shrink:0;border-top:1px solid #0a1222}
+.rlist{flex:1;overflow-y:auto;border-top:1px solid #0a1222;min-height:0}
 .rrow{display:flex;align-items:center;gap:5px;padding:4px 10px;cursor:pointer;border-bottom:1px solid #0a1222}
 .rrow:hover{background:#111c30}
 .rrow.on{background:#0c1a2e;border-left:2px solid #38bdf8}
@@ -84,7 +87,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
 #mainSvg>image{filter:invert(1)}
 .bfr{cursor:pointer;fill:rgba(56,189,248,.06);stroke:rgba(56,189,248,.33);stroke-width:1.5;stroke-linejoin:round;transition:fill .1s,stroke .1s,opacity .15s}
 .bfr:hover{fill:rgba(56,189,248,.2);stroke:#38bdf8;stroke-width:2.5}
-.bfr.sel{fill:rgba(56,189,248,.52)!important;stroke:#38bdf8!important;stroke-width:3!important;opacity:1!important}
+.bfr.sel{fill:rgba(239,68,68,.52)!important;stroke:#ef4444!important;stroke-width:3!important;opacity:1!important}
 .bfr.shd{fill:rgba(4,8,22,.74)!important;stroke:rgba(56,189,248,.04)!important;opacity:.55!important}
 .bfr.fout{fill:rgba(4,8,22,.9)!important;stroke:rgba(56,189,248,.02)!important;opacity:.25!important;cursor:not-allowed!important}
 /* 2D overlays */
@@ -104,8 +107,43 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
 /* 3D */
 #v3d{flex-shrink:0;position:relative;background:#060e1f;overflow:hidden;min-height:60px}
 #c3d{display:block;width:100%;height:100%}
-.zbx3{position:absolute;top:10px;right:10px;z-index:10}
-.h3d{position:absolute;left:10px;bottom:8px;font-size:10px;color:#475569;background:rgba(13,21,38,.7);padding:3px 7px;border-radius:4px;pointer-events:none}
+.zbx3{position:absolute;bottom:8px;left:8px;z-index:10}
+.h3d{position:absolute;right:10px;bottom:8px;font-size:10px;color:#475569;background:rgba(13,21,38,.7);padding:3px 7px;border-radius:4px;pointer-events:none}
+.v3d-btn{background:rgba(15,23,42,.82);border:1px solid #334155;color:#94a3b8;border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;position:absolute;top:8px;z-index:10}
+.v3d-btn:hover,.v3d-btn.active{background:rgba(29,78,216,.9);border-color:#3b82f6;color:#e0f2fe}
+/* Compare bar */
+#cmpBar{display:none;background:#1a1000;border-bottom:1px solid #f59e0b;padding:5px 12px;font-size:11px;color:#fcd34d;flex-shrink:0;align-items:center;gap:8px}
+#cmpBar.on{display:flex}
+.cmp-exit{background:transparent;border:1px solid #f59e0b;color:#f59e0b;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;cursor:pointer;margin-left:auto}
+/* Changed polygon in 2D */
+.bfr.changed{fill:rgba(245,158,11,.35)!important;stroke:#f59e0b!important;stroke-width:2.5!important;opacity:1!important}
+/* Import modal */
+#impModal{display:none;position:fixed;inset:0;z-index:1500;background:rgba(0,0,0,.6);align-items:center;justify-content:center}
+#impModal.on{display:flex}
+#impBox{background:#111827;border:1px solid #374151;border-radius:10px;padding:16px;width:540px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.8)}
+.imp-hd{font-weight:700;color:#f1f5f9;font-size:13px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.imp-sub{font-size:11px;color:#94a3b8;margin-bottom:8px}
+.imp-list{flex:1;overflow-y:auto;min-height:80px;max-height:320px;border:1px solid #1f2937;border-radius:6px;font-size:11px}
+.imp-row{padding:6px 10px;border-bottom:1px solid #0a1222;display:flex;flex-direction:column;gap:2px}
+.imp-row:last-child{border-bottom:none}
+.imp-rname{color:#e2e8f0;font-weight:600}
+.imp-diff{color:#94a3b8;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.imp-diff b{color:#60a5fa}
+.imp-old{color:#f87171;text-decoration:line-through}
+.imp-new{color:#4ade80}
+.imp-foot{display:flex;gap:8px;margin-top:12px;justify-content:flex-end}
+.imp-btn{padding:6px 14px;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;border:none}
+/* Compare popup */
+#cmpPopF{display:none;position:fixed;top:54px;right:12px;z-index:1200;background:#1f2937;border:1px solid #374151;border-radius:8px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.7);width:300px;font-size:12px}
+.cpop-hd{font-weight:700;color:#cbd5e1;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.cpop-close{background:transparent;border:none;color:#64748b;cursor:pointer;font-size:14px;padding:0}
+.cpop-sel{width:100%;margin:2px 0 8px;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:4px;font-size:11px}
+.cpop-btn{width:100%;padding:6px;border:none;border-radius:5px;font-weight:700;cursor:pointer;font-size:12px;margin-bottom:4px}
+.cpop-manage{margin-top:6px;font-size:11px;max-height:120px;overflow-y:auto}
+.cpop-vrow{display:flex;align-items:center;gap:6px;padding:2px 0;border-bottom:1px solid rgba(127,127,127,.15)}
+.cpop-vrow span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cpop-del{background:transparent;border:1px solid #5b2330;color:#f87171;border-radius:3px;padding:1px 5px;cursor:pointer;font-size:10px}
+.cpop-status{font-size:10px;color:#64748b;text-align:center;margin-top:4px}
 /* View modes: hide/show 2D or 3D — vmBar stays always visible */
 .vm2 #v3d,.vm2 .hspl{display:none}
 .vm3 #v2d,.vm3 .hspl{display:none}
@@ -192,7 +230,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
 [data-theme=light] #mainSvg>image{filter:none}
 [data-theme=light] .bfr{fill:rgba(2,132,199,.05);stroke:rgba(2,132,199,.3)}
 [data-theme=light] .bfr:hover{fill:rgba(2,132,199,.15);stroke:#0284c7}
-[data-theme=light] .bfr.sel{fill:rgba(2,132,199,.42)!important;stroke:#0284c7!important}
+[data-theme=light] .bfr.sel{fill:rgba(239,68,68,.42)!important;stroke:#ef4444!important}
 [data-theme=light] .bfr.shd{fill:rgba(218,225,235,.88)!important;stroke:rgba(2,132,199,.04)!important}
 [data-theme=light] .bfr.fout{fill:rgba(218,225,235,.95)!important}
 [data-theme=light] .hspl{background:#e6e9f0;border-top-color:#dde2ec}
@@ -242,13 +280,49 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
     <a href="/fiches.html" class="active" data-en="📋 Data Sheets">📋 Fiches de Locaux</a>
     <a href="/analyse.html" data-en="📊 Analysis">📊 Analyse</a>
     <a href="/parametres.html" data-en="🔧 Parameters">🔧 Paramètres</a>
+    <a href="/projets.html" data-en="📁 Projects">📁 Projets</a>
   </div>
   <div class="tbr">
+    <button class="tbtn" id="btnSaveVer" title="Sauvegarder version" data-en="💾 Version">💾 Version</button>
+    <button class="tbtn" id="btnOpenCmp" title="Comparer des versions" data-en="⇆ Compare">⇆ Comparer</button>
     <button class="tbtn" id="langBtn">EN</button>
     <button class="tbtn" id="themeBtn">☾</button>
     <div class="sdot load" id="sdot"></div>
     <div class="stxt" id="stxt">Chargement…</div>
   </div>
+</div>
+
+<!-- Import preview modal -->
+<div id="impModal">
+  <div id="impBox">
+    <div class="imp-hd">
+      <span>📥 Importer les modifications Excel</span>
+      <button class="cpop-close" id="impClose">✕</button>
+    </div>
+    <div class="imp-sub" id="impSub"></div>
+    <div class="imp-list" id="impList"></div>
+    <div class="imp-foot">
+      <button class="imp-btn" id="impCancel" style="background:#374151;color:#cbd5e1" data-en="Cancel">Annuler</button>
+      <button class="imp-btn" id="impApply" style="background:#16a34a;color:#fff" data-en="✓ Apply changes">✓ Appliquer les modifications</button>
+    </div>
+  </div>
+</div>
+<input type="file" id="impFile" accept=".xlsx,.xls,.csv" style="display:none"/>
+
+<!-- Compare popup -->
+<div id="cmpPopF">
+  <div class="cpop-hd">
+    <span>⇆ Comparer versions</span>
+    <button class="cpop-close" id="cmpPopClose">✕</button>
+  </div>
+  <label style="font-size:10px;color:#94a3b8">Version A (avant)</label>
+  <select class="cpop-sel" id="cmpSelA"></select>
+  <label style="font-size:10px;color:#94a3b8">Version B (après)</label>
+  <select class="cpop-sel" id="cmpSelB"></select>
+  <button class="cpop-btn" id="cmpRunBtn" style="background:#1d4ed8;color:#e0f2fe">⇆ Comparer</button>
+  <div class="cpop-status" id="cmpStatus">Choisissez deux versions à comparer.</div>
+  <div style="border-top:1px solid #374151;margin:8px 0 4px;font-size:10px;color:#64748b">Versions sauvegardées</div>
+  <div class="cpop-manage" id="cmpVList"></div>
 </div>
 
 <div id="app">
@@ -267,20 +341,23 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
       </div>
     </div>
 
-    <div class="psec">
-      <div class="plbl" data-en="Select by parameter — all levels">Sélectionner par paramètre — tous niveaux</div>
-      <select class="psel" id="palP"><option value="">— Choisir un paramètre —</option></select>
+    <div id="palHalf">
+      <div class="psec">
+        <div class="plbl" data-en="Select by parameter — all levels">Sélectionner par paramètre — tous niveaux</div>
+        <select class="psel" id="palP"><option value="">— Choisir un paramètre —</option></select>
+      </div>
+      <div class="val-list" id="valList"><div class="val-e">Choisissez un paramètre</div></div>
     </div>
-    <div class="val-list" id="valList"><div class="val-e">Choisissez un paramètre</div></div>
 
-    <div class="rsw">
-      <input class="rs" id="rSrch" type="text" placeholder="Rechercher une pièce (tous niveaux)…" data-en-ph="Search a room (all levels)…"/>
-    </div>
-    <div class="rlist" id="rList"><div class="re">Aucune pièce</div></div>
-
-    <div class="sfoot">
-      <div class="si" id="selInfo">Aucune sélection</div>
-      <button class="sclr" id="selClr" data-en="Clear">Effacer</button>
+    <div id="roomHalf">
+      <div class="rsw">
+        <input class="rs" id="rSrch" type="text" placeholder="Rechercher par nom ou N° de pièce…" data-en-ph="Search by name or room number…"/>
+      </div>
+      <div class="rlist" id="rList"><div class="re">Aucune pièce</div></div>
+      <div class="sfoot">
+        <div class="si" id="selInfo">Aucune sélection</div>
+        <button class="sclr" id="selClr" data-en="Clear">Effacer</button>
+      </div>
     </div>
   </div>
 
@@ -292,6 +369,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
       <button class="vmbtn" data-m="vm2">🗺 2D</button>
       <button class="vmbtn on" data-m="vmb">⊞ 2D+3D</button>
       <button class="vmbtn" data-m="vm3">🧊 3D</button>
+    </div>
+    <div id="cmpBar">
+      <span id="cmpBarTxt">Comparaison active</span>
+      <button class="cmp-exit" id="cmpExit">✕ Quitter</button>
     </div>
     <div id="v2d">
       <div class="vempty" id="v2dE">
@@ -305,6 +386,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
     <div class="hspl" id="hspl"></div>
     <div id="v3d">
       <canvas id="c3d"></canvas>
+      <button class="v3d-btn" id="btn3dShade" style="left:8px">Shade</button>
+      <button class="v3d-btn" id="btn3dIsolate" style="right:8px">Isolate</button>
       <div class="zbx3"><button class="zb" id="fit3Btn">⌖</button></div>
       <div class="h3d" data-en="Drag · Scroll = zoom · Click a room">Glissez · Molette = zoom · Cliquez une pièce</div>
     </div>
@@ -325,9 +408,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
             <div style="padding:4px 12px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid #1f2937" data-en="Print (PDF)">Imprimer (PDF)</div>
             <div class="ei" onclick="doPrint('sel')"><b data-en="🖨 Selection">🖨 Sélection</b><small data-en="Selected room sheets">Fiches des pièces sélectionnées</small></div>
             <div class="ei" onclick="doPrint('all')"><b data-en="🖨 Entire project">🖨 Tout le projet</b><small data-en="All A4 sheets">Toutes les fiches A4</small></div>
-            <div style="padding:4px 12px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid #1f2937;border-top:1px solid #1f2937">Excel</div>
+            <div style="padding:4px 12px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid #1f2937;border-top:1px solid #1f2937">Excel — Fiches</div>
             <div class="ei" onclick="doExcel('sel')"><b data-en="📊 Selection">📊 Sélection</b><small data-en="Selected rooms">Pièces sélectionnées</small></div>
             <div class="ei" onclick="doExcel('all')"><b data-en="📊 Entire project">📊 Tout le projet</b><small data-en="All rooms">Toutes les pièces</small></div>
+            <div style="padding:4px 12px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid #1f2937;border-top:1px solid #1f2937" data-en="Excel — Edit parameters">Excel — Édition paramètres</div>
+            <div class="ei" onclick="doExcelEdit()"><b data-en="📥 Export for editing">📥 Exporter pour édition</b><small data-en="Flat table, all params editable">Tableau plat, tous paramètres éditables</small></div>
+            <div class="ei" onclick="$('edWrap').classList.remove('open');$('impFile').click()"><b data-en="📤 Import from Excel">📤 Importer depuis Excel</b><small data-en="Apply parameter changes">Appliquer les modifications</small></div>
           </div>
         </div>
       </div>
@@ -393,6 +479,9 @@ let palP='',palV='';
 let zoom=1,panX=0,panY=0,W=0,H=0;
 let panning=false,panStart={x:0,y:0};
 const planCache={};
+let isolateMode=false;
+let cmpDiff=null;
+const PALETTE3D=['#3b82f6','#ef4444','#22c55e','#f59e0b','#a855f7','#06b6d4','#ec4899','#84cc16','#f97316','#14b8a6','#f43f5e','#8b5cf6'];
 
 /* ════ UTILS ════ */
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -417,7 +506,7 @@ const isCore=k=>CORE.some(c=>k.toLowerCase().includes(c)||c.includes(k.toLowerCa
 async function loadAll(){
   try{
     setSt('Chargement…','load');
-    allPlans=await apiFetch('/api/plans');
+    allPlans=await apiFetch(window.BFProject?.plansUrl?.()||'/api/plans');
     if(!allPlans.length){setSt('Aucun plan — envoyez depuis Revit','');return;}
     const res=await Promise.all(allPlans.map(p=>getPD(p.key)));
     allRooms=[];
@@ -500,7 +589,7 @@ function buildPS(){
   if(prev&&Object.keys(pc).includes(prev))sel.value=prev;
   buildVL();
 }
-$('palP').onchange=function(){palP=this.value;palV='';buildVL();};
+$('palP').onchange=function(){palP=this.value;palV='';buildVL();if(R3.ready)recolor3D();};
 
 function buildVL(){
   const list=$('valList');list.innerHTML='';
@@ -544,6 +633,15 @@ function buildRList(){
   });
 }
 $('rSrch').oninput=buildRList;
+$('rSrch').onkeydown=e=>{
+  if(e.key!=='Enter')return;
+  const q=($('rSrch').value||'').toLowerCase().trim();if(!q)return;
+  /* select all rooms visible in current list */
+  const rooms=allF().filter(r=>(r.Name||'').toLowerCase().includes(q)||(r.Number||'').toLowerCase().includes(q)||(r._lv||'').toLowerCase().includes(q));
+  if(!rooms.length)return;
+  rooms.forEach(r=>selIds.add(r.RevitId));
+  buildVL();buildRList();paintRooms();renderFiche();updSel();if(R3.ready)recolor3D();
+};
 
 /* ════ ROOM CLICK ════ */
 function roomClick(id,add,pk){
@@ -619,9 +717,12 @@ function paintRooms(){
   const hasSel=selIds.size>0;
   (plan.Rooms||[]).forEach(r=>{
     const p=$('poly-'+r.RevitId);if(!p)return;
-    p.classList.remove('sel','shd','fout');
+    p.classList.remove('sel','shd','fout','changed');
     const v=isVis({...r,_lv:plan.LevelName}),s=selIds.has(r.RevitId);
-    if(!v)p.classList.add('fout');
+    if(cmpDiff){
+      if(cmpDiff.changedIds.has(r.RevitId))p.classList.add('changed');
+      else if(!s)p.classList.add('shd');
+    } else if(!v)p.classList.add('fout');
     else if(s)p.classList.add('sel');
     else if(hasSel)p.classList.add('shd');
   });
@@ -735,16 +836,22 @@ function init3D(){
   R3.meshes={};R3.ready=true;
   resize3D();
   (function loop(){requestAnimationFrame(loop);R3.oc.update();R3.r.render(R3.s,R3.c);})();
-  /* click handler */
+  /* click handler — drag-aware (pointerdown is safe alongside OrbitControls) */
   const ray=new THREE.Raycaster(),v2=new THREE.Vector2();
+  cv.addEventListener('pointerdown',e=>{cv._pd={x:e.clientX,y:e.clientY};});
   cv.onclick=e=>{
+    const pd=cv._pd||{x:e.clientX,y:e.clientY};
+    if(Math.hypot(e.clientX-pd.x,e.clientY-pd.y)>5)return;
     const rc=cv.getBoundingClientRect();
     v2.x=((e.clientX-rc.left)/rc.width)*2-1;v2.y=-((e.clientY-rc.top)/rc.height)*2+1;
     ray.setFromCamera(v2,R3.c);
     const hits=ray.intersectObjects(R3.g.children,true);
     let o=hits[0]&&hits[0].object;while(o&&!o.userData.id)o=o.parent;
-    if(o&&o.userData.id){roomClick(o.userData.id,false,o.userData.pk);}
-    else{if(selIds.size){selIds.clear();palV='';buildVL();buildRList();paintRooms();renderFiche();updSel();recolor3D();}fit3D();}
+    if(o&&o.userData.id){roomClick(o.userData.id,e.ctrlKey||e.metaKey||e.shiftKey,o.userData.pk);}
+    else if(!e.ctrlKey&&!e.metaKey&&!e.shiftKey){
+      if(isolateMode){isolateMode=false;$('btn3dIsolate').classList.remove('active');Object.values(R3.meshes).forEach(m=>m.visible=true);}
+      selIds.clear();palV='';buildVL();buildRList();paintRooms();renderFiche();updSel();recolor3D();fit3D();
+    }
   };
 }
 
@@ -795,30 +902,74 @@ function focus3D(){
   R3.c.near=Math.max(.05,d/2000);R3.c.far=d*500;R3.c.updateProjectionMatrix();R3.oc.update();
 }
 
-/* Recolor 3D — semi-transparent ghost effect on selection */
+/* Recolor 3D — supports isolate/compare/normal modes + palette coloring */
 function recolor3D(){
   if(!R3.ready)return;
   const hasSel=selIds.size>0;
+  /* build palette color map for current param */
+  const pMap={};
+  if(palP){
+    const vals=[...new Set(allRooms.map(r=>String((r.Parameters||{})[palP]||'')).filter(Boolean))].sort();
+    vals.forEach((v,i)=>pMap[v]=PALETTE3D[i%PALETTE3D.length]);
+  }
+  function getCol(room){
+    if(palP){const v=String((room.Parameters||{})[palP]||'');if(pMap[v])return parseInt(pMap[v].slice(1),16);}
+    return 0x3b82f6;
+  }
   Object.entries(R3.meshes).forEach(([id,mesh])=>{
     const room=allRooms.find(r=>r.RevitId===id);if(!mesh||!room)return;
     const v=isVis(room),s=selIds.has(id);
-    if(!v){
-      /* filtered-out: nearly invisible */
-      mesh.material.color.setHex(0x1e3a5f);mesh.material.opacity=.04;mesh.material.depthWrite=false;
-    } else if(s){
-      /* selected: bright cyan, solid */
-      mesh.material.color.setHex(0x38bdf8);mesh.material.opacity=.95;mesh.material.depthWrite=true;
-    } else if(hasSel){
-      /* others when something selected: semi-transparent blue ghost — still visible */
-      mesh.material.color.setHex(0x3b82f6);mesh.material.opacity=.22;mesh.material.depthWrite=false;
-    } else {
-      /* no selection: normal blue */
-      mesh.material.color.setHex(0x3b82f6);mesh.material.opacity=.78;mesh.material.depthWrite=true;
+    /* isolate mode */
+    if(isolateMode){
+      const inScope=hasSel?s:v;
+      mesh.visible=inScope;
+      if(inScope){mesh.material.color.setHex(s?0xef4444:getCol(room));mesh.material.opacity=.92;mesh.material.depthWrite=true;}
+      return;
     }
+    mesh.visible=true;
+    /* comparison mode */
+    if(cmpDiff){
+      const changed=cmpDiff.changedIds.has(id);
+      mesh.material.color.setHex(changed?0xf59e0b:0x3b82f6);
+      mesh.material.opacity=changed?.92:(v?.12:.04);
+      mesh.material.depthWrite=changed;
+      return;
+    }
+    /* normal mode */
+    const col=s?0xef4444:getCol(room);
+    if(!v){mesh.material.color.setHex(col);mesh.material.opacity=.04;mesh.material.depthWrite=false;}
+    else if(s){mesh.material.color.setHex(0xef4444);mesh.material.opacity=.95;mesh.material.depthWrite=true;}
+    else if(hasSel){mesh.material.color.setHex(col);mesh.material.opacity=.22;mesh.material.depthWrite=false;}
+    else{mesh.material.color.setHex(col);mesh.material.opacity=.78;mesh.material.depthWrite=true;}
   });
 }
 
-$('fit3Btn').onclick=()=>{if(selIds.size)focus3D();else fit3D();};
+$('fit3Btn').onclick=()=>{if(isolateMode)fitToIsolated();else if(selIds.size)focus3D();else fit3D();};
+
+function fitToIsolated(){
+  if(!R3.ready)return;
+  const box=new THREE.Box3();
+  Object.values(R3.meshes).forEach(m=>{if(m.visible)box.expandByObject(m);});
+  if(box.isEmpty())return;
+  const c=new THREE.Vector3(),d=box.getSize(new THREE.Vector3()).length();
+  box.getCenter(c);
+  R3.oc.target.copy(c);R3.c.position.set(c.x+d*.8,c.y+d*.8,c.z+d*.8);
+  R3.c.near=Math.max(.05,d/2000);R3.c.far=d*500;R3.c.updateProjectionMatrix();R3.oc.update();
+}
+
+$('btn3dShade').onclick=function(){
+  isolateMode=false;this.classList.toggle('active');
+  $('btn3dIsolate').classList.remove('active');
+  Object.values(R3.meshes).forEach(m=>m.visible=true);
+  recolor3D();
+};
+$('btn3dIsolate').onclick=function(){
+  isolateMode=!isolateMode;
+  this.classList.toggle('active',isolateMode);
+  $('btn3dShade').classList.remove('active');
+  if(isolateMode)fitToIsolated(); else{Object.values(R3.meshes).forEach(m=>m.visible=true);recolor3D();}
+  recolor3D();
+};
 
 const _today=new Date().toLocaleDateString('fr-FR');
 /* ════ FICHE HTML (pure function) ════ */
@@ -1035,6 +1186,144 @@ async function doExcel(mode){
   setSt(`${rooms.length} fiches exportées`,'ok');
 }
 
+/* ════ EXCEL — EXPORT FOR EDITING ════ */
+async function doExcelEdit(){
+  $('edWrap').classList.remove('open');
+  setSt('Préparation Excel…','load');
+  try{await loadXLSX();}catch(e){alert('Bibliothèque Excel indisponible.');setSt('Erreur','err');return;}
+  const rooms=allRooms;
+  if(!rooms.length){setSt('Aucune pièce','err');return;}
+  /* collect all param keys, sorted */
+  const paramKeys=[...new Set(rooms.flatMap(r=>Object.keys(r.Parameters||{})))].sort();
+  /* header row */
+  const header=['RevitId (ne pas modifier)','Numéro','Nom','Niveau (info)',...paramKeys];
+  const aoa=[header];
+  rooms.forEach(r=>{
+    aoa.push([
+      r.RevitId,
+      r.Number||'',
+      r.Name||'',
+      r._lv||r.LevelName||'',
+      ...paramKeys.map(k=>(r.Parameters||{})[k]??'')
+    ]);
+  });
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=[{wch:16},{wch:10},{wch:26},{wch:18},...paramKeys.map(()=>({wch:22}))];
+  /* freeze top row via sheetView */
+  ws['!sheetView']={state:'frozen',ySplit:1};
+  XLSX.utils.book_append_sheet(wb,ws,'BIMFlow Édition');
+  XLSX.writeFile(wb,`BIMFlow_Edition_${new Date().toISOString().slice(0,10)}.xlsx`);
+  setSt(`${rooms.length} pièces exportées`,'ok');
+}
+
+/* ════ EXCEL — IMPORT ════ */
+let _pendingImport=null;
+
+$('impFile').onchange=async function(){
+  const file=this.files[0];this.value='';
+  if(!file)return;
+  setSt('Lecture du fichier…','load');
+  try{await loadXLSX();}catch(e){alert('Bibliothèque Excel indisponible.');setSt('Erreur','err');return;}
+  try{
+    const buf=await file.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const aoa=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    if(!aoa.length){alert('Fichier vide.');setSt('','');return;}
+    /* parse header — strip annotation like "(ne pas modifier)" */
+    const hdr=aoa[0].map(h=>String(h).replace(/\s*\(.*?\)/g,'').trim());
+    const ridCol=hdr.findIndex(h=>h.toLowerCase()==='revitid');
+    if(ridCol<0){alert('Colonne RevitId introuvable.\nUtilisez "Exporter pour édition" pour obtenir le bon format.');return;}
+    /* compute diffs */
+    const changes=[];
+    for(let ri=1;ri<aoa.length;ri++){
+      const row=aoa[ri];
+      const rid=String(row[ridCol]??'').trim();
+      if(!rid)continue;
+      const room=allRooms.find(r=>String(r.RevitId)===rid);
+      if(!room)continue;
+      const diffs=[];
+      hdr.forEach((h,ci)=>{
+        if(!h||['RevitId','Niveau','Niveau (info)'].includes(h))return;
+        const newVal=String(row[ci]??'').trim();
+        if(h==='Numéro'){if(newVal!==(room.Number||''))diffs.push({k:'__Number__',l:'Numéro',old:room.Number||'',nw:newVal});}
+        else if(h==='Nom'){if(newVal!==(room.Name||''))diffs.push({k:'__Name__',l:'Nom',old:room.Name||'',nw:newVal});}
+        else{
+          const oldVal=String((room.Parameters||{})[h]??'');
+          if(oldVal!==newVal)diffs.push({k:h,l:h,old:oldVal,nw:newVal});
+        }
+      });
+      if(diffs.length)changes.push({room,pk:room._pk,diffs});
+    }
+    if(!changes.length){setSt('Aucune modification détectée','ok');return;}
+    _pendingImport=changes;
+    showImportPreview(changes);
+  }catch(e){setSt('Erreur lecture: '+e.message,'err');console.error(e);}
+};
+
+function showImportPreview(changes){
+  const totalDiffs=changes.reduce((s,c)=>s+c.diffs.length,0);
+  $('impSub').textContent=`${changes.length} pièce(s) · ${totalDiffs} modification(s)`;
+  const list=$('impList');list.innerHTML='';
+  const max=Math.min(changes.length,80);
+  for(let i=0;i<max;i++){
+    const {room,diffs}=changes[i];
+    const d=document.createElement('div');d.className='imp-row';
+    const lvl=room._lv||room.LevelName||'';
+    d.innerHTML=`<div class="imp-rname">${esc(room.Number||'')} — ${esc(room.Name||'—')} <span style="font-size:10px;color:#64748b">${esc(lvl)}</span></div>`
+      +diffs.map(df=>`<div class="imp-diff"><b>${esc(df.l)}</b><span class="imp-old">${esc(df.old||'(vide)')}</span><span style="color:#475569">→</span><span class="imp-new">${esc(df.nw||'(vide)')}</span></div>`).join('');
+    list.appendChild(d);
+  }
+  if(changes.length>max){const d=document.createElement('div');d.className='val-e';d.textContent=`… et ${changes.length-max} autres pièces`;list.appendChild(d);}
+  $('impModal').classList.add('on');
+}
+
+async function applyImport(){
+  if(!_pendingImport?.length)return;
+  $('impModal').classList.remove('on');
+  setSt('Application des modifications…','load');
+  /* group by plan key */
+  const byPk={};
+  _pendingImport.forEach(({room,pk,diffs})=>{
+    if(!byPk[pk])byPk[pk]={};
+    const entry=byPk[pk][String(room.RevitId)]={Parameters:{}};
+    diffs.forEach(d=>{
+      if(d.k==='__Number__')entry.Number=d.nw;
+      else if(d.k==='__Name__')entry.Name=d.nw;
+      else entry.Parameters[d.k]=d.nw;
+    });
+  });
+  /* PATCH KV for each affected plan */
+  let patched=0,errs=0;
+  for(const [pk,rooms] of Object.entries(byPk)){
+    try{
+      await apiFetch(`/api/plans?key=${encodeURIComponent(pk)}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({rooms})});
+      patched++;
+    }catch(e){errs++;console.error('PATCH',pk,e);}
+  }
+  /* update in-memory */
+  _pendingImport.forEach(({room,pk,diffs})=>{
+    diffs.forEach(d=>{
+      if(d.k==='__Number__')room.Number=d.nw;
+      else if(d.k==='__Name__')room.Name=d.nw;
+      else{if(!room.Parameters)room.Parameters={};room.Parameters[d.k]=d.nw;}
+    });
+    /* also update planCache so getPD returns fresh data */
+    const pd=planCache[pk];
+    if(pd){
+      const pr=(pd.Rooms||[]).find(r=>String(r.RevitId)===String(room.RevitId));
+      if(pr){diffs.forEach(d=>{if(d.k==='__Number__')pr.Number=d.nw;else if(d.k==='__Name__')pr.Name=d.nw;else{if(!pr.Parameters)pr.Parameters={};pr.Parameters[d.k]=d.nw;}});}
+    }
+  });
+  const total=_pendingImport.length;_pendingImport=null;
+  buildPS();buildVL();buildRList();paintRooms();renderFiche();updSel();if(R3.ready)recolor3D();
+  setSt(`${total} pièce(s) mise(s) à jour`+(errs?' · '+errs+' erreur(s)':''),'ok');
+}
+
+$('impClose').onclick=$('impCancel').onclick=()=>$('impModal').classList.remove('on');
+$('impApply').onclick=applyImport;
+
 /* ════ LANG + THEME ════ */
 function applyLang(l){
   document.documentElement.lang=l;
@@ -1052,6 +1341,111 @@ $('themeBtn').onclick=()=>applyTheme(document.documentElement.getAttribute('data
 
 /* ════ INIT ════ */
 loadAll();
+
+/* ════ VERSIONS / COMPARE ════ */
+
+async function saveFichesVersion(){
+  setSt('Sauvegarde…','load');
+  const ts=new Date().toISOString();
+  const label=new Date(ts).toLocaleString('fr-FR');
+  const plans=[];
+  for(const pl of allPlans){
+    const pd=await getPD(pl.key);
+    const rooms={};
+    (pd.Rooms||[]).forEach(r=>rooms[r.RevitId]={Number:r.Number,Name:r.Name,P:Object.assign({},r.Parameters||{})});
+    plans.push({key:pl.key,rooms});
+  }
+  await apiFetch('/api/versions?batch=1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ts,label,plans})});
+  setSt('Version sauvegardée','ok');
+  return {ts,label};
+}
+
+let _cmpBatches=[];
+async function loadCmpBatches(){
+  _cmpBatches=await apiFetch('/api/versions?all=1').catch(()=>[]);
+  const selA=$('cmpSelA'),selB=$('cmpSelB');
+  selA.innerHTML=`<option value="">— Version A —</option>`;
+  selB.innerHTML=`<option value="">— Version B —</option>`;
+  _cmpBatches.forEach(b=>{
+    const dt=new Date(b.ts).toLocaleString('fr-FR');
+    selA.appendChild(new Option(b.label||dt,b.ts));
+    selB.appendChild(new Option(b.label||dt,b.ts));
+  });
+  if(_cmpBatches.length>1){selA.value=_cmpBatches[1].ts;selB.value=_cmpBatches[0].ts;}
+  else if(_cmpBatches.length===1){selB.value=_cmpBatches[0].ts;}
+  renderCmpVList();
+}
+function renderCmpVList(){
+  const c=$('cmpVList');c.innerHTML='';
+  _cmpBatches.forEach(b=>{
+    const dt=new Date(b.ts).toLocaleString('fr-FR');
+    const row=document.createElement('div');row.className='cpop-vrow';
+    row.innerHTML=`<span title="${b.ts}">${b.label||dt}</span><button class="cpop-del">✕</button>`;
+    row.querySelector('.cpop-del').onclick=async()=>{
+      if(!confirm('Supprimer cette version ?'))return;
+      for(const k of(b.planKeys||[])) await apiFetch(`/api/versions?key=${encodeURIComponent(k)}&ts=${encodeURIComponent(b.ts)}`,{method:'DELETE'}).catch(()=>{});
+      await loadCmpBatches();
+    };
+    c.appendChild(row);
+  });
+  if(!_cmpBatches.length)c.innerHTML=`<div class="val-e">Aucune version sauvegardée</div>`;
+}
+
+async function runCmp(){
+  const tsA=$('cmpSelA').value,tsB=$('cmpSelB').value;
+  if(!tsA||!tsB){$('cmpStatus').textContent='Sélectionnez deux versions.';return;}
+  if(tsA===tsB){$('cmpStatus').textContent='Choisissez deux versions différentes.';return;}
+  $('cmpStatus').textContent='Chargement…';
+  /* load rooms for both timestamps across all plans */
+  async function loadBatchRooms(ts){
+    const snap=_cmpBatches.find(b=>b.ts===ts);
+    const rooms={};
+    for(const k of(snap?.planKeys||allPlans.map(p=>p.key))){
+      const d=await apiFetch(`/api/versions?key=${encodeURIComponent(k)}&ts=${encodeURIComponent(ts)}`).catch(()=>null);
+      if(d?.rooms)Object.assign(rooms,d.rooms);
+    }
+    return rooms;
+  }
+  const [rA,rB]=await Promise.all([loadBatchRooms(tsA),loadBatchRooms(tsB)]);
+  const changedIds=new Set(),changedRooms=[];
+  const lA=$('cmpSelA').options[$('cmpSelA').selectedIndex].text;
+  const lB=$('cmpSelB').options[$('cmpSelB').selectedIndex].text;
+  const allIds=new Set([...Object.keys(rA),...Object.keys(rB)]);
+  allIds.forEach(id=>{
+    const a=rA[id],b=rB[id];
+    if(!a||!b){changedIds.add(id);changedRooms.push({id,a,b,diffs:[]});return;}
+    const diffs=[];
+    const allK=new Set([...Object.keys(a.P||{}),...Object.keys(b.P||{})]);
+    allK.forEach(k=>{const va=String((a.P||{})[k]??''),vb=String((b.P||{})[k]??'');if(va!==vb)diffs.push({k,va,vb});});
+    if(a.Number!==b.Number)diffs.push({k:'Numéro',va:a.Number||'',vb:b.Number||''});
+    if(a.Name!==b.Name)diffs.push({k:'Nom',va:a.Name||'',vb:b.Name||''});
+    if(diffs.length){changedIds.add(id);changedRooms.push({id,a,b,diffs});}
+  });
+  cmpDiff={changedIds,changedRooms,lA,lB};
+  $('cmpPopF').style.display='none';
+  $('cmpBar').classList.add('on');
+  $('cmpBarTxt').textContent=`${changedIds.size} pièce(s) modifiée(s) : ${lA} → ${lB}`;
+  paintRooms();if(R3.ready)recolor3D();
+  $('cmpStatus').textContent=`${changedIds.size} pièces modifiées.`;
+}
+
+function exitCmp(){
+  cmpDiff=null;
+  $('cmpBar').classList.remove('on');
+  paintRooms();if(R3.ready)recolor3D();
+}
+
+$('btnSaveVer').onclick=async()=>{try{await saveFichesVersion();}catch(e){setSt('Erreur: '+e.message,'err');}};
+$('btnOpenCmp').onclick=()=>{
+  const p=$('cmpPopF');
+  if(p.style.display==='block'){p.style.display='none';return;}
+  p.style.display='block';
+  loadCmpBatches();
+};
+$('cmpPopClose').onclick=()=>$('cmpPopF').style.display='none';
+$('cmpRunBtn').onclick=runCmp;
+$('cmpExit').onclick=exitCmp;
 </script>
+<script src="/bimflow-projet.js"></script>
 </body>
 </html>

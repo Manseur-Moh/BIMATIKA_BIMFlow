@@ -37,6 +37,7 @@ namespace BIMFlowPlugin.Models
     {
         public string ProjectName    { get; set; } = "";
         public string ProjectNumber  { get; set; } = "";
+        public string ProjectCode    { get; set; } = ""; // stable code derived from Revit GUID
         public string LevelName      { get; set; } = "";
         public double LevelElevation { get; set; }      // m — for ordering levels by height
         public string ExportDate    { get; set; } = "";

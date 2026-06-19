@@ -83,11 +83,30 @@ namespace BIMFlowPlugin
                     Image      = LoadIcon("receive_16.png"),
                 };
 
+                // ── Button: Manage Project ──
+                var projectBtn = new PushButtonData(
+                    name:         "ManageProject",
+                    text:         "Gérer\nle projet",
+                    assemblyName: assemblyPath,
+                    className:    "BIMFlowPlugin.Commands.ManageProjectCommand")
+                {
+                    ToolTip = "Définissez le code et le nom de ce projet Revit pour BIMFlow.",
+                    LongDescription =
+                        "Crée ou modifie le code projet utilisé lors des envois vers BIMFlow.\n\n" +
+                        "Utiliser un code unique par projet évite que les plans d'un projet\n" +
+                        "écrasent ceux d'un autre (problème fréquent avec les fichiers copiés).\n\n" +
+                        "Le code peut être partagé avec l'équipe pour accéder au projet sur le web.",
+                    LargeImage = LoadIcon("project_32.png"),
+                    Image      = LoadIcon("project_16.png"),
+                };
+
                 panel.AddItem(sendBtn);
                 panel.AddItem(quickBtn);
                 panel.AddItem(paramsBtn);
                 panel.AddSeparator();
                 panel.AddItem(receiveBtn);
+                panel.AddSeparator();
+                panel.AddItem(projectBtn);
 
                 return Result.Succeeded;
             }

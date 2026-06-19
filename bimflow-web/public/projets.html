@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>BIMFlow — Projets</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f0;min-height:100vh;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;background:#111827;border-bottom:1px solid #1f2937;flex-shrink:0;height:48px}
+.logo{padding:0 16px;font-size:16px;font-weight:800;color:#38bdf8;letter-spacing:-.5px;white-space:nowrap;border-right:1px solid #1f2937;height:100%;display:flex;align-items:center}
+.logo span{color:#7dd3fc}
+.nav{display:flex;height:100%}
+.nav a{display:flex;align-items:center;padding:0 16px;font-size:13px;font-weight:600;color:#64748b;text-decoration:none;border-right:1px solid #1f2937}
+.nav a:hover{background:#1f2937;color:#e2e8f0}
+.nav a.active{color:#38bdf8;background:#0c1a2e;box-shadow:inset 0 -2px 0 #38bdf8}
+.tbr{display:flex;align-items:center;gap:8px;padding:0 14px;margin-left:auto}
+.tbtn{background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer}
+.tbtn:hover{background:#374151}
+.sdot{width:7px;height:7px;border-radius:50%;background:#334155}
+.sdot.ok{background:#22c55e}.sdot.err{background:#ef4444}.sdot.load{background:#f59e0b;animation:pl 1s infinite}
+@keyframes pl{0%,100%{opacity:1}50%{opacity:.3}}
+.stxt{font-size:12px;color:#64748b}
+
+/* ── LAYOUT ── */
+#page{max-width:900px;margin:0 auto;padding:24px 16px;flex:1}
+h1{font-size:18px;font-weight:800;color:#f1f5f9;margin-bottom:4px}
+.sub{font-size:12px;color:#64748b;margin-bottom:24px}
+
+/* ── PROJECT CARDS ── */
+#projList{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:28px}
+.pcard{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:14px 16px;cursor:pointer;transition:border-color .15s}
+.pcard:hover{border-color:#3b82f6}
+.pcard.active{border-color:#3b82f6;background:#0c1a2e}
+.pc-code{font-size:11px;font-weight:700;color:#64748b;letter-spacing:.12em;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.pc-copy{background:transparent;border:1px solid #374151;color:#64748b;border-radius:3px;padding:1px 5px;font-size:9px;cursor:pointer}
+.pc-copy:hover{border-color:#3b82f6;color:#3b82f6}
+.pc-name{font-size:15px;font-weight:700;color:#f1f5f9;margin-bottom:2px}
+.pc-sub{font-size:11px;color:#64748b;margin-bottom:8px}
+.pc-stats{display:flex;gap:10px;font-size:10px;color:#475569}
+.pc-stat b{color:#94a3b8}
+.pc-actions{display:flex;gap:5px;margin-top:10px;border-top:1px solid #1f2937;padding-top:8px}
+.pa-btn{flex:1;padding:5px 0;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid #374151;background:transparent;color:#94a3b8}
+.pa-btn:hover{background:#1f2937;color:#e2e8f0}
+.pa-btn.primary{background:#1d4ed8;border-color:#1d4ed8;color:#e0f2fe}
+.pa-btn.primary:hover{background:#2563eb}
+.pa-btn.danger{border-color:#7f1d1d;color:#f87171}
+.pa-btn.danger:hover{background:#450a0a}
+
+/* ── ENTER CODE ── */
+#codeBox{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:20px;margin-bottom:28px}
+.cb-title{font-size:13px;font-weight:700;color:#f1f5f9;margin-bottom:12px}
+.cb-row{display:flex;gap:8px;align-items:center}
+.cb-inp{flex:1;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:6px;padding:8px 12px;font-size:14px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;outline:none}
+.cb-inp:focus{border-color:#3b82f6}
+.cb-inp::placeholder{color:#334155;font-weight:400;letter-spacing:0;text-transform:none}
+.cb-go{padding:8px 18px;background:#1d4ed8;border:none;border-radius:6px;color:#e0f2fe;font-size:13px;font-weight:700;cursor:pointer}
+.cb-go:hover{background:#2563eb}
+.cb-err{font-size:11px;color:#f87171;margin-top:6px;min-height:16px}
+
+/* ── RENAME INLINE ── */
+.pcard .ren-row{display:none;gap:5px;margin-top:6px}
+.pcard.renaming .ren-row{display:flex}
+.pcard.renaming .pc-name{display:none}
+.ren-inp{flex:1;background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:4px;padding:3px 7px;font-size:13px;font-weight:700;outline:none}
+.ren-inp:focus{border-color:#3b82f6}
+.ren-ok{background:#16a34a;border:none;border-radius:4px;color:#fff;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer}
+.ren-cancel{background:transparent;border:1px solid #374151;color:#64748b;border-radius:4px;padding:3px 7px;font-size:11px;cursor:pointer}
+
+/* ── EMPTY / LEGACY ── */
+.empty{text-align:center;padding:40px;color:#475569;font-size:13px}
+.legacy{background:#0f172a;border:1px solid #1f2937;border-left:3px solid #f59e0b;border-radius:8px;padding:12px 14px;font-size:11px;color:#94a3b8;margin-bottom:20px}
+.legacy b{color:#fbbf24}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">BIM<span>Flow</span></div>
+  <div class="nav">
+    <a href="/">🗺 Plans</a>
+    <a href="/fiches.html">📋 Fiches de Locaux</a>
+    <a href="/analyse.html">📊 Analyse</a>
+    <a href="/parametres.html">🔧 Paramètres</a>
+    <a href="/projets.html" class="active">📁 Projets</a>
+  </div>
+  <div class="tbr">
+    <div class="sdot load" id="sdot"></div>
+    <div class="stxt" id="stxt">Chargement…</div>
+  </div>
+</div>
+
+<div id="page">
+  <h1>📁 Projets BIMFlow</h1>
+  <p class="sub">Chaque projet Revit est identifié par un code unique. Cliquez sur un projet pour l'ouvrir, ou entrez un code partagé par votre équipe.</p>
+
+  <!-- Setup instructions banner -->
+  <div style="background:#0c1a2e;border:1px solid #1e3a5f;border-left:3px solid #38bdf8;border-radius:8px;padding:14px 16px;margin-bottom:20px;font-size:12px;color:#94a3b8;line-height:1.6">
+    <div style="font-weight:700;color:#7dd3fc;margin-bottom:6px">⚙ Comment configurer un projet Revit</div>
+    <b style="color:#e2e8f0">Option A — Sans recompilation (maintenant) :</b><br>
+    Dans Revit → <b>Gérer → Informations du projet → N° de projet</b>, entrez un code court unique (ex : <code style="background:#1e3a5f;padding:1px 5px;border-radius:3px;color:#38bdf8">VLM-001</code>). Ce code sera utilisé comme identifiant de projet.<br><br>
+    <b style="color:#e2e8f0">Option B — Après recompilation du plugin (permanent) :</b><br>
+    Le plugin génère automatiquement un code à partir du GUID du fichier Revit. Aucune configuration nécessaire.
+  </div>
+
+  <!-- Enter code to access a project -->
+  <div id="codeBox">
+    <div class="cb-title">🔑 Accéder à un projet par code</div>
+    <div class="cb-row">
+      <input class="cb-inp" id="codeInp" maxlength="30" placeholder="Ex : VLM-001 ou A1B2C3D4"/>
+      <button class="cb-go" id="codeGo">Accéder →</button>
+    </div>
+    <div class="cb-err" id="codeErr"></div>
+  </div>
+
+  <!-- Discovered projects -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <div style="font-size:12px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em">Projets détectés</div>
+    <button onclick="openCreateModal()" style="padding:5px 13px;background:#1d4ed8;border:none;color:#e0f2fe;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">＋ Créer un projet</button>
+  </div>
+  <div id="projList"><div class="empty">Aucun projet — envoyez des plans depuis Revit</div></div>
+</div>
+
+<!-- ── Create project modal ── -->
+<div id="createModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;align-items:center;justify-content:center">
+  <div style="background:#111827;border:1px solid #374151;border-radius:12px;padding:24px;width:430px;max-width:96vw">
+    <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:6px">➕ Créer un projet</div>
+    <div style="font-size:12px;color:#64748b;margin-bottom:18px;line-height:1.5">Crée un projet nommé sur BIMFlow. Entrez ce code dans le plugin Revit (bouton <b style="color:#94a3b8">Gérer le projet</b>) avant d'envoyer vos plans.</div>
+    <label style="display:block;font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:4px">NOM DU PROJET</label>
+    <input id="newName" maxlength="60" placeholder="Ex : Résidence Les Oliviers"
+      style="width:100%;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:6px;padding:8px 12px;font-size:14px;margin-bottom:14px;outline:none;box-sizing:border-box"/>
+    <label style="display:block;font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:4px">CODE PROJET <span style="color:#475569;font-weight:400">(modifiable)</span></label>
+    <input id="newCode" maxlength="20" placeholder="Ex : RES-001"
+      style="width:100%;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:6px;padding:8px 12px;font-size:14px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;outline:none;box-sizing:border-box"/>
+    <div id="createErr" style="font-size:11px;color:#f87171;min-height:16px;margin-bottom:10px"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button onclick="closeCreateModal()" style="padding:8px 16px;background:#1f2937;border:1px solid #374151;color:#94a3b8;border-radius:6px;font-size:13px;cursor:pointer">Annuler</button>
+      <button id="createBtn" onclick="submitCreate()" style="padding:8px 18px;background:#1d4ed8;border:none;color:#e0f2fe;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">Créer →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+function setSt(m,s){$('stxt').textContent=m;$('sdot').className='sdot'+(s?' '+s:'');}
+
+let _projects=[];
+
+async function apiFetch(url,opts){
+  const r=await fetch(url,opts);
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
+}
+
+function copyCode(code){
+  navigator.clipboard?.writeText(code).then(()=>{setSt('Code copié !','ok');setTimeout(()=>setSt('',''),2000);}).catch(()=>prompt('Code du projet :',code));
+}
+
+function selectProject(p){
+  try{
+    const stored={code:p.code,displayName:p.displayName||p.projectName||p.code,projectName:p.projectName||''};
+    localStorage.setItem('bimflow_project',JSON.stringify(stored));
+    setSt('Projet sélectionné : '+(stored.displayName),'ok');
+  }catch(e){}
+  window.location.href='/';
+}
+
+function renderProjects(){
+  const list=$('projList');
+  if(!_projects.length){list.innerHTML='<div class="empty">Aucun projet trouvé — envoyez des plans depuis Revit</div>';return;}
+
+  // Check if there are legacy plans (no projectCode)
+  const hasLegacy=_projects.some(p=>p.code==='__legacy__');
+  let html='';
+  if(hasLegacy) html+=`<div class="legacy" style="grid-column:1/-1"><b>⚠ Plans sans code projet</b> — Ces plans n'ont pas de code car :<br>• Le plugin n'est pas encore recompilé, OU<br>• Le champ <b>N° de projet</b> (Gérer → Informations du projet) est vide dans Revit.<br>Définissez un N° de projet unique dans Revit puis renvoyez les plans.</div>`;
+
+  const current=getCurrentProject();
+  _projects.forEach(p=>{
+    const isActive=current?.code===p.code;
+    const name=p.displayName||p.projectName||p.code;
+    const date=p.lastDate?new Date(p.lastDate).toLocaleDateString('fr-FR'):'—';
+    html+=`<div class="pcard${isActive?' active':''}" id="card-${p.code}">
+      <div class="pc-code">
+        <span>${p.code==='__legacy__'?'LEGACY':p.code}</span>
+        ${p.code!=='__legacy__'?`<button class="pc-copy" onclick="event.stopPropagation();copyCode('${p.code}')">📋 Copier</button>`:''}
+      </div>
+      <div class="pc-name">${esc(name)}</div>
+      <div class="ren-row">
+        <input class="ren-inp" id="ren-${p.code}" value="${esc(name)}" placeholder="Nom du projet"/>
+        <button class="ren-ok" onclick="saveRename('${p.code}')">✓</button>
+        <button class="ren-cancel" onclick="cancelRename('${p.code}')">✕</button>
+      </div>
+      <div class="pc-sub">${esc(p.projectName||'')}</div>
+      <div class="pc-stats">
+        <span><b>${p.plans}</b> niveau(x)</span>
+        <span><b>${p.rooms||0}</b> pièces</span>
+        <span>Mis à jour : <b>${date}</b></span>
+      </div>
+      <div class="pc-actions">
+        <button class="pa-btn primary" onclick="selectProject(${JSON.stringify(p).replace(/"/g,'&quot;')})">→ Ouvrir</button>
+        ${p.code!=='__legacy__'?`<button class="pa-btn" onclick="startRename('${p.code}')">✏ Renommer</button>`:''}
+        ${p.code!=='__legacy__'?`<button class="pa-btn danger" onclick="event.stopPropagation();deleteProject('${p.code}')">🗑 Supprimer</button>`:''}
+      </div>
+    </div>`;
+  });
+  list.innerHTML=html;
+}
+
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function getCurrentProject(){
+  try{return JSON.parse(localStorage.getItem('bimflow_project')||'null');}catch{return null;}
+}
+
+function startRename(code){
+  const card=$('card-'+code);if(!card)return;
+  card.classList.add('renaming');
+  const inp=$('ren-'+code);if(inp)inp.focus();
+}
+function cancelRename(code){
+  const card=$('card-'+code);if(card)card.classList.remove('renaming');
+}
+async function saveRename(code){
+  const inp=$('ren-'+code);if(!inp)return;
+  const name=inp.value.trim();if(!name)return;
+  try{
+    await apiFetch(`/api/projets?code=${encodeURIComponent(code)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({displayName:name})});
+    setSt('Nom mis à jour','ok');
+    const p=_projects.find(x=>x.code===code);if(p)p.displayName=name;
+    cancelRename(code);
+    renderProjects();
+    /* update localStorage if this is the current project */
+    const cur=getCurrentProject();
+    if(cur?.code===code){cur.displayName=name;try{localStorage.setItem('bimflow_project',JSON.stringify(cur));}catch{}}
+  }catch(e){setSt('Erreur: '+e.message,'err');}
+}
+
+async function loadProjects(){
+  setSt('Chargement…','load');
+  try{
+    _projects=await apiFetch('/api/projets');
+    renderProjects();
+    setSt(_projects.length+' projet(s)','ok');
+  }catch(e){setSt('Erreur: '+e.message,'err');}
+}
+
+/* Enter code to access */
+async function accessByCode(){
+  const code=$('codeInp').value.trim().toUpperCase();
+  $('codeErr').textContent='';
+  if(!code){$('codeErr').textContent='Entrez un code projet.';return;}
+  $('codeGo').disabled=true;$('codeGo').textContent='…';
+  try{
+    const data=await apiFetch(`/api/projets?code=${encodeURIComponent(code)}`);
+    if(data.found){
+      selectProject({code,displayName:data.displayName,projectName:data.projectName||''});
+    } else {
+      $('codeErr').textContent='Code introuvable. Vérifiez le code affiché dans le plugin Revit.';
+    }
+  }catch(e){
+    $('codeErr').textContent='Code introuvable ou erreur réseau.';
+  }finally{$('codeGo').disabled=false;$('codeGo').textContent='Accéder →';}
+}
+
+$('codeGo').onclick=accessByCode;
+$('codeInp').onkeydown=e=>{if(e.key==='Enter')accessByCode();};
+$('codeInp').oninput=function(){this.value=this.value.toUpperCase();};
+
+/* ── Delete project ── */
+async function deleteProject(code){
+  const p=_projects.find(x=>x.code===code);
+  const name=p?(p.displayName||p.projectName||p.code):code;
+  if(!confirm(`Supprimer le projet "${name}" et tous ses plans ?\n\nCette action est irréversible.`))return;
+  try{
+    setSt('Suppression…','load');
+    await apiFetch(`/api/plans?code=${encodeURIComponent(code)}`,{method:'DELETE'});
+    await apiFetch(`/api/projets?code=${encodeURIComponent(code)}`,{method:'DELETE'});
+    const cur=getCurrentProject();
+    if(cur?.code===code){try{localStorage.removeItem('bimflow_project');}catch{}}
+    _projects=_projects.filter(x=>x.code!==code);
+    renderProjects();
+    setSt('Projet supprimé','ok');
+  }catch(e){setSt('Erreur: '+e.message,'err');}
+}
+
+/* ── Create project modal ── */
+function openCreateModal(){
+  const modal=$('createModal');
+  modal.style.display='flex';
+  // generate random 8-char hex code as default
+  const rand=Array.from({length:8},()=>'0123456789ABCDEF'[Math.floor(Math.random()*16)]).join('');
+  $('newCode').value=rand;
+  $('newName').value='';
+  $('createErr').textContent='';
+  setTimeout(()=>$('newName').focus(),50);
+}
+function closeCreateModal(){
+  $('createModal').style.display='none';
+}
+async function submitCreate(){
+  const name=$('newName').value.trim();
+  const code=$('newCode').value.trim().toUpperCase();
+  $('createErr').textContent='';
+  if(!name){$('createErr').textContent='Le nom du projet est requis.';return;}
+  if(!code){$('createErr').textContent='Le code est requis.';return;}
+  const btn=$('createBtn');
+  btn.disabled=true;btn.textContent='…';
+  try{
+    await apiFetch(`/api/projets?code=${encodeURIComponent(code)}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({displayName:name})
+    });
+    closeCreateModal();
+    await loadProjects();
+  }catch(e){
+    $('createErr').textContent='Erreur: '+e.message;
+  }finally{btn.disabled=false;btn.textContent='Créer →';}
+}
+$('newCode').oninput=function(){this.value=this.value.toUpperCase().replace(/\s/g,'-');};
+$('createModal').onclick=function(e){if(e.target===this)closeCreateModal();};
+
+loadProjects();
+</script>
+</body>
+</html>

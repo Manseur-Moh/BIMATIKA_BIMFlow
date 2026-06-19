@@ -14,9 +14,10 @@ namespace BIMFlowPlugin.Commands
 {
     internal static class BimFlowSender
     {
-        public const string UploadUrl = "https://bimatika-bimplan.pages.dev/api/upload";
-        public const string ResetUrl  = "https://bimatika-bimplan.pages.dev/api/plans";
-        public const string ParamsUrl = "https://bimatika-bimplan.pages.dev/api/params";
+        public const string UploadUrl  = "https://bimatika-bimplan.pages.dev/api/upload";
+        public const string ResetUrl   = "https://bimatika-bimplan.pages.dev/api/plans";
+        public const string ParamsUrl  = "https://bimatika-bimplan.pages.dev/api/params";
+        public const string ProjectsUrl = "https://bimatika-bimplan.pages.dev/api/projets";
 
         // ── Reusable HttpClient (not disposed between calls) ──
         private static readonly HttpClient _http = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
@@ -34,8 +35,15 @@ namespace BIMFlowPlugin.Commands
             string tempRoot = Path.Combine(Path.GetTempPath(),
                 "BIMFlow_" + Guid.NewGuid().ToString("N").Substring(0, 8));
 
-            // 1. Wipe server state so the site reflects only this batch.
-            try { _http.DeleteAsync(ResetUrl).GetAwaiter().GetResult(); } catch { }
+            // 1. Wipe only THIS project's plans so the site reflects only this batch.
+            string projectName = "";
+            try { projectName = doc.ProjectInformation?.Name ?? ""; } catch { }
+            string projectCode = ComputeProjectCode(doc);
+            // Include both code (new key scheme) and project name (legacy fallback).
+            string deleteUrl = ResetUrl
+                + "?code=" + Uri.EscapeDataString(projectCode)
+                + "&project=" + Uri.EscapeDataString(projectName);
+            try { _http.DeleteAsync(deleteUrl).GetAwaiter().GetResult(); } catch { }
 
             // 2. Export ALL views sequentially — Revit API is single-threaded.
             var exports = new List<(ViewPlan view, PlanExport export, Exception err)>();
@@ -47,6 +55,7 @@ namespace BIMFlowPlugin.Commands
                     {
                         string tempDir = Path.Combine(tempRoot, view.Id.Value.ToString());
                         var export = new SvgPlanExporter(doc, view, tempDir).Run();
+                        export.ProjectCode = projectCode;
                         exports.Add((view, export, null));
                     }
                     catch (Exception ex)
@@ -109,6 +118,7 @@ namespace BIMFlowPlugin.Commands
                 {
                     // Collect current parameters (no PNG, no geometry projection — fast).
                     var export = new SvgPlanExporter(doc, view).RunParamsOnly();
+                    export.ProjectCode = ComputeProjectCode(doc);
                     var allRooms = export.Rooms;
 
                     // Diff against last-sent snapshot.
@@ -142,6 +152,84 @@ namespace BIMFlowPlugin.Commands
             }
 
             return (sent, failed, unchanged, errors);
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // PROJECT CODE — checks for user-defined override first,
+        // then falls back to the auto-generated code from the
+        // Revit document UniqueId. Use "Gérer le projet" button
+        // in the ribbon to set a custom code and avoid collisions
+        // when two Revit files were copied from the same source.
+        // ═══════════════════════════════════════════════════════════
+        public static string ComputeProjectCode(Document doc)
+        {
+            string auto = ComputeAutoCode(doc);
+            string custom = LoadCustomCode(auto);
+            return string.IsNullOrEmpty(custom) ? auto : custom;
+        }
+
+        // Raw auto-code derived from the Revit document UniqueId.
+        // Called by ManageProjectCommand to display the read-only code.
+        internal static string ComputeAutoCode(Document doc)
+        {
+            try
+            {
+                string uid = doc.ProjectInformation?.UniqueId ?? "";
+                if (!string.IsNullOrWhiteSpace(uid))
+                    return uid.Replace("-", "").Substring(0, 8).ToUpperInvariant();
+            }
+            catch { }
+            try
+            {
+                string name = doc.ProjectInformation?.Name ?? "";
+                if (!string.IsNullOrEmpty(name))
+                    return Math.Abs(name.GetHashCode()).ToString("X8").Substring(0, 8).ToUpperInvariant();
+            }
+            catch { }
+            return "DEFAULT0";
+        }
+
+        // ── Project code override persistence ──
+        private static string CodeSettingsFile => Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "BIMFlow", "project_codes.json");
+
+        private static string LoadCustomCode(string autoCode)
+        {
+            try
+            {
+                if (!File.Exists(CodeSettingsFile)) return null;
+                var dict = JsonConvert.DeserializeObject<
+                    System.Collections.Generic.Dictionary<string, ProjectCodeEntry>>(
+                        File.ReadAllText(CodeSettingsFile));
+                if (dict != null && dict.TryGetValue(autoCode, out var e) && !string.IsNullOrEmpty(e?.Code))
+                    return e.Code;
+            }
+            catch { }
+            return null;
+        }
+
+        internal static void SaveProjectCode(string autoCode, string customCode, string name)
+        {
+            try
+            {
+                System.Collections.Generic.Dictionary<string, ProjectCodeEntry> dict = null;
+                if (File.Exists(CodeSettingsFile))
+                    dict = JsonConvert.DeserializeObject<
+                        System.Collections.Generic.Dictionary<string, ProjectCodeEntry>>(
+                            File.ReadAllText(CodeSettingsFile));
+                dict ??= new System.Collections.Generic.Dictionary<string, ProjectCodeEntry>();
+                dict[autoCode] = new ProjectCodeEntry { Code = customCode, Name = name };
+                Directory.CreateDirectory(Path.GetDirectoryName(CodeSettingsFile)!);
+                File.WriteAllText(CodeSettingsFile, JsonConvert.SerializeObject(dict, Formatting.Indented));
+            }
+            catch { }
+        }
+
+        private class ProjectCodeEntry
+        {
+            [JsonProperty("code")] public string Code { get; set; }
+            [JsonProperty("name")] public string Name { get; set; }
         }
 
         // ═══════════════════════════════════════════════════════════
