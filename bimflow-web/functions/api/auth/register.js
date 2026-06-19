@@ -83,7 +83,7 @@ export async function onRequestPost({ request, env }) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "BIMFlow <onboarding@resend.dev>",
+        from: "onboarding@resend.dev",
         to: [email],
         subject: "Confirmez votre compte BIMFlow",
         html: confirmHtml(name, confirmUrl),
@@ -91,11 +91,13 @@ export async function onRequestPost({ request, env }) {
     });
 
     if (!r.ok) {
-      const err = await r.text().catch(() => "");
+      const errText = await r.text().catch(() => "");
+      let errMsg = errText;
+      try { errMsg = JSON.parse(errText)?.message || errText; } catch {}
       // Roll back the pending user so they can retry
       await kv.delete(ekey);
       await kv.delete(`bfconfirm:${token}`);
-      return json({ error: `Impossible d'envoyer l'email de confirmation. (${err.substring(0, 120)})` }, 502);
+      return json({ error: `Impossible d'envoyer l'email de confirmation. (${r.status}: ${errMsg.substring(0, 200)})` }, 502);
     }
 
     return json({ ok: true, emailSent: true });
