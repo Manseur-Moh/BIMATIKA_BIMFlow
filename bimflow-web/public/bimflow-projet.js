@@ -101,9 +101,10 @@
       'display:flex;align-items:center;gap:6px;background:transparent;border:1px solid #334155;' +
       'border-radius:8px;padding:4px 10px 4px 5px;cursor:pointer;color:#94a3b8;transition:all .2s';
 
+    const initial = (user.initial || user.name || '?').charAt(0).toUpperCase();
     const avatarHTML = user.picture
       ? `<img src="${_esc(user.picture)}" style="width:24px;height:24px;border-radius:50%;border:1px solid #334155" alt=""/>`
-      : `<div style="width:24px;height:24px;border-radius:50%;background:#1f2937;display:flex;align-items:center;justify-content:center;font-size:12px">👤</div>`;
+      : `<div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#1d4ed8,#0ea5e9);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff">${initial}</div>`;
 
     gBtn.innerHTML = `${avatarHTML}<span style="font-size:12px;font-weight:700;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(user.name.split(' ')[0])}</span><span style="font-size:13px">⚙</span>`;
     gBtn.onmouseover = () => { gBtn.style.borderColor = '#38bdf8'; gBtn.style.color = '#e2e8f0'; };

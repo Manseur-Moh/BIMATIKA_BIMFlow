@@ -4,8 +4,6 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>BIMFlow — De Revit au Web, en un clic</title>
-<!-- Google Identity Services  →  remplacez CLIENT_ID par votre vrai ID -->
-<script src="https://accounts.google.com/gsi/client" async></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -142,16 +140,23 @@ h1{font-size:clamp(38px,6vw,70px);font-weight:900;line-height:1.08;margin-bottom
 .cta{text-align:center;padding:90px 24px;max-width:680px;margin:0 auto}
 .cta h2{font-size:clamp(26px,4vw,42px);font-weight:900;color:#f1f5f9;margin-bottom:14px;line-height:1.15}
 .cta p{color:#475569;font-size:16px;line-height:1.7;margin-bottom:38px}
-.google-btn{display:inline-flex;align-items:center;gap:12px;background:#fff;color:#1e293b;border:none;border-radius:12px;
-  padding:13px 28px;font-size:15px;font-weight:700;cursor:pointer;
-  box-shadow:0 4px 24px rgba(0,0,0,.35);transition:all .22s}
-.google-btn:hover{transform:translateY(-2px);box-shadow:0 8px 36px rgba(0,0,0,.45)}
-.g-svg{width:22px;height:22px;flex-shrink:0}
-#login-info{font-size:12px;color:#475569;margin-top:14px;min-height:18px}
-.config-notice{background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.2);border-radius:10px;
-  padding:14px 18px;margin-bottom:28px;font-size:12px;color:#92400e;line-height:1.6;text-align:left}
-.config-notice b{color:#f59e0b}
-.config-notice code{background:rgba(245,158,11,.1);padding:1px 5px;border-radius:3px;font-family:Consolas,monospace}
+.login-box{background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;max-width:420px;margin:0 auto;text-align:left}
+.login-box label{display:block;font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;margin-top:16px}
+.login-box label:first-of-type{margin-top:0}
+.login-box input{width:100%;background:#060f1e;color:#e2e8f0;border:1px solid #334155;border-radius:9px;
+  padding:11px 14px;font-size:14px;outline:none;transition:border-color .2s;font-family:inherit}
+.login-box input:focus{border-color:#3b82f6}
+.login-box input::placeholder{color:#334155}
+.btn-login{width:100%;margin-top:20px;padding:13px;background:linear-gradient(135deg,#1d4ed8,#0ea5e9);
+  border:none;color:#fff;border-radius:9px;font-size:15px;font-weight:700;cursor:pointer;
+  transition:all .22s;box-shadow:0 6px 24px rgba(14,165,233,.3)}
+.btn-login:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(14,165,233,.45)}
+#login-err{font-size:12px;color:#f87171;margin-top:10px;min-height:16px}
+.google-hint{display:flex;align-items:center;gap:8px;margin-top:14px;
+  font-size:12px;color:#334155;justify-content:center}
+.google-hint::before,.google-hint::after{content:'';flex:1;height:1px;background:#1e3a5f}
+.google-logo{display:inline-flex;gap:2px;font-size:11px;font-weight:700}
+.g-b{color:#4285F4}.g-r{color:#EA4335}.g-y{color:#FBBC05}.g-g{color:#34A853}
 
 /* ── FOOTER ── */
 footer{border-top:1px solid #0f1c30;padding:36px 32px;text-align:center;max-width:1100px;margin:0 auto}
@@ -351,26 +356,26 @@ footer{border-top:1px solid #0f1c30;padding:36px 32px;text-align:center;max-widt
   <h2>Prêt à transformer votre workflow BIM ?</h2>
   <p>Rejoignez les équipes qui utilisent BIMFlow pour publier, partager et analyser leurs projets Revit depuis n'importe où.</p>
 
-  <!-- Notice de configuration Google -->
-  <div class="config-notice" id="configNotice" style="display:none">
-    <b>⚙ Configuration Google Sign-In requise</b><br>
-    Pour activer la connexion Google, ajoutez votre Client ID OAuth dans le fichier <code>accueil.html</code> :<br>
-    1. Allez sur <b>console.cloud.google.com</b> → API et services → Identifiants<br>
-    2. Créez un ID client OAuth 2.0 (type : Application Web)<br>
-    3. Ajoutez <code>https://bimatika-bimplan.pages.dev</code> comme origine autorisée<br>
-    4. Remplacez <code>VOTRE_CLIENT_ID</code> dans le code par votre ID
-  </div>
+  <div class="login-box">
+    <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:4px">Créer un compte / Se connecter</div>
+    <div style="font-size:12px;color:#475569;margin-bottom:20px">Entrez votre adresse e-mail pour accéder à BIMFlow</div>
 
-  <button class="google-btn" id="googleBtn" onclick="doGoogleLogin()">
-    <svg class="g-svg" viewBox="0 0 24 24">
-      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-    </svg>
-    Se connecter avec Google
-  </button>
-  <div id="login-info"></div>
+    <label>Nom complet</label>
+    <input type="text" id="inp-name" placeholder="Ex : Mohamed Manseur" maxlength="60" autocomplete="name"/>
+
+    <label>Adresse e-mail</label>
+    <input type="email" id="inp-email" placeholder="votre@gmail.com" autocomplete="email"/>
+
+    <div id="login-err"></div>
+    <button class="btn-login" onclick="doLogin()">Accéder à BIMFlow →</button>
+
+    <div class="google-hint">
+      <span class="google-logo">
+        <span class="g-b">G</span><span class="g-r">o</span><span class="g-y">o</span><span class="g-g">g</span><span class="g-b">l</span><span class="g-r">e</span>
+      </span>
+      Utilisez votre adresse Gmail
+    </div>
+  </div>
   <p style="margin-top:20px;font-size:12px;color:#1e3a5f">En vous connectant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité.</p>
 </div>
 
@@ -388,60 +393,40 @@ footer{border-top:1px solid #0f1c30;padding:36px 32px;text-align:center;max-widt
 </footer>
 
 <script>
-// ══════════════════════════════════════════════════════
-//  CONFIGURATION GOOGLE SIGN-IN
-//  ➜ Remplacez la valeur ci-dessous par votre Client ID
-//  Étapes :
-//  1. console.cloud.google.com → API et services → Identifiants
-//  2. Créer un ID client OAuth 2.0 (Application Web)
-//  3. Origine autorisée : https://bimatika-bimplan.pages.dev
-//  4. Copiez l'ID et remplacez VOTRE_CLIENT_ID ci-dessous
-// ══════════════════════════════════════════════════════
-const GOOGLE_CLIENT_ID = 'VOTRE_CLIENT_ID.apps.googleusercontent.com';
+function doLogin() {
+  const name  = document.getElementById('inp-name').value.trim();
+  const email = document.getElementById('inp-email').value.trim().toLowerCase();
+  const err   = document.getElementById('login-err');
 
-const isConfigured = !GOOGLE_CLIENT_ID.startsWith('VOTRE_');
+  if (!name)  { err.textContent = 'Entrez votre nom.';           return; }
+  if (!email || !email.includes('@')) { err.textContent = 'Entrez une adresse e-mail valide.'; return; }
+  err.textContent = '';
 
-function doGoogleLogin() {
-  if (!isConfigured) {
-    document.getElementById('configNotice').style.display = 'block';
-    document.getElementById('login-info').textContent = '';
-    return;
-  }
-  if (typeof google !== 'undefined') google.accounts.id.prompt();
+  // Derive initials-based avatar letter
+  const initial = name.charAt(0).toUpperCase();
+
+  const user = {
+    name,
+    email,
+    picture: '',   // pas de photo — on affichera l'initiale
+    initial,
+    plan:    'free',
+    loginAt: new Date().toISOString(),
+  };
+  localStorage.setItem('bimflow_user', JSON.stringify(user));
+  window.location.href = '/';
 }
 
-// Called by Google after authentication
-function onGoogleLogin(response) {
-  try {
-    const parts = response.credential.split('.');
-    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-    const user = {
-      name:    payload.name    || 'Utilisateur',
-      email:   payload.email   || '',
-      picture: payload.picture || '',
-      sub:     payload.sub     || '',
-      plan:    'free',
-      loginAt: new Date().toISOString(),
-    };
-    localStorage.setItem('bimflow_user', JSON.stringify(user));
-    document.getElementById('login-info').textContent = '✓ Connecté — redirection…';
-    setTimeout(() => window.location.href = '/', 600);
-  } catch(e) {
-    document.getElementById('login-info').textContent = 'Erreur de connexion : ' + e.message;
-  }
-}
-
-window.addEventListener('load', () => {
-  // Already logged in? Redirect to app
-  try {
-    const u = JSON.parse(localStorage.getItem('bimflow_user') || 'null');
-    if (u?.email) { window.location.href = '/'; return; }
-  } catch {}
-
-  if (isConfigured && typeof google !== 'undefined') {
-    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogleLogin });
-  }
+// Submit on Enter
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
 });
+
+// Already logged in? Go to app
+try {
+  const u = JSON.parse(localStorage.getItem('bimflow_user') || 'null');
+  if (u?.email) window.location.href = '/';
+} catch {}
 </script>
 </body>
 </html>
