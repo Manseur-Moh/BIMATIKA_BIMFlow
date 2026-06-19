@@ -324,6 +324,7 @@
   <div class="topbar-right">
     <button class="refresh-btn" id="langBtn" title="Language / Langue">EN</button>
     <button class="refresh-btn" id="themeBtn" title="Thème clair / sombre">☾</button>
+    <button class="refresh-btn" id="toggleLevels" data-en="🏢 Levels" title="Afficher / masquer les niveaux">🏢 Niveaux</button>
     <button class="refresh-btn" id="toggleRooms" data-en="👥 Rooms" title="Afficher / masquer le panneau des pièces">👥 Pièces</button>
     <button class="refresh-btn" id="togglePlan" data-en="🗺 Plan" title="Afficher / masquer le plan">🗺 Plan</button>
     <button class="refresh-btn" id="btnSaveVersion" data-en="💾 Version" title="Enregistrer une copie horodatée">💾 Version</button>
@@ -336,19 +337,41 @@
 </div>
 
 <!-- Compare picker -->
-<div id="cmpPop" style="display:none;position:fixed;top:52px;right:12px;z-index:1200;background:#1f2937;border:1px solid #374151;border-radius:8px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.7);width:300px;font-size:12px">
-  <div style="font-weight:700;color:#cbd5e1;margin-bottom:8px">Comparer deux versions</div>
-  <label style="font-size:10px;color:#64748b">Version A (avant)</label>
-  <select id="cmpA" style="width:100%;margin:2px 0 8px;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:4px"></select>
-  <label style="font-size:10px;color:#64748b">Version B (après)</label>
-  <select id="cmpB" style="width:100%;margin:2px 0 10px;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:4px"></select>
-  <div style="display:flex;gap:6px">
-    <button id="cmpRun" style="flex:1;background:#1d4ed8;color:#e0f2fe;border:none;border-radius:5px;padding:6px;font-weight:700;cursor:pointer">Comparer</button>
-    <button id="cmpClose" style="background:#30415b;color:#94a3b8;border:none;border-radius:5px;padding:6px 10px;cursor:pointer">Fermer</button>
+<div id="cmpPop" style="display:none;position:fixed;top:52px;right:12px;z-index:1200;background:#1f2937;border:1px solid #374151;border-radius:8px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.7);width:320px;font-size:12px">
+  <!-- mode tabs -->
+  <div style="display:flex;gap:4px;margin-bottom:10px">
+    <button id="cmpTabLevel" style="flex:1;padding:5px;border-radius:5px;border:1px solid #3b82f6;background:#1d4ed8;color:#e0f2fe;font-weight:700;cursor:pointer;font-size:11px">📄 Ce niveau</button>
+    <button id="cmpTabAll" style="flex:1;padding:5px;border-radius:5px;border:1px solid #374151;background:#0f172a;color:#94a3b8;font-weight:700;cursor:pointer;font-size:11px">🌍 Tout le projet</button>
+    <button id="cmpClose" style="padding:5px 8px;border-radius:5px;border:1px solid #374151;background:#30415b;color:#94a3b8;cursor:pointer">✕</button>
   </div>
-  <button id="cmpSaveAll" style="width:100%;margin-top:8px;background:#0e4429;color:#3fb950;border:1px solid #238636;border-radius:5px;padding:6px;font-weight:600;cursor:pointer">💾 Enregistrer une version de TOUS les niveaux</button>
-  <div style="font-size:10px;color:#64748b;margin-top:10px">Versions enregistrées (ce niveau) :</div>
-  <div id="cmpManage" style="margin-top:4px;font-size:11px;max-height:150px;overflow:auto"></div>
+
+  <!-- Section niveau courant -->
+  <div id="cmpSecLevel">
+    <label style="font-size:10px;color:#64748b">Version A (avant)</label>
+    <select id="cmpA" style="width:100%;margin:2px 0 8px;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:4px"></select>
+    <label style="font-size:10px;color:#64748b">Version B (après)</label>
+    <select id="cmpB" style="width:100%;margin:2px 0 8px;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:4px"></select>
+    <button id="cmpRun" style="width:100%;background:#1d4ed8;color:#e0f2fe;border:none;border-radius:5px;padding:6px;font-weight:700;cursor:pointer">⇆ Comparer ce niveau</button>
+    <div style="font-size:10px;color:#64748b;margin-top:8px">Versions sauvegardées :</div>
+    <div id="cmpManage" style="margin-top:4px;font-size:11px;max-height:100px;overflow:auto"></div>
+  </div>
+
+  <!-- Section tout le projet -->
+  <div id="cmpSecAll" style="display:none">
+    <label style="font-size:10px;color:#64748b">Instantané A (avant)</label>
+    <select id="cmpBatchA" style="width:100%;margin:2px 0 8px;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:4px"></select>
+    <label style="font-size:10px;color:#64748b">Instantané B (après)</label>
+    <select id="cmpBatchB" style="width:100%;margin:2px 0 8px;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:4px"></select>
+    <button id="cmpRunAll" style="width:100%;background:#7c3aed;color:#ede9fe;border:none;border-radius:5px;padding:6px;font-weight:700;cursor:pointer">⇆ Comparer tout le projet</button>
+    <div style="font-size:10px;color:#64748b;margin-top:6px">Instantanés disponibles :</div>
+    <div id="cmpBatchManage" style="margin-top:4px;font-size:11px;max-height:100px;overflow:auto"></div>
+  </div>
+
+  <div style="border-top:1px solid #374151;margin-top:10px;padding-top:8px;display:flex;gap:4px">
+    <button id="cmpSave" style="flex:1;background:#0e4429;color:#3fb950;border:1px solid #238636;border-radius:5px;padding:5px;font-weight:600;cursor:pointer;font-size:11px">💾 Sauver ce niveau</button>
+    <button id="cmpSaveAll" style="flex:1;background:#0e3020;color:#3fb950;border:1px solid #238636;border-radius:5px;padding:5px;font-weight:600;cursor:pointer;font-size:11px">💾 Sauver tout le projet</button>
+  </div>
+  <div id="cmpStatus" style="font-size:10px;color:#64748b;margin-top:6px;text-align:center"></div>
 </div>
 
 <!-- Layout reset popup -->
@@ -1112,67 +1135,143 @@ function updateMinimap(){
   const r=$('mini-vp'); if(r){r.setAttribute('x',x1);r.setAttribute('y',y1);r.setAttribute('width',Math.max(0,x2-x1));r.setAttribute('height',Math.max(0,y2-y1));}
 }
 
-/* ═══ VERSIONS + COMPARE ═══ */
-function snapKey(){ return 'bimflow_snaps_'+currentPlanKey; }
-function loadSnaps(){ try{ return JSON.parse(localStorage.getItem(snapKey()))||[]; }catch(e){ return []; } }
-function saveSnaps(a){ try{ localStorage.setItem(snapKey(),JSON.stringify(a)); return true; }catch(e){ alert('Stockage plein — supprimez d\'anciennes versions.'); return false; } }
-function snapshotRooms(){ const m={}; (plan?.Rooms||[]).forEach(r=>m[r.RevitId]={Number:r.Number,Name:r.Name,P:Object.assign({},r.Parameters||{})}); return m; }
-$('btnSaveVersion').addEventListener('click',()=>{
-  if(!plan){ alert('Aucun plan chargé.'); return; }
-  const snaps=loadSnaps(); const ts=new Date();
-  snaps.push({ts:ts.toISOString(), label:ts.toLocaleString('fr-FR'), rooms:snapshotRooms()});
-  while(snaps.length>20) snaps.shift();
-  if(saveSnaps(snaps)) alert('Version enregistrée : '+ts.toLocaleString('fr-FR')+'\n('+snaps.length+' version(s) sauvegardée(s) pour ce niveau)');
-});
+/* ═══ VERSIONS + COMPARE (KV via /api/versions) ═══ */
+function snapshotRooms(p){ const m={}; ((p||plan)?.Rooms||[]).forEach(r=>m[r.RevitId]={Number:r.Number,Name:r.Name,P:Object.assign({},r.Parameters||{})}); return m; }
+function setCmpStatus(msg){ $('cmpStatus').textContent=msg; }
 
-function versionRooms(val){ if(val==='current') return snapshotRooms(); const s=loadSnaps()[+val]; return s?s.rooms:{}; }
-function openCompare(){
+/* ── save one level ── */
+async function saveVersion(){
   if(!plan){ alert('Aucun plan chargé.'); return; }
-  const snaps=loadSnaps();
-  const opts='<option value="current">Actuel (plan chargé)</option>'+snaps.map((s,i)=>`<option value="${i}">${esc(s.label)}</option>`).join('');
-  $('cmpA').innerHTML=opts; $('cmpB').innerHTML=opts;
-  if(snaps.length) $('cmpA').value=String(snaps.length-1);
-  $('cmpB').value='current';
-  $('cmpManage').innerHTML = snaps.length
-    ? snaps.map((s,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:2px 0;border-bottom:1px solid rgba(127,127,127,.15)"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.label)}</span><button class="vdel" data-i="${i}" title="Supprimer cette version" style="background:transparent;border:1px solid #5b2330;color:#f87171;border-radius:4px;cursor:pointer;font-size:11px;padding:1px 6px">🗑</button></div>`).join('')
-    : '<span style="color:#64748b">Aucune version pour ce niveau.</span>';
-  $('cmpManage').querySelectorAll('.vdel').forEach(b=>b.addEventListener('click',()=>{
-    const arr=loadSnaps(); arr.splice(+b.getAttribute('data-i'),1); saveSnaps(arr); openCompare();
-  }));
-  $('cmpPop').style.display='block';
-}
-async function saveAllVersions(){
+  const ts=new Date().toISOString(), label=new Date(ts).toLocaleString('fr-FR');
+  setCmpStatus('Sauvegarde…');
   try{
-    const list=await api('/api/plans'); if(!list.length){ alert('Aucun plan.'); return; }
-    const ts=new Date(); let n=0;
-    for(const m of list){
-      try{
-        const p=await api('/api/plans?key='+encodeURIComponent(m.key)+'&light=1');
-        const k='bimflow_snaps_'+m.key; let snaps=[]; try{ snaps=JSON.parse(localStorage.getItem(k))||[]; }catch(e){}
-        const rooms={}; (p.Rooms||[]).forEach(r=>rooms[r.RevitId]={Number:r.Number,Name:r.Name,P:Object.assign({},r.Parameters||{})});
-        snaps.push({ts:ts.toISOString(),label:ts.toLocaleString('fr-FR'),rooms}); while(snaps.length>20) snaps.shift();
-        localStorage.setItem(k,JSON.stringify(snaps)); n++;
-      }catch(e){}
-    }
-    openCompare(); alert(n+' niveau(x) enregistré(s) à '+ts.toLocaleString('fr-FR')+'.');
-  }catch(e){ alert('Erreur: '+e.message); }
+    await api('/api/versions?key='+encodeURIComponent(currentPlanKey),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ts,label,rooms:snapshotRooms()})});
+    setCmpStatus('✓ Version sauvegardée.'); refreshLevelSnaps();
+  }catch(e){ setCmpStatus('Erreur: '+e.message); }
 }
-$('cmpSaveAll').addEventListener('click',saveAllVersions);
-$('btnCompare').addEventListener('click',openCompare);
-$('cmpClose').addEventListener('click',()=>$('cmpPop').style.display='none');
-$('cmpRun').addEventListener('click',()=>{
-  const A=versionRooms($('cmpA').value), B=versionRooms($('cmpB').value);
-  const aLabel=$('cmpA').selectedOptions[0].textContent, bLabel=$('cmpB').selectedOptions[0].textContent;
+/* ── save all levels ── */
+async function saveAllVersions(){
+  const list=await api('/api/plans').catch(e=>{ alert('Erreur liste: '+e.message); return null; });
+  if(!list?.length){ alert('Aucun plan.'); return; }
+  setCmpStatus('Chargement de tous les niveaux…');
+  const ts=new Date().toISOString(), label=new Date(ts).toLocaleString('fr-FR');
+  const plans=[];
+  for(const m of list){
+    try{
+      const p=await getPlanData(m.key);
+      plans.push({key:m.key,rooms:snapshotRooms(p)});
+      setCmpStatus(`Chargé ${plans.length}/${list.length}…`);
+    }catch(e){}
+  }
+  try{
+    await api('/api/versions?batch=1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ts,label,plans})});
+    setCmpStatus(`✓ ${plans.length} niveau(x) sauvegardés.`); refreshLevelSnaps(); refreshBatchSnaps();
+  }catch(e){ setCmpStatus('Erreur: '+e.message); }
+}
+
+/* ── load list + refresh UI ── */
+async function refreshLevelSnaps(){
+  if(!currentPlanKey) return;
+  const snaps=await api('/api/versions?key='+encodeURIComponent(currentPlanKey)).catch(()=>[]);
+  const opts='<option value="__current">Actuel (plan chargé)</option>'+snaps.map(s=>`<option value="${encodeURIComponent(s.ts)}">${esc(s.label)}</option>`).join('');
+  $('cmpA').innerHTML=opts; $('cmpB').innerHTML=opts;
+  if(snaps.length) $('cmpA').value=encodeURIComponent(snaps[0].ts);
+  $('cmpB').value='__current';
+  $('cmpManage').innerHTML=snaps.length
+    ? snaps.map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;padding:2px 0;border-bottom:1px solid rgba(127,127,127,.15)"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.label)}</span><button class="vdel" data-ts="${encodeURIComponent(s.ts)}" style="background:transparent;border:1px solid #5b2330;color:#f87171;border-radius:4px;cursor:pointer;font-size:10px;padding:1px 5px">🗑</button></div>`).join('')
+    : '<span style="color:#64748b">Aucune version pour ce niveau.</span>';
+  $('cmpManage').querySelectorAll('.vdel').forEach(b=>b.addEventListener('click',async()=>{
+    b.disabled=true;
+    await api('/api/versions?key='+encodeURIComponent(currentPlanKey)+'&ts='+b.getAttribute('data-ts'),{method:'DELETE'}).catch(()=>{});
+    refreshLevelSnaps();
+  }));
+}
+async function refreshBatchSnaps(){
+  const batches=await api('/api/versions?all=1').catch(()=>[]);
+  const opts='<option value="__current">Actuel (plans chargés)</option>'+batches.map(b=>`<option value="${encodeURIComponent(b.ts)}">${esc(b.label)}</option>`).join('');
+  $('cmpBatchA').innerHTML=opts; $('cmpBatchB').innerHTML=opts;
+  if(batches.length) $('cmpBatchA').value=encodeURIComponent(batches[0].ts);
+  $('cmpBatchB').value='__current';
+  $('cmpBatchManage').innerHTML=batches.length
+    ? batches.map(b=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;padding:2px 0;border-bottom:1px solid rgba(127,127,127,.15)"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(b.label)} <span style="color:#475569">(${b.planKeys?.length||0} niv.)</span></span></div>`).join('')
+    : '<span style="color:#64748b">Aucun instantané global.</span>';
+}
+async function openCompare(){
+  if(!plan){ alert('Aucun plan chargé.'); return; }
+  $('cmpPop').style.display='block'; setCmpStatus('Chargement…');
+  await Promise.all([refreshLevelSnaps(), refreshBatchSnaps()]);
+  setCmpStatus('');
+}
+
+/* ── load rooms for one slot (current or ts) ── */
+async function slotRooms(val, key){
+  if(val==='__current'){
+    if(key && key!==currentPlanKey){ const p=await getPlanData(key); return snapshotRooms(p); }
+    return snapshotRooms();
+  }
+  const ts=decodeURIComponent(val);
+  const data=await api('/api/versions?key='+encodeURIComponent(key||currentPlanKey)+'&ts='+encodeURIComponent(ts));
+  return data.rooms||{};
+}
+
+/* ── diff two room maps ── */
+function diffRooms(A,B,aLabel,bLabel){
   const ids=new Set([...Object.keys(A),...Object.keys(B)]); const rooms=[]; const changedIds=new Set();
   ids.forEach(id=>{ const ra=A[id], rb=B[id]; const pa=ra?ra.P:{}, pb=rb?rb.P:{};
     const keys=new Set([...Object.keys(pa),...Object.keys(pb)]); const changes=[];
     keys.forEach(k=>{ const va=pa[k]??'', vb=pb[k]??''; if(String(va)!==String(vb)) changes.push({key:k,a:va,b:vb}); });
     if(changes.length){ rooms.push({id,number:(rb||ra).Number,name:(rb||ra).Name,changes}); changedIds.add(id); }
   });
-  compareDiff={aLabel,bLabel,rooms,changedIds};
-  $('cmpPop').style.display='none';
-  renderCompare();
+  return {aLabel,bLabel,rooms,changedIds};
+}
+
+/* ── tabs ── */
+$('cmpTabLevel').addEventListener('click',()=>{
+  $('cmpSecLevel').style.display=''; $('cmpSecAll').style.display='none';
+  $('cmpTabLevel').style.background='#1d4ed8'; $('cmpTabLevel').style.borderColor='#3b82f6'; $('cmpTabLevel').style.color='#e0f2fe';
+  $('cmpTabAll').style.background='#0f172a'; $('cmpTabAll').style.borderColor='#374151'; $('cmpTabAll').style.color='#94a3b8';
 });
+$('cmpTabAll').addEventListener('click',()=>{
+  $('cmpSecAll').style.display=''; $('cmpSecLevel').style.display='none';
+  $('cmpTabAll').style.background='#7c3aed'; $('cmpTabAll').style.borderColor='#7c3aed'; $('cmpTabAll').style.color='#ede9fe';
+  $('cmpTabLevel').style.background='#0f172a'; $('cmpTabLevel').style.borderColor='#374151'; $('cmpTabLevel').style.color='#94a3b8';
+});
+
+/* ── compare current level ── */
+$('cmpRun').addEventListener('click',async()=>{
+  setCmpStatus('Comparaison…'); $('cmpRun').disabled=true;
+  try{
+    const [A,B]=await Promise.all([slotRooms($('cmpA').value),slotRooms($('cmpB').value)]);
+    const aLabel=$('cmpA').selectedOptions[0].textContent, bLabel=$('cmpB').selectedOptions[0].textContent;
+    compareDiff=diffRooms(A,B,aLabel,bLabel);
+    $('cmpPop').style.display='none'; renderCompare();
+  }catch(e){ setCmpStatus('Erreur: '+e.message); }
+  finally{ $('cmpRun').disabled=false; }
+});
+
+/* ── compare all project ── */
+$('cmpRunAll').addEventListener('click',async()=>{
+  setCmpStatus('Chargement de tout le projet…'); $('cmpRunAll').disabled=true;
+  try{
+    const list=await api('/api/plans');
+    const valA=$('cmpBatchA').value, valB=$('cmpBatchB').value;
+    const A={}, B={};
+    for(const m of list){
+      const [ra,rb]=await Promise.all([slotRooms(valA,m.key).catch(()=>({})), slotRooms(valB,m.key).catch(()=>({}))]);
+      Object.assign(A,ra); Object.assign(B,rb);
+    }
+    const aLabel=$('cmpBatchA').selectedOptions[0].textContent, bLabel=$('cmpBatchB').selectedOptions[0].textContent;
+    compareDiff=diffRooms(A,B,aLabel,bLabel);
+    $('cmpPop').style.display='none'; renderCompare();
+  }catch(e){ setCmpStatus('Erreur: '+e.message); }
+  finally{ $('cmpRunAll').disabled=false; }
+});
+
+$('cmpSave').addEventListener('click',saveVersion);
+$('cmpSaveAll').addEventListener('click',saveAllVersions);
+$('btnSaveVersion').addEventListener('click',saveVersion);
+$('btnCompare').addEventListener('click',openCompare);
+$('cmpClose').addEventListener('click',()=>$('cmpPop').style.display='none');
 function renderCompare(){
   if(!compareDiff) return;
   $('paramScope').textContent='Comparaison : '+compareDiff.aLabel+'  ⇆  '+compareDiff.bLabel+'  ('+compareDiff.rooms.length+' pièce(s) modifiée(s))';
@@ -1198,6 +1297,12 @@ function renderCompare(){
 
 /* ═══ PANEL TOGGLES ═══ */
 function refitPlan(){ const s=$('mainSvg'); if(s&&plan) setTimeout(()=>resetView(s),30); }
+$('toggleLevels').addEventListener('click',function(){
+  const la=document.querySelector('.levels-aside'), sp=$('splitLevels');
+  const hidden=la.style.display==='none';
+  la.style.display=hidden?'':'none'; if(sp) sp.style.display=hidden?'':'none';
+  this.classList.toggle('on',!hidden); refitPlan(); setTimeout(resize3D,30);
+});
 $('toggleRooms').addEventListener('click',function(){
   const a=document.querySelector('.rooms-aside');
   const collapsed=a.classList.toggle('collapsed');
