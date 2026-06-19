@@ -745,7 +745,7 @@ function roomClicked(id,additive,planKey){
 function clearSelection(){
   if(compareDiff||!selIds.size)return; selIds.clear(); lastSel=null;
   if(isolateMode){
-    if(selectedLevelKeys.size>1){ recolor3D(); } // level-based isolate stays
+    if(selectedLevelKeys.size>0){ recolor3D(); } // level-based isolate stays
     else { isolateMode=false; rooms3D().forEach(r=>{ const m=R3.meshes[r.RevitId]; if(m) m.visible=true; }); $('btn3dIsolate').classList.remove('active'); }
   }
   onSelectionChanged(false);
@@ -1430,7 +1430,7 @@ function init3D(){
     } else if(!e.ctrlKey&&!e.metaKey&&!e.shiftKey){
       /* click on empty space → deselect rooms */
       selIds.clear(); lastSel=null;
-      if(isolateMode && selectedLevelKeys.size<=1){
+      if(isolateMode && selectedLevelKeys.size===0){
         isolateMode=false; rooms3D().forEach(r=>{ const m=R3.meshes[r.RevitId]; if(m) m.visible=true; }); $('btn3dIsolate').classList.remove('active');
       }
       onSelectionChanged(false); renderList(); renderMatrix();
@@ -1481,7 +1481,7 @@ $('btn3dShade').addEventListener('click',()=>{
   $('btn3dShade').classList.remove('active'); $('btn3dIsolate').classList.remove('active');
 });
 $('btn3dIsolate').addEventListener('click',()=>{
-  const hasRooms=selIds.size>0, hasLevels=selectedLevelKeys.size>1;
+  const hasRooms=selIds.size>0, hasLevels=selectedLevelKeys.size>0;
   if(!hasRooms && !hasLevels){ alert('Sélectionnez des pièces ou plusieurs niveaux.'); return; }
   isolateMode=true; recolor3D(); fitToIsolated();
   $('btn3dIsolate').classList.add('active'); $('btn3dShade').classList.remove('active');
@@ -1498,7 +1498,7 @@ function recolor3D(){
     /* ── isolate mode ── */
     if(isolateMode){
       const byRoom = selIds.size>0;
-      const byLevel = !byRoom && selectedLevelKeys.size>1;
+      const byLevel = !byRoom && selectedLevelKeys.size>0;
       const visible = byRoom ? selIds.has(r.RevitId)
                     : byLevel ? selectedLevelKeys.has(r._planKey)
                     : true;
