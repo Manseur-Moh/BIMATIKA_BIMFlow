@@ -46,7 +46,7 @@ export async function onRequestPost({ request, env }) {
     const origin       = new URL(request.url).origin;
     const token        = crypto.randomUUID();
 
-    // Admin + dev always auto-confirm; everyone else must click the email link
+    // Admin + dev always auto-confirm
     if (isAdmin || isLocal) {
       const session = crypto.randomUUID();
       await kv.put(ekey, JSON.stringify({
@@ -57,11 +57,15 @@ export async function onRequestPost({ request, env }) {
       return json({ ok: true, autoConfirmed: true, session, user: { name, email: emailLC, plan: "free" } });
     }
 
-    // Production non-admin: require email confirmation
+    // No Resend key → auto-confirm immediately (email confirmation skipped)
     if (!env.RESEND_API_KEY) {
-      return json({
-        error: "Le service d'envoi d'emails n'est pas configuré. Contactez l'administrateur.",
-      }, 503);
+      const session = crypto.randomUUID();
+      await kv.put(ekey, JSON.stringify({
+        name, email: emailLC, passwordHash,
+        confirmed: true, plan: "free", createdAt: now,
+      }));
+      await kv.put(`bfsession:${session}`, emailLC, { expirationTtl: 2592000 });
+      return json({ ok: true, autoConfirmed: true, session, user: { name, email: emailLC, plan: "free" } });
     }
 
     // Store user as pending confirmation
