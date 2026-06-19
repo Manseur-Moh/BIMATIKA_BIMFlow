@@ -846,7 +846,7 @@ async function loadAllLevels(){
     const list=await api('/api/plans');
     const results=await Promise.all(list.map(p=>getPlanData(p.key)));
     allLevelsRooms=[];
-    results.forEach(p=>{ (p.Rooms||[]).forEach(r=>allLevelsRooms.push({...r,_levelName:p.LevelName,_planKey:p.key})); });
+    results.forEach((p,i)=>{ (p.Rooms||[]).forEach(r=>allLevelsRooms.push({...r,_levelName:p.LevelName,_planKey:list[i].key})); });
     setStatus(`${allLevelsRooms.length} pièces — tous niveaux`,'ok');
   }catch(e){ setStatus('Erreur: '+e.message,'err'); allLevelsMode=false; updateAllLevelsBtn(); }
 }
@@ -1481,8 +1481,6 @@ $('btn3dShade').addEventListener('click',()=>{
   $('btn3dShade').classList.remove('active'); $('btn3dIsolate').classList.remove('active');
 });
 $('btn3dIsolate').addEventListener('click',()=>{
-  const hasRooms=selIds.size>0, hasLevels=selectedLevelKeys.size>0;
-  if(!hasRooms && !hasLevels){ alert('Sélectionnez des pièces ou plusieurs niveaux.'); return; }
   isolateMode=true; recolor3D(); fitToIsolated();
   $('btn3dIsolate').classList.add('active'); $('btn3dShade').classList.remove('active');
 });
@@ -1497,16 +1495,10 @@ function recolor3D(){
 
     /* ── isolate mode ── */
     if(isolateMode){
-      const byRoom = selIds.size>0;
-      const byLevel = !byRoom && selectedLevelKeys.size>0;
-      const visible = byRoom ? selIds.has(r.RevitId)
-                    : byLevel ? selectedLevelKeys.has(r._planKey)
-                    : true;
-      mesh.visible=visible;
-      if(visible){
-        const col = byRoom && selIds.has(r.RevitId) ? 0xef4444 : 0x3b82f6;
-        mesh.material.color.setHex(col); mesh.material.opacity=.90;
-      }
+      const rKey = r._planKey || currentPlanKey; // fallback: rooms without _planKey belong to current plan
+      const inScope = selIds.size>0 ? selIds.has(r.RevitId) : selectedLevelKeys.has(rKey);
+      mesh.visible = inScope;
+      if(inScope){ mesh.material.color.setHex(selIds.has(r.RevitId)?0xef4444:0x3b82f6); mesh.material.opacity=.90; }
       return;
     }
     mesh.visible=true;
