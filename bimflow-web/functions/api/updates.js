@@ -12,17 +12,23 @@ const CORS = {
 };
 const j = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: CORS });
 
+const sanitize = (s) => String(s || "").replace(/[^a-zA-Z0-9_\-]/g, "_").substring(0, 80);
+const keyFor = (request) => {
+  const code = sanitize(new URL(request.url).searchParams.get("code") || "");
+  return code ? "pending:" + code : "pending";
+};
+
 export async function onRequestOptions() { return new Response("", { status: 200, headers: CORS }); }
 
 export async function onRequestPost({ request, env }) {
-  try { const payload = await request.json(); await env.BIMFLOW.put("pending", JSON.stringify(payload)); return j({ ok: true }); }
+  try { const payload = await request.json(); await env.BIMFLOW.put(keyFor(request), JSON.stringify(payload)); return j({ ok: true }); }
   catch (err) { return j({ error: err.message }, 500); }
 }
-export async function onRequestGet({ env }) {
-  try { const data = await env.BIMFLOW.get("pending", { type: "json" }); return j(data || { Updates: [] }); }
+export async function onRequestGet({ request, env }) {
+  try { const data = await env.BIMFLOW.get(keyFor(request), { type: "json" }); return j(data || { Updates: [] }); }
   catch (err) { return j({ error: err.message }, 500); }
 }
-export async function onRequestDelete({ env }) {
-  try { await env.BIMFLOW.delete("pending"); return j({ ok: true }); }
+export async function onRequestDelete({ request, env }) {
+  try { await env.BIMFLOW.delete(keyFor(request)); return j({ ok: true }); }
   catch (err) { return j({ error: err.message }, 500); }
 }

@@ -96,7 +96,7 @@ namespace BIMFlowPlugin.Auth
         {
             _errorLabel.Text = "Connexion en cours…";
             _loginBtn.Enabled = false;
-            Application.DoEvents();
+            System.Windows.Forms.Application.DoEvents();
 
             var (ok, err) = BFSession.Login(_emailBox.Text.Trim(), _pwBox.Text);
             if (ok)

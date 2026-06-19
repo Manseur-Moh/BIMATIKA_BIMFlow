@@ -66,20 +66,20 @@ namespace BIMFlowPlugin.Auth
                 var content = new StringContent(body, Encoding.UTF8, "application/json");
                 var resp    = _http.PostAsync(LoginUrl, content).GetAwaiter().GetResult();
                 var json    = resp.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-                dynamic data = JsonConvert.DeserializeObject<dynamic>(json);
+                var data    = Newtonsoft.Json.Linq.JObject.Parse(json);
 
                 if (!resp.IsSuccessStatusCode)
                 {
-                    string msg = data?.error ?? "Erreur de connexion";
-                    return (false, msg.ToString());
+                    string msg = data["error"]?.ToString() ?? "Erreur de connexion";
+                    return (false, msg);
                 }
 
                 Save(new SessionData
                 {
-                    Email   = data.user.email.ToString(),
-                    Name    = data.user.name.ToString(),
-                    Session = data.session.ToString(),
-                    Plan    = data.user.plan?.ToString() ?? "free",
+                    Email   = data["user"]?["email"]?.ToString() ?? "",
+                    Name    = data["user"]?["name"]?.ToString() ?? "",
+                    Session = data["session"]?.ToString() ?? "",
+                    Plan    = data["user"]?["plan"]?.ToString() ?? "free",
                 });
                 return (true, null);
             }

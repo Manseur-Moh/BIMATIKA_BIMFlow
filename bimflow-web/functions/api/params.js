@@ -10,7 +10,8 @@ const CORS = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Content-Type": "application/json",
 };
-const sanitize = (s) => String(s).replace(/[^a-zA-Z0-9_\-]/g, "_").substring(0, 100);
+const sanitize = (s) => String(s || "").replace(/[^a-zA-Z0-9_\-]/g, "_").substring(0, 80);
+const clean    = (s) => String(s || "").trim();
 const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: CORS });
 
 export async function onRequestOptions() { return new Response("", { status: 200, headers: CORS }); }
@@ -19,7 +20,11 @@ export async function onRequestPost({ request, env }) {
   try {
     const p = await request.json();
     if (!p || !p.LevelName) return json({ error: "Missing LevelName" }, 400);
-    const key = sanitize(`${p.ProjectName}__${p.LevelName}`);
+    const rawCode = clean(p.ProjectCode) || clean(p.ProjectNumber) || "";
+    const code    = sanitize(rawCode);
+    const key = code
+      ? sanitize(`${code}__${p.LevelName}`)
+      : sanitize(`${p.ProjectName}__${p.LevelName}`);
     const kv = env.BIMFLOW;
 
     const plan = await kv.get("plan:" + key, { type: "json" });

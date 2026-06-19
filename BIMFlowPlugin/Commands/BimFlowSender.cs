@@ -35,7 +35,7 @@ namespace BIMFlowPlugin.Commands
         }
 
         // ── Build an HTTP request with Authorization header ──
-        private static HttpResponseMessage AuthSend(HttpMethod method, string url, HttpContent content = null)
+        internal static HttpResponseMessage AuthSend(HttpMethod method, string url, HttpContent content = null)
         {
             var req = new HttpRequestMessage(method, url) { Content = content };
             if (BFSession.IsAuthenticated)

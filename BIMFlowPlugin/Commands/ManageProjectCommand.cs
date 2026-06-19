@@ -12,7 +12,7 @@ namespace BIMFlowPlugin.Commands
     [Transaction(TransactionMode.ReadOnly)]
     public class ManageProjectCommand : IExternalCommand
     {
-        private static readonly HttpClient _http = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -45,12 +45,18 @@ namespace BIMFlowPlugin.Commands
 
             if (dlg.RegisterOnWeb && !string.IsNullOrEmpty(newName))
             {
+                if (!BimFlowSender.EnsureAuthenticated())
+                {
+                    TaskDialog.Show("BIMFlow", "Connectez-vous à BIMFlow avant d'enregistrer un projet sur le web.");
+                    return Result.Cancelled;
+                }
+
                 try
                 {
                     string url  = BimFlowSender.ProjectsUrl + "?code=" + Uri.EscapeDataString(newCode);
                     string body = JsonConvert.SerializeObject(new { displayName = newName });
                     using var content = new StringContent(body, Encoding.UTF8, "application/json");
-                    var resp = _http.PostAsync(url, content).GetAwaiter().GetResult();
+                    var resp = BimFlowSender.AuthSend(HttpMethod.Post, url, content);
                     if (resp.IsSuccessStatusCode)
                         TaskDialog.Show("BIMFlow — Projet",
                             $"✅ Projet enregistré sur BIMFlow !\n\nCode : {newCode}\nNom  : {newName}\n\n" +

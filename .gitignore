@@ -24,3 +24,5 @@ Release/
 
 # Dépendances
 packages/
+# Cloudflare Wrangler cache
+.wrangler/

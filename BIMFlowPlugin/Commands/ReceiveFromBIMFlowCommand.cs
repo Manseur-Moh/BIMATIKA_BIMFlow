@@ -17,6 +17,7 @@ namespace BIMFlowPlugin.Commands
     public class ReceiveFromBIMFlowCommand : IExternalCommand
     {
         private const string UpdatesUrl = "https://bimatika-bimplan.pages.dev/api/updates";
+        private static readonly HttpClient _http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -26,15 +27,15 @@ namespace BIMFlowPlugin.Commands
             {
                 // Pull pending updates from web app
                 PlanUpdate update;
-                using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) })
-                {
-                    var resp = client.GetAsync(UpdatesUrl).GetAwaiter().GetResult();
-                    var body = resp.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-                    if (!resp.IsSuccessStatusCode)
-                        throw new Exception($"HTTP {(int)resp.StatusCode}\n{body}");
+                string code = Uri.EscapeDataString(BimFlowSender.ComputeProjectCode(doc) ?? "");
+                string url  = string.IsNullOrEmpty(code) ? UpdatesUrl : $"{UpdatesUrl}?code={code}";
 
-                    update = JsonConvert.DeserializeObject<PlanUpdate>(body);
-                }
+                var resp = _http.GetAsync(url).GetAwaiter().GetResult();
+                var body = resp.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                if (!resp.IsSuccessStatusCode)
+                    throw new Exception($"HTTP {(int)resp.StatusCode}\n{body}");
+
+                update = JsonConvert.DeserializeObject<PlanUpdate>(body);
 
                 bool hasUpdates   = update?.Updates       != null && update.Updates.Count       > 0;
                 bool hasNewParams = update?.NewParameters != null && update.NewParameters.Count > 0;
@@ -86,7 +87,7 @@ namespace BIMFlowPlugin.Commands
                             SetParamValue(param, kv.Value, doc);
                             paramCount++;
                         }
-                        catch { }
+                        catch (Exception ex) { log.AppendLine($"  ✗ {kv.Key} : {ex.Message}"); }
                     }
 
                     if (paramCount > 0)
@@ -101,8 +102,7 @@ namespace BIMFlowPlugin.Commands
                 // Clear updates on server after applying
                 try
                 {
-                    using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
-                    client.DeleteAsync(UpdatesUrl).GetAwaiter().GetResult();
+                    _http.DeleteAsync(url).GetAwaiter().GetResult();
                 }
                 catch { /* non-critical */ }
 
@@ -169,9 +169,8 @@ namespace BIMFlowPlugin.Commands
 
                 var catSet = new CategorySet();
                 catSet.Insert(Category.GetCategory(doc, BuiltInCategory.OST_Rooms));
-                Binding binding = req.Instance
-                    ? (Binding)new InstanceBinding(catSet)
-                    : new TypeBinding(catSet);
+                // Les pièces sont des éléments d'instance : un TypeBinding sur OST_Rooms est invalide.
+                Binding binding = new InstanceBinding(catSet);
 
                 if (!doc.ParameterBindings.Insert(extDef, binding, groupId))
                     doc.ParameterBindings.ReInsert(extDef, binding, groupId);
@@ -223,7 +222,7 @@ namespace BIMFlowPlugin.Commands
                     break;
                 case StorageType.ElementId:
                     var targetId = param.AsElementId();
-                    if (targetId != null && targetId != ElementId.InvalidElementId)
+                    if (targetId != ElementId.InvalidElementId)
                     {
                         var targetElem = doc.GetElement(targetId);
                         if (targetElem != null)

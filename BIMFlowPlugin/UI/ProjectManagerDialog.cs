@@ -47,7 +47,7 @@ namespace BIMFlowPlugin.UI
                 SD.Color.FromArgb(30, 41, 59), SD.Color.FromArgb(148, 163, 184));
             _btnCopy.Click += (s, e) =>
             {
-                try { WF.Clipboard.SetText(_codeBox.Text.Trim()); } catch { }
+                try { WF.Clipboard.SetText(autoBox.Text.Trim()); } catch (Exception ex) { BFLog.Warn("Clipboard: " + ex.Message); }
                 _btnCopy.Text = "✅ Copié !";
                 var t = new WF.Timer { Interval = 1500 };
                 t.Tick += (ts, te) => { _btnCopy.Text = "📋 Copier"; t.Stop(); t.Dispose(); };

@@ -136,7 +136,7 @@ namespace BIMFlowPlugin.Exporters
             }
 
             // Make the white background transparent so the plan blends on any viewer theme.
-            try { MakeTransparent(pngPath); } catch { }
+            try { MakeTransparent(pngPath); } catch (Exception ex) { BFLog.Warn("MakeTransparent: " + ex.Message); }
 
             return pngPath;
         }
@@ -446,6 +446,11 @@ namespace BIMFlowPlugin.Exporters
         {
             // The image covers the crop region uniformly-scaled and centered (FitToPage),
             // so map crop-local coords → pixels with a centered letter-box offset.
+            if (box.SpanX <= 1e-9 || box.SpanY <= 1e-9)
+            {
+                // Pas de géométrie projetable : renvoyer les pièces sans polygone plutôt que NaN.
+                return geoms.Select(g => { g.Data.SvgPolygon = ""; return g.Data; }).ToList();
+            }
             double scale = Math.Min(imgW / box.SpanX, imgH / box.SpanY);
             double offX  = (imgW - box.SpanX * scale) / 2.0;
             double offY  = (imgH - box.SpanY * scale) / 2.0;
@@ -549,7 +554,7 @@ namespace BIMFlowPlugin.Exporters
                             try
                             {
                                 var targetId = param.AsElementId();
-                                if (targetId != null && targetId != ElementId.InvalidElementId)
+                                if (targetId != ElementId.InvalidElementId)
                                 {
                                     var targetElem = _doc.GetElement(targetId);
                                     if (targetElem != null)

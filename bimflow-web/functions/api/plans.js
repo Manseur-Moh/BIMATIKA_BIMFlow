@@ -132,8 +132,9 @@ export async function onRequestDelete({ request, env }) {
     if (project || code) {
       do {
         const listed = await kv.list({ prefix: "meta:", cursor });
-        for (const k of listed.keys) {
-          const meta = await kv.get(k.name, { type: "json" }).catch(() => null);
+        const metas = await Promise.all(listed.keys.map(k => kv.get(k.name, { type: "json" }).catch(() => null)));
+        for (let i = 0; i < listed.keys.length; i++) {
+          const meta = metas[i];
           const match = meta && (
             (code    && (meta.projectCode || "") === code) ||
             (project && (meta.project || "") === project && !meta.projectCode)
