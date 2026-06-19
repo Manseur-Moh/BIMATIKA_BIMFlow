@@ -635,6 +635,7 @@ async function doRegister() {
 
     if (data.autoConfirmed && data.session) {
       // Logged in directly — store session and redirect
+      localStorage.removeItem('bimflow_project');
       localStorage.setItem('bimflow_user', JSON.stringify({
         name: data.user.name,
         email: data.user.email,
@@ -685,6 +686,7 @@ async function doLogin() {
       return;
     }
 
+    localStorage.removeItem('bimflow_project');
     localStorage.setItem('bimflow_user', JSON.stringify({
       name:    data.user.name,
       email:   data.user.email,

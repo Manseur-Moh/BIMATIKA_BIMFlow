@@ -255,6 +255,16 @@
         });
         const projects = await r.json();
         loaded = true;
+        // If stored project not in accessible list → clear it silently
+        const valid = (projects || []).filter(p => p.code !== '__legacy__');
+        if (cur && !valid.find(p => p.code === cur.code)) {
+          localStorage.removeItem('bimflow_project');
+          btn.className = 'bfp-proj-pill';
+          btn.innerHTML =
+            `<span>📁</span>` +
+            `<span style="overflow:hidden;text-overflow:ellipsis;max-width:120px">Mes projets</span>` +
+            `<span style="font-size:10px;opacity:.5">▾</span>`;
+        }
         renderProjDrop(drop, projects, cur);
       } catch (err) {
         drop.innerHTML = `<div style="padding:10px 12px;font-size:12px;color:#f87171">Erreur : ${_esc(err.message)}</div>`;
@@ -382,6 +392,7 @@
       `<span class="bfp-item-body"><span class="bfp-item-label">Déconnexion</span></span>`;
     logoutBtn.addEventListener('click', () => {
       localStorage.removeItem('bimflow_user');
+      localStorage.removeItem('bimflow_project');
       window.location.href = '/accueil.html';
     });
     drop.appendChild(logoutBtn);
