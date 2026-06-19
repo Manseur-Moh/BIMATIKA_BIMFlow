@@ -51,10 +51,92 @@
   //  INJECT TOPBAR ELEMENTS
   // ══════════════════════════════════════════════
   function inject() {
+    injectNavMenu();
     const tbr = document.querySelector('.tbr, .topbar-right');
     if (!tbr) return;
     injectProjectSwitcher(tbr);
     injectUserMenu(tbr);
+  }
+
+  // ── Nav hamburger menu (replaces .nav links) ──
+  function injectNavMenu() {
+    const topbar = document.querySelector('.topbar');
+    if (!topbar) return;
+
+    // Hide static nav links
+    const existingNav = topbar.querySelector('.nav');
+    if (existingNav) existingNav.style.display = 'none';
+
+    const path = window.location.pathname;
+    const items = [
+      { href: '/',                icon: '🗺', label: 'Plans' },
+      { href: '/fiches.html',     icon: '📋', label: 'Fiches de Locaux' },
+      { href: '/analyse.html',    icon: '📊', label: 'Analyse' },
+      { href: '/parametres.html', icon: '🔧', label: 'Paramètres' },
+      { href: '/projets.html',    icon: '📁', label: 'Projets' },
+      { href: '/profil.html',     icon: '👤', label: 'Profil' },
+    ];
+
+    // Detect active page
+    const cur = items.find(i => i.href === path)
+             || items.find(i => i.href !== '/' && path.startsWith(i.href));
+
+    const wrap = document.createElement('div');
+    wrap.style.cssText =
+      'position:relative;display:flex;align-items:center;height:100%;' +
+      'border-right:1px solid #1f2937';
+
+    const btn = document.createElement('button');
+    btn.style.cssText =
+      'display:flex;align-items:center;gap:7px;height:100%;padding:0 16px;' +
+      'background:transparent;border:none;cursor:pointer;font-size:13px;font-weight:700;' +
+      'color:#38bdf8;white-space:nowrap;transition:background .15s';
+    btn.innerHTML =
+      `<span style="font-size:17px;line-height:1">☰</span>` +
+      `<span>${cur ? _esc(cur.label) : 'Menu'}</span>` +
+      `<span style="font-size:10px;opacity:.5">▾</span>`;
+    btn.onmouseover = () => { btn.style.background = '#0c1a2e'; };
+    btn.onmouseout  = () => { btn.style.background = 'transparent'; };
+
+    const drop = document.createElement('div');
+    drop.style.cssText =
+      'position:absolute;top:100%;left:0;background:#111827;border:1px solid #374151;' +
+      'border-radius:12px;padding:8px;min-width:230px;display:none;z-index:9999;' +
+      'box-shadow:0 24px 50px rgba(0,0,0,.65)';
+
+    items.forEach(item => {
+      const active = item === cur;
+      const a = document.createElement('a');
+      a.href = item.href;
+      a.style.cssText =
+        `display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;` +
+        `text-decoration:none;font-size:13px;font-weight:${active ? '800' : '600'};` +
+        `color:${active ? '#38bdf8' : '#e2e8f0'};background:${active ? '#0c1a2e' : 'transparent'};` +
+        `border:${active ? '1px solid #1e3a5f' : '1px solid transparent'}`;
+      a.innerHTML =
+        `<span style="font-size:16px">${item.icon}</span>` +
+        `<span style="flex:1">${item.label}</span>` +
+        (active ? `<span style="color:#38bdf8;font-size:12px">●</span>` : '');
+      if (!active) {
+        a.onmouseover = () => { a.style.background = '#1f2937'; };
+        a.onmouseout  = () => { a.style.background = 'transparent'; };
+      }
+      drop.appendChild(a);
+    });
+
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      drop.style.display = drop.style.display === 'none' ? 'block' : 'none';
+    };
+    document.addEventListener('click', () => { drop.style.display = 'none'; });
+    drop.addEventListener('click', e => e.stopPropagation());
+
+    wrap.appendChild(btn);
+    wrap.appendChild(drop);
+
+    const logo = topbar.querySelector('.logo');
+    if (logo) topbar.insertBefore(wrap, logo);
+    else topbar.insertBefore(wrap, topbar.firstChild);
   }
 
   // ── Project switcher dropdown ──
