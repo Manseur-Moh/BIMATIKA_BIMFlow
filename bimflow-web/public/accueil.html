@@ -146,22 +146,77 @@ h1{font-size:clamp(38px,6vw,70px);font-weight:900;line-height:1.08;margin-bottom
 .cta h2{font-size:clamp(26px,4vw,42px);font-weight:900;color:#f1f5f9;margin-bottom:14px;line-height:1.15}
 .cta p{color:#475569;font-size:16px;line-height:1.7;margin-bottom:38px}
 .login-box{background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;max-width:420px;margin:0 auto;text-align:left}
-.login-box label{display:block;font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;margin-top:16px}
-.login-box label:first-of-type{margin-top:0}
+.login-box label{display:block;font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;margin-top:14px}
 .login-box input{width:100%;background:#060f1e;color:#e2e8f0;border:1px solid #334155;border-radius:9px;
   padding:11px 14px;font-size:14px;outline:none;transition:border-color .2s;font-family:inherit}
 .login-box input:focus{border-color:#3b82f6}
 .login-box input::placeholder{color:#334155}
 .btn-login{width:100%;margin-top:20px;padding:13px;background:linear-gradient(135deg,#1d4ed8,#0ea5e9);
   border:none;color:#fff;border-radius:9px;font-size:15px;font-weight:700;cursor:pointer;
-  transition:all .22s;box-shadow:0 6px 24px rgba(14,165,233,.3)}
+  transition:all .22s;box-shadow:0 6px 24px rgba(14,165,233,.3);font-family:inherit}
 .btn-login:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(14,165,233,.45)}
-#login-err{font-size:12px;color:#f87171;margin-top:10px;min-height:16px}
-.google-hint{display:flex;align-items:center;gap:8px;margin-top:14px;
-  font-size:12px;color:#334155;justify-content:center}
-.google-hint::before,.google-hint::after{content:'';flex:1;height:1px;background:#1e3a5f}
-.google-logo{display:inline-flex;gap:2px;font-size:11px;font-weight:700}
-.g-b{color:#4285F4}.g-r{color:#EA4335}.g-y{color:#FBBC05}.g-g{color:#34A853}
+.btn-login:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.form-err{font-size:12px;color:#f87171;margin-top:10px;min-height:16px}
+/* Auth tabs */
+.auth-tabs{display:flex;border-bottom:1px solid #1e3a5f;margin-bottom:22px}
+.auth-tab{flex:1;padding:10px;background:none;border:none;border-bottom:2px solid transparent;
+  text-align:center;font-size:13px;font-weight:700;color:#475569;cursor:pointer;
+  transition:all .2s;font-family:inherit}
+.auth-tab.active{color:#38bdf8;border-bottom-color:#38bdf8}
+/* Email-sent screen */
+.auth-msg{text-align:center;padding:16px 0}
+.auth-msg-icon{font-size:44px;margin-bottom:14px}
+.auth-msg h3{font-size:16px;font-weight:800;color:#f1f5f9;margin-bottom:8px}
+.auth-msg p{font-size:13px;color:#475569;line-height:1.6}
+/* Theme toggle */
+.theme-toggle{display:flex;border:1px solid #334155;border-radius:8px;overflow:hidden;margin-left:4px}
+.theme-btn{background:transparent;border:none;font-size:14px;padding:5px 9px;cursor:pointer;transition:all .2s}
+.theme-btn.active{background:#334155}
+
+/* ── LIGHT THEME ── */
+[data-theme=light] body{background:#f0f5fb;color:#1e293b}
+[data-theme=light] .blob{opacity:.05}
+[data-theme=light] body::before{background-image:linear-gradient(rgba(2,132,199,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(2,132,199,.04) 1px,transparent 1px)}
+[data-theme=light] .nav{background:rgba(248,250,252,.95);border-bottom-color:rgba(0,0,0,.07)}
+[data-theme=light] .logo{color:#0284c7}
+[data-theme=light] .logo em{color:#0ea5e9}
+[data-theme=light] .nav-links a{color:#64748b}
+[data-theme=light] .nav-links a:hover{color:#1e293b}
+[data-theme=light] .btn-outline{border-color:#cbd5e1;color:#64748b}
+[data-theme=light] .btn-outline:hover{border-color:#0284c7;color:#0284c7}
+[data-theme=light] .lang-toggle,[data-theme=light] .theme-toggle{border-color:#cbd5e1}
+[data-theme=light] .lang-btn,[data-theme=light] .theme-btn{color:#64748b}
+[data-theme=light] .lang-btn.active{background:#1d4ed8;color:#fff}
+[data-theme=light] .theme-btn.active{background:#e2e8f0}
+[data-theme=light] .s-label{color:#0284c7;background:rgba(2,132,199,.08);border-color:rgba(2,132,199,.15)}
+[data-theme=light] .s-title{color:#1e293b}
+[data-theme=light] .s-sub,.hero-sub{color:#64748b}
+[data-theme=light] .feat-card{background:#fff;border-color:#e2e8f0}
+[data-theme=light] .feat-card:hover{border-color:#93c5fd}
+[data-theme=light] .f-icon{background:rgba(2,132,199,.08)}
+[data-theme=light] .step{background:#fff;border-color:#e2e8f0}
+[data-theme=light] .step-n{background:rgba(2,132,199,.1);color:#0284c7}
+[data-theme=light] .step h3,.step p{color:#1e293b}
+[data-theme=light] .step p{color:#475569}
+[data-theme=light] .pcard{background:#fff;border-color:#e2e8f0}
+[data-theme=light] .pcard.pop{background:linear-gradient(135deg,#eff6ff,#f0f9ff);border-color:#93c5fd}
+[data-theme=light] .p-plan,.p-price{color:#1e293b}
+[data-theme=light] .p-note,.pf{color:#64748b}
+[data-theme=light] .p-btn{background:#fff;border-color:#cbd5e1;color:#1e293b}
+[data-theme=light] .cta h2{color:#1e293b}
+[data-theme=light] .cta p{color:#475569}
+[data-theme=light] .login-box{background:#fff;border-color:#e2e8f0}
+[data-theme=light] .login-box label{color:#64748b}
+[data-theme=light] .login-box input{background:#f8fafc;color:#1e293b;border-color:#e2e8f0}
+[data-theme=light] .login-box input::placeholder{color:#94a3b8}
+[data-theme=light] .login-box input:focus{border-color:#3b82f6}
+[data-theme=light] .auth-tabs{border-bottom-color:#e2e8f0}
+[data-theme=light] .auth-tab{color:#94a3b8}
+[data-theme=light] .auth-tab.active{color:#0284c7;border-bottom-color:#0284c7}
+[data-theme=light] .auth-msg h3{color:#1e293b}
+[data-theme=light] footer{border-top-color:#e2e8f0}
+[data-theme=light] .f-links a{color:#64748b}
+[data-theme=light] .f-copy{color:#94a3b8}
 
 /* ── FOOTER ── */
 footer{border-top:1px solid #0f1c30;padding:36px 32px;text-align:center;max-width:1100px;margin:0 auto}
@@ -189,6 +244,10 @@ footer{border-top:1px solid #0f1c30;padding:36px 32px;text-align:center;max-widt
     <div class="lang-toggle">
       <button class="lang-btn active" id="btnFR" onclick="setLang('fr')">FR</button>
       <button class="lang-btn" id="btnEN" onclick="setLang('en')">EN</button>
+    </div>
+    <div class="theme-toggle">
+      <button class="theme-btn active" id="btnDark"  onclick="setTheme('dark')" title="Mode sombre">🌙</button>
+      <button class="theme-btn"        id="btnLight" onclick="setTheme('light')" title="Mode clair">☀</button>
     </div>
   </div>
 </nav>
@@ -366,26 +425,45 @@ footer{border-top:1px solid #0f1c30;padding:36px 32px;text-align:center;max-widt
   <p data-i18n="cta_p">Rejoignez les équipes qui utilisent BIMFlow pour publier, partager et analyser leurs projets Revit depuis n'importe où.</p>
 
   <div class="login-box">
-    <div style="font-size:15px;font-weight:800;color:#f1f5f9;margin-bottom:4px" data-i18n="login_title">Créer un compte / Se connecter</div>
-    <div style="font-size:12px;color:#475569;margin-bottom:20px" data-i18n="login_sub">Entrez votre adresse e-mail pour accéder à BIMFlow</div>
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-reg"   onclick="switchTab('reg')"   data-i18n="tab_reg">Créer un compte</button>
+      <button class="auth-tab"        id="tab-login" onclick="switchTab('login')" data-i18n="tab_login">Se connecter</button>
+    </div>
 
-    <label data-i18n="login_name_lbl">Nom complet</label>
-    <input type="text" id="inp-name" maxlength="60" autocomplete="name" data-i18n-ph="login_name_ph"/>
+    <!-- Register form -->
+    <div id="form-reg">
+      <label data-i18n="lbl_name">Nom complet</label>
+      <input type="text"     id="reg-name"  maxlength="60" autocomplete="name"         data-i18n-ph="ph_name"/>
+      <label data-i18n="lbl_email">Adresse e-mail</label>
+      <input type="email"    id="reg-email" autocomplete="email"                        data-i18n-ph="ph_email"/>
+      <label data-i18n="lbl_pw">Mot de passe</label>
+      <input type="password" id="reg-pw"    autocomplete="new-password"                data-i18n-ph="ph_pw"/>
+      <label data-i18n="lbl_pw2">Confirmer le mot de passe</label>
+      <input type="password" id="reg-pw2"   autocomplete="new-password"                data-i18n-ph="ph_pw2"/>
+      <div class="form-err" id="reg-err"></div>
+      <button class="btn-login" id="reg-btn" data-i18n="btn_reg" onclick="doRegister()">Créer mon compte →</button>
+    </div>
 
-    <label data-i18n="login_email_lbl">Adresse e-mail</label>
-    <input type="email" id="inp-email" autocomplete="email" data-i18n-ph="login_email_ph"/>
+    <!-- Login form -->
+    <div id="form-login" style="display:none">
+      <label data-i18n="lbl_email">Adresse e-mail</label>
+      <input type="email"    id="login-email" autocomplete="email"            data-i18n-ph="ph_email"/>
+      <label data-i18n="lbl_pw">Mot de passe</label>
+      <input type="password" id="login-pw"    autocomplete="current-password" data-i18n-ph="ph_pw"/>
+      <div class="form-err" id="login-err"></div>
+      <button class="btn-login" id="login-btn" data-i18n="btn_login" onclick="doLogin()">Se connecter →</button>
+    </div>
 
-    <div id="login-err"></div>
-    <button class="btn-login" data-i18n="login_btn" onclick="doLogin()">Accéder à BIMFlow →</button>
-
-    <div class="google-hint">
-      <span class="google-logo">
-        <span class="g-b">G</span><span class="g-r">o</span><span class="g-y">o</span><span class="g-g">g</span><span class="g-b">l</span><span class="g-r">e</span>
-      </span>
-      <span data-i18n="login_hint">Utilisez votre adresse Gmail</span>
+    <!-- Email-sent confirmation screen -->
+    <div id="form-sent" style="display:none" class="auth-msg">
+      <div class="auth-msg-icon">📧</div>
+      <h3 data-i18n="sent_title">Vérifiez votre boîte mail !</h3>
+      <p data-i18n="sent_body">Un e-mail de confirmation vous a été envoyé.<br>Cliquez sur le lien pour activer votre compte.</p>
+      <p id="sent-email" style="margin-top:8px;font-size:12px;font-weight:700;color:#38bdf8"></p>
     </div>
   </div>
-  <p style="margin-top:20px;font-size:12px;color:#1e3a5f" data-i18n="login_legal">En vous connectant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité.</p>
+  <p style="margin-top:20px;font-size:12px;color:#64748b" data-i18n="login_legal">En vous connectant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité.</p>
 </div>
 
 <!-- ── FOOTER ── -->
@@ -421,8 +499,8 @@ const T = {
     how_label:'Prise en main', how_title:'Opérationnel en 3 étapes',
     how_sub:'De l\'installation à la publication de vos plans, comptez moins de 5 minutes.',
     s1_h:'Installez le plugin Revit', s1_p:'Téléchargez le plugin BIMFlow pour Revit 2024. Un onglet dédié apparaît dans votre ruban Revit, prêt à l\'emploi.',
-    s2_h:'Créez votre projet',       s2_p:'Cliquez sur "Gérer le projet" dans Revit pour nommer votre projet et générer un code unique. Partagez-le avec votre équipe.',
-    s3_h:'Envoyez et collaborez',    s3_p:'Sélectionnez vos niveaux et cliquez "Envoyer". Vos plans et données sont instantanément disponibles sur BIMFlow.',
+    s2_h:'Créez votre projet',        s2_p:'Cliquez sur "Gérer le projet" dans Revit pour nommer votre projet et générer un code unique. Partagez-le avec votre équipe.',
+    s3_h:'Envoyez et collaborez',     s3_p:'Sélectionnez vos niveaux et cliquez "Envoyer". Vos plans et données sont instantanément disponibles sur BIMFlow.',
     pr_label:'Tarifs', pr_title:'Simple et transparent',
     pr_sub:'Commencez gratuitement. Passez au Pro quand votre équipe en a besoin.',
     per_month:'/mois',
@@ -435,12 +513,15 @@ const T = {
     p3_f1:'Tout le plan Pro', p3_f2:'Déploiement sur site', p3_f3:'API REST complète', p3_f4:'SSO / Azure AD', p3_f5:'Support dédié 24/7', p3_f6:'Formation personnalisée',
     cta_h2:'Prêt à transformer votre workflow BIM ?',
     cta_p:'Rejoignez les équipes qui utilisent BIMFlow pour publier, partager et analyser leurs projets Revit depuis n\'importe où.',
-    login_title:'Créer un compte / Se connecter', login_sub:'Entrez votre adresse e-mail pour accéder à BIMFlow',
-    login_name_lbl:'Nom complet', login_name_ph:'Ex : Mohamed Manseur',
-    login_email_lbl:'Adresse e-mail', login_email_ph:'votre@gmail.com',
-    login_btn:'Accéder à BIMFlow →', login_hint:'Utilisez votre adresse Gmail',
+    tab_reg:'Créer un compte', tab_login:'Se connecter',
+    lbl_name:'Nom complet', ph_name:'Ex : Mohamed Manseur',
+    lbl_email:'Adresse e-mail', ph_email:'votre@email.com',
+    lbl_pw:'Mot de passe', ph_pw:'8 caractères minimum',
+    lbl_pw2:'Confirmer le mot de passe', ph_pw2:'Répétez le mot de passe',
+    btn_reg:'Créer mon compte →', btn_login:'Se connecter →',
+    sent_title:'Vérifiez votre boîte mail !',
+    sent_body:'Un e-mail de confirmation a été envoyé.<br>Cliquez sur le lien pour activer votre compte.',
     login_legal:'En vous connectant, vous acceptez nos Conditions d\'utilisation et notre Politique de confidentialité.',
-    err_name:'Entrez votre nom.', err_email:'Entrez une adresse e-mail valide.',
   },
   en: {
     nav_login:'Sign in', nav_start:'Get started for free',
@@ -451,9 +532,9 @@ const T = {
     feat_label:'Features', feat_title:'Everything your team needs',
     feat_sub:'A complete suite designed for architects and BIM managers who want to collaborate without friction.',
     f1_h:'Interactive 3D Floor Plans', f1_p:'Visualize your levels directly in the browser. Click on any room to view its parameters, area and history.',
-    f2_h:'Room Data Sheets',          f2_p:'Every room, its Revit parameters and status updated in real time. Filtering, search and PDF export built in.',
-    f3_h:'Automatic Analysis',        f3_p:'Ratios, areas by use, breakdowns — generated automatically. Spot anomalies at a glance.',
-    f4_h:'Code-based Collaboration',  f4_p:'Share an 8-character code with your team. All Revit updates are immediately visible on the web.',
+    f2_h:'Room Data Sheets',           f2_p:'Every room, its Revit parameters and status updated in real time. Filtering, search and PDF export built in.',
+    f3_h:'Automatic Analysis',         f3_p:'Ratios, areas by use, breakdowns — generated automatically. Spot anomalies at a glance.',
+    f4_h:'Code-based Collaboration',   f4_p:'Share an 8-character code with your team. All Revit updates are immediately visible on the web.',
     how_label:'Getting started', how_title:'Up and running in 3 steps',
     how_sub:'From installation to publishing your floor plans in under 5 minutes.',
     s1_h:'Install the Revit plugin', s1_p:'Download the BIMFlow plugin for Revit 2024. A dedicated tab appears in your Revit ribbon, ready to use.',
@@ -471,12 +552,15 @@ const T = {
     p3_f1:'Everything in Pro', p3_f2:'On-premise deployment', p3_f3:'Full REST API', p3_f4:'SSO / Azure AD', p3_f5:'24/7 dedicated support', p3_f6:'Custom training',
     cta_h2:'Ready to transform your BIM workflow?',
     cta_p:'Join the teams using BIMFlow to publish, share and analyze their Revit projects from anywhere.',
-    login_title:'Create an account / Sign in', login_sub:'Enter your email address to access BIMFlow',
-    login_name_lbl:'Full name', login_name_ph:'Ex: John Smith',
-    login_email_lbl:'Email address', login_email_ph:'your@gmail.com',
-    login_btn:'Access BIMFlow →', login_hint:'Use your Gmail address',
+    tab_reg:'Create account', tab_login:'Sign in',
+    lbl_name:'Full name', ph_name:'Ex: John Smith',
+    lbl_email:'Email address', ph_email:'your@email.com',
+    lbl_pw:'Password', ph_pw:'8 characters minimum',
+    lbl_pw2:'Confirm password', ph_pw2:'Repeat your password',
+    btn_reg:'Create my account →', btn_login:'Sign in →',
+    sent_title:'Check your inbox!',
+    sent_body:'A confirmation email has been sent.<br>Click the link to activate your account.',
     login_legal:'By signing in, you agree to our Terms of Service and Privacy Policy.',
-    err_name:'Please enter your name.', err_email:'Please enter a valid email address.',
   }
 };
 
@@ -499,36 +583,142 @@ function setLang(lang) {
   });
 }
 
-// Init on load
-document.addEventListener('DOMContentLoaded', () => setLang(_lang));
-
-function doLogin() {
-  const name  = document.getElementById('inp-name').value.trim();
-  const email = document.getElementById('inp-email').value.trim().toLowerCase();
-  const err   = document.getElementById('login-err');
-
-  if (!name)  { err.textContent = T[_lang].err_name;  return; }
-  if (!email || !email.includes('@')) { err.textContent = T[_lang].err_email; return; }
-  err.textContent = '';
-
-  // Derive initials-based avatar letter
-  const initial = name.charAt(0).toUpperCase();
-
-  const user = {
-    name,
-    email,
-    picture: '',   // pas de photo — on affichera l'initiale
-    initial,
-    plan:    'free',
-    loginAt: new Date().toISOString(),
-  };
-  localStorage.setItem('bimflow_user', JSON.stringify(user));
-  window.location.href = '/';
+function setTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('bimflow_landing_theme', t);
+  document.getElementById('btnDark').classList.toggle('active',  t === 'dark');
+  document.getElementById('btnLight').classList.toggle('active', t === 'light');
 }
 
-// Submit on Enter
+function switchTab(tab) {
+  const isReg = tab === 'reg';
+  document.getElementById('tab-reg').classList.toggle('active', isReg);
+  document.getElementById('tab-login').classList.toggle('active', !isReg);
+  document.getElementById('form-reg').style.display   = isReg   ? '' : 'none';
+  document.getElementById('form-login').style.display = !isReg  ? '' : 'none';
+  document.getElementById('form-sent').style.display  = 'none';
+  document.getElementById('reg-err').textContent   = '';
+  document.getElementById('login-err').textContent = '';
+}
+
+async function doRegister() {
+  const name  = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim().toLowerCase();
+  const pw    = document.getElementById('reg-pw').value;
+  const pw2   = document.getElementById('reg-pw2').value;
+  const err   = document.getElementById('reg-err');
+
+  if (!name)                    { err.textContent = _lang === 'fr' ? 'Entrez votre nom.' : 'Enter your name.'; return; }
+  if (!email.includes('@'))     { err.textContent = _lang === 'fr' ? 'E-mail invalide.' : 'Invalid email.'; return; }
+  if (pw.length < 8)            { err.textContent = _lang === 'fr' ? 'Mot de passe trop court (8 min).' : 'Password too short (8 min).'; return; }
+  if (pw !== pw2)               { err.textContent = _lang === 'fr' ? 'Les mots de passe ne correspondent pas.' : 'Passwords do not match.'; return; }
+  err.textContent = '';
+
+  const btn = document.getElementById('reg-btn');
+  btn.disabled = true;
+  btn.textContent = _lang === 'fr' ? 'Création…' : 'Creating…';
+
+  try {
+    const r = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password: pw }),
+    });
+    const data = await r.json();
+
+    if (data.error) {
+      err.textContent = data.error;
+      btn.disabled = false;
+      btn.textContent = T[_lang].btn_reg;
+      return;
+    }
+
+    if (data.autoConfirmed && data.session) {
+      // Logged in directly — store session and redirect
+      localStorage.setItem('bimflow_user', JSON.stringify({
+        name: data.user.name,
+        email: data.user.email,
+        plan: data.user.plan || 'free',
+        session: data.session,
+        initial: data.user.name.charAt(0).toUpperCase(),
+      }));
+      window.location.href = '/';
+      return;
+    }
+
+    // Email sent — show confirmation screen
+    document.getElementById('form-reg').style.display  = 'none';
+    document.getElementById('form-sent').style.display = '';
+    document.getElementById('sent-email').textContent  = email;
+  } catch (e) {
+    err.textContent = 'Erreur réseau. Réessayez.';
+    btn.disabled = false;
+    btn.textContent = T[_lang].btn_reg;
+  }
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const pw    = document.getElementById('login-pw').value;
+  const err   = document.getElementById('login-err');
+
+  if (!email.includes('@')) { err.textContent = _lang === 'fr' ? 'E-mail invalide.' : 'Invalid email.'; return; }
+  if (!pw)                  { err.textContent = _lang === 'fr' ? 'Entrez votre mot de passe.' : 'Enter your password.'; return; }
+  err.textContent = '';
+
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  btn.textContent = _lang === 'fr' ? 'Connexion…' : 'Signing in…';
+
+  try {
+    const r = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pw }),
+    });
+    const data = await r.json();
+
+    if (data.error) {
+      err.textContent = data.error;
+      btn.disabled = false;
+      btn.textContent = T[_lang].btn_login;
+      return;
+    }
+
+    localStorage.setItem('bimflow_user', JSON.stringify({
+      name:    data.user.name,
+      email:   data.user.email,
+      plan:    data.user.plan || 'free',
+      session: data.session,
+      initial: data.user.name.charAt(0).toUpperCase(),
+    }));
+    window.location.href = '/';
+  } catch (e) {
+    err.textContent = 'Erreur réseau. Réessayez.';
+    btn.disabled = false;
+    btn.textContent = T[_lang].btn_login;
+  }
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  // Redirect if already logged in
+  try {
+    const u = JSON.parse(localStorage.getItem('bimflow_user') || 'null');
+    if (u?.email) { window.location.href = '/'; return; }
+  } catch {}
+
+  const t = localStorage.getItem('bimflow_landing_theme') || 'dark';
+  setTheme(t);
+  setLang(_lang);
+});
+
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter') doLogin();
+  if (e.key !== 'Enter') return;
+  const visReg   = document.getElementById('form-reg').style.display   !== 'none';
+  const visLogin = document.getElementById('form-login').style.display !== 'none';
+  if (visReg)   doRegister();
+  if (visLogin) doLogin();
 });
 
 // Already logged in? Go to app
