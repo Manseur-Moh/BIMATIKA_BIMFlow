@@ -68,6 +68,9 @@
     .level-item{border:1px solid #1f2937;border-radius:7px;overflow:hidden;cursor:pointer;margin-bottom:8px;background:#0f172a;transition:border-color .12s}
     .level-item:hover{border-color:#334155}
     .level-item.active{border-color:#3b82f6;box-shadow:0 0 0 1px #3b82f6}
+    .level-item.level-sel{border-color:#7c3aed;box-shadow:0 0 0 1px #7c3aed}
+    .level-item.level-sel .level-name{color:#c4b5fd}
+    #btn3dShade.active,#btn3dIsolate.active{background:rgba(29,78,216,.9)!important;border-color:#3b82f6!important;color:#e0f2fe!important}
     .level-thumb{width:100%;height:84px;background:#0f172a;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
     .level-thumb .thumb-svg{filter:invert(1) brightness(.85)}
     .level-thumb img{width:100%;height:100%;object-fit:contain}
@@ -421,6 +424,12 @@
         <canvas id="canvas3d"></canvas>
         <div class="pane3d-hint" id="pane3dHint" data-en="Drag to rotate · Scroll to zoom · Click a room">Glissez pour pivoter · Molette pour zoomer · Cliquez une pièce</div>
         <div class="zoom-wrap"><button class="zbtn" id="fit3d" title="Recadrer la vue 3D">⌖</button></div>
+        <div style="position:absolute;top:8px;left:8px;display:flex;gap:4px;z-index:10">
+          <button id="btn3dShade" title="Shade — afficher tout en mode normal" style="background:rgba(15,23,42,.82);border:1px solid #334155;color:#94a3b8;border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer">Shade</button>
+        </div>
+        <div style="position:absolute;top:8px;right:8px;display:flex;gap:4px;z-index:10">
+          <button id="btn3dIsolate" title="Isolate — isoler la sélection et zoomer dessus" style="background:rgba(15,23,42,.82);border:1px solid #334155;color:#94a3b8;border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer">Isolate</button>
+        </div>
       </div>
       <!-- ROOMS -->
       <aside class="rooms-aside">
@@ -589,12 +598,53 @@ function renderLevels(list){
       `<svg class="thumb-svg" preserveAspectRatio="xMidYMid meet" style="display:none"><image/><g class="thumb-sel"></g></svg></div>`+
       `<div class="level-meta"><div class="level-name" title="${p.level}">${p.level||'—'}</div>`+
       `<div class="level-sub">${p.rooms||0} pièce${(p.rooms>1)?'s':''}</div></div>`;
-    item.addEventListener('click',()=>loadPlan(p.key));
+    item.addEventListener('click',e=>levelClicked(p.key,e));
     box.appendChild(item); levelObserver.observe(item);
   });
   setActivePlan(currentPlanKey);
 }
-function setActivePlan(key){ document.querySelectorAll('.level-item').forEach(el=>el.classList.toggle('active',el.getAttribute('data-key')===key)); }
+let _lastLevelKey=null;
+function levelClicked(key,e){
+  if(e.shiftKey && _lastLevelKey && _lastLevelKey!==key){
+    /* range select */
+    const items=[...$('levelsList').querySelectorAll('.level-item[data-key]')];
+    const keys=items.map(el=>el.getAttribute('data-key'));
+    const a=keys.indexOf(_lastLevelKey), b=keys.indexOf(key);
+    const [from,to]=a<b?[a,b]:[b,a];
+    keys.slice(from,to+1).forEach(k=>selectedLevelKeys.add(k));
+    _lastLevelKey=key;
+    applyLevelMultiSel();
+    return;
+  }
+  if(e.ctrlKey||e.metaKey){
+    if(selectedLevelKeys.has(key)) selectedLevelKeys.delete(key); else selectedLevelKeys.add(key);
+    _lastLevelKey=key;
+    applyLevelMultiSel();
+    return;
+  }
+  /* simple click — load plan and reset multi-sel */
+  selectedLevelKeys.clear(); selectedLevelKeys.add(key); _lastLevelKey=key;
+  loadPlan(key);
+}
+function applyLevelMultiSel(){
+  /* update level item visual state */
+  document.querySelectorAll('.level-item').forEach(el=>{
+    const k=el.getAttribute('data-key');
+    el.classList.toggle('active', k===currentPlanKey);
+    el.classList.toggle('level-sel', selectedLevelKeys.has(k) && k!==currentPlanKey);
+  });
+  /* ensure allLevelsRooms is loaded, then refresh rooms list and 3D */
+  const doRefresh=()=>{ renderList(); if(R3.ready) recolor3D(); };
+  if(!allLevelsRooms.length) loadAllLevels().then(doRefresh).catch(doRefresh);
+  else doRefresh();
+}
+function setActivePlan(key){
+  selectedLevelKeys.clear(); selectedLevelKeys.add(key); _lastLevelKey=key;
+  document.querySelectorAll('.level-item').forEach(el=>{
+    el.classList.toggle('active',el.getAttribute('data-key')===key);
+    el.classList.remove('level-sel');
+  });
+}
 
 // Draw the currently-selected rooms (red) onto a level thumbnail so its position shows
 function drawThumbSel(item,planData){
@@ -692,7 +742,11 @@ function roomClicked(id,additive,planKey){
   lastSel=id;
   onSelectionChanged(true);
 }
-function clearSelection(){ if(compareDiff||!selIds.size)return; selIds.clear(); lastSel=null; onSelectionChanged(false); }
+function clearSelection(){
+  if(compareDiff||!selIds.size)return; selIds.clear(); lastSel=null;
+  if(isolateMode){ isolateMode=false; rooms3D().forEach(r=>{ const m=R3.meshes[r.RevitId]; if(m) m.visible=true; }); $('btn3dIsolate').classList.remove('active'); }
+  onSelectionChanged(false);
+}
 function selectMatching(){
   const key=$('colorBy').value, val=$('filtVal').value;
   if(!key){ alert('Choisissez d\'abord un paramètre dans "Colorer / filtrer par".'); return; }
@@ -718,7 +772,11 @@ function onSelectionChanged(center){
 
 /* ═══ ROOM LIST ═══ */
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function activeRooms(){ return allLevelsMode ? allLevelsRooms : (plan?.Rooms||[]); }
+function activeRooms(){
+  if(allLevelsMode) return allLevelsRooms;
+  if(selectedLevelKeys.size>1 && allLevelsRooms.length) return allLevelsRooms.filter(r=>selectedLevelKeys.has(r._planKey));
+  return plan?.Rooms||[];
+}
 function renderList(){
   const list=$('roomsList'); list.innerHTML='';
   const rooms=activeRooms();
@@ -777,6 +835,8 @@ $('searchKey').addEventListener('change',renderList);
 
 /* ═══ ALL-LEVELS MODE ═══ */
 let allLevelsMode=false, allLevelsRooms=[];
+let selectedLevelKeys=new Set(); // multi-level selection (Ctrl/Shift on level thumbnails)
+let isolateMode=false;           // 3D isolate — hide non-selected rooms completely
 async function loadAllLevels(){
   setStatus('Chargement tous niveaux…','loading');
   try{
@@ -1352,10 +1412,25 @@ function init3D(){
   R3.meshes={}; R3.ready=true; resize3D();
   (function loop(){ R3.raf=requestAnimationFrame(loop); R3.controls.update(); R3.renderer.render(R3.scene,R3.camera); })();
   const ray=new THREE.Raycaster(), v=new THREE.Vector2();
-  cv.addEventListener('click',e=>{ const r=cv.getBoundingClientRect(); v.x=((e.clientX-r.left)/r.width)*2-1; v.y=-((e.clientY-r.top)/r.height)*2+1;
-    ray.setFromCamera(v,R3.camera); const hit=ray.intersectObjects(R3.group.children,true)[0];
+  let _mouseDownPos={x:0,y:0};
+  cv.addEventListener('mousedown',e=>{ _mouseDownPos={x:e.clientX,y:e.clientY}; });
+  cv.addEventListener('click',e=>{
+    /* ignore drags (OrbitControls rotate) — only act on short clicks */
+    if(Math.hypot(e.clientX-_mouseDownPos.x,e.clientY-_mouseDownPos.y)>5) return;
+    const r=cv.getBoundingClientRect(); v.x=((e.clientX-r.left)/r.width)*2-1; v.y=-((e.clientY-r.top)/r.height)*2+1;
+    ray.setFromCamera(v,R3.camera);
+    const visibleMeshes=Object.values(R3.meshes).filter(m=>m.visible);
+    const hit=ray.intersectObjects(visibleMeshes,true)[0];
     let o=hit&&hit.object; while(o&&!o.userData.id) o=o.parent;
-    if(o&&o.userData.id) roomClicked(o.userData.id, e.ctrlKey||e.metaKey||e.shiftKey); });
+    if(o&&o.userData.id){
+      roomClicked(o.userData.id, e.ctrlKey||e.metaKey||e.shiftKey);
+    } else if(!e.ctrlKey&&!e.metaKey&&!e.shiftKey){
+      /* click on empty space → deselect all */
+      selIds.clear(); lastSel=null;
+      if(isolateMode){ isolateMode=false; rooms3D().forEach(r=>{ const m=R3.meshes[r.RevitId]; if(m) m.visible=true; }); $('btn3dIsolate').classList.remove('active'); }
+      onSelectionChanged(false); renderList(); renderMatrix();
+    }
+  });
 }
 function resize3D(){ if(!R3.ready)return; const p=$('pane3d'); const w=p.clientWidth||1,h=p.clientHeight||1;
   R3.renderer.setSize(w,h,false); R3.camera.aspect=w/h; R3.camera.updateProjectionMatrix(); }
@@ -1384,16 +1459,48 @@ function fit3D(){
   R3.controls.target.copy(c); R3.camera.position.set(c.x+d*.75,c.y+d*.9,c.z+d*.75);
   R3.camera.near=Math.max(.05,d/2000); R3.camera.far=d*200; R3.camera.updateProjectionMatrix(); R3.controls.update();
 }
+function fitToSelection(){
+  if(!R3.ready||!selIds.size)return;
+  const box=new THREE.Box3();
+  rooms3D().forEach(r=>{ if(selIds.has(r.RevitId)){ const m=R3.meshes[r.RevitId]; if(m&&m.visible) box.expandByObject(m); }});
+  if(box.isEmpty())return;
+  const c=box.getCenter(new THREE.Vector3()), s=box.getSize(new THREE.Vector3()); const d=Math.max(s.x,s.y,s.z,2);
+  R3.controls.target.copy(c); R3.camera.position.set(c.x+d*.5,c.y+d*.7,c.z+d*.5);
+  R3.camera.near=Math.max(.05,d/500); R3.camera.far=d*200; R3.camera.updateProjectionMatrix(); R3.controls.update();
+}
+$('btn3dShade').addEventListener('click',()=>{
+  isolateMode=false;
+  rooms3D().forEach(r=>{ const m=R3.meshes[r.RevitId]; if(m) m.visible=true; });
+  recolor3D();
+  $('btn3dShade').classList.remove('active'); $('btn3dIsolate').classList.remove('active');
+});
+$('btn3dIsolate').addEventListener('click',()=>{
+  if(!selIds.size){ alert('Sélectionnez d\'abord des pièces.'); return; }
+  isolateMode=true; recolor3D(); fitToSelection();
+  $('btn3dIsolate').classList.add('active'); $('btn3dShade').classList.remove('active');
+});
 function recolor3D(){
   if(!R3.ready)return;
   const curLevel=plan?.LevelName||'';
   rooms3D().forEach(r=>{ const mesh=R3.meshes[r.RevitId]; if(!mesh)return;
-    const onCurrentLevel = allLevelsMode || !curLevel || (r._levelName||r.LevelName||'')=== curLevel;
+    /* level visibility: is this room on a "selected" level? */
+    const rLevel=r._levelName||r.LevelName||'';
+    const onSelLevel = allLevelsMode
+      || (selectedLevelKeys.size>1 ? selectedLevelKeys.has(r._planKey) : (!curLevel||rLevel===curLevel));
+
+    /* ── isolate mode ── */
+    if(isolateMode && selIds.size){
+      mesh.visible=selIds.has(r.RevitId);
+      if(mesh.visible){ mesh.material.color.setHex(0xef4444); mesh.material.opacity=.92; }
+      return;
+    }
+    mesh.visible=true;
+
     /* ── comparison mode ── */
     if(compareDiff){
       const changed=compareDiff.changedIds.has(r.RevitId);
       mesh.material.color.setHex(changed ? 0xf59e0b : 0x3b82f6);
-      mesh.material.opacity = changed ? .92 : (onCurrentLevel ? .12 : .04);
+      mesh.material.opacity = changed ? .92 : (onSelLevel ? .12 : .04);
       return;
     }
     /* ── normal mode ── */
@@ -1403,10 +1510,8 @@ function recolor3D(){
     mesh.material.color.setHex(col);
     if(selIds.size){
       mesh.material.opacity = selIds.has(r.RevitId) ? .90 : .06;
-    } else if(!allLevelsMode && allLevelsRooms.length){
-      mesh.material.opacity = onCurrentLevel ? .82 : .10;
     } else {
-      mesh.material.opacity = .75;
+      mesh.material.opacity = onSelLevel ? .82 : .10;
     }
   });
 }
