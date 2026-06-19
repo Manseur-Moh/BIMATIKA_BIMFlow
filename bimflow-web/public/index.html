@@ -1495,10 +1495,16 @@ function recolor3D(){
 
     /* ── isolate mode ── */
     if(isolateMode){
-      const rKey = r._planKey || currentPlanKey; // fallback: rooms without _planKey belong to current plan
+      const rKey = r._planKey || currentPlanKey;
       const inScope = selIds.size>0 ? selIds.has(r.RevitId) : selectedLevelKeys.has(rKey);
       mesh.visible = inScope;
-      if(inScope){ mesh.material.color.setHex(selIds.has(r.RevitId)?0xef4444:0x3b82f6); mesh.material.opacity=.90; }
+      if(inScope){
+        /* same color logic as normal mode */
+        let col=0x3b82f6;
+        if(selIds.has(r.RevitId)) col=0xef4444;
+        else if(colorKey){ const v=roomColorValue(r,colorKey)||'(vide)'; const hex=colorMap[v]; if(hex) col=parseInt(hex.slice(1),16); }
+        mesh.material.color.setHex(col); mesh.material.opacity=.92;
+      }
       return;
     }
     mesh.visible=true;
