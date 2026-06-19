@@ -421,7 +421,7 @@ async function loadAll(){
     if(!allPlans.length){setSt('Aucun plan — envoyez depuis Revit','');return;}
     const res=await Promise.all(allPlans.map(p=>getPD(p.key)));
     allRooms=[];
-    res.forEach(p=>(p.Rooms||[]).forEach(r=>allRooms.push({...r,_lv:p.LevelName,_pk:p.key,_proj:p.ProjectName||''})));
+    res.forEach((p,i)=>(p.Rooms||[]).forEach(r=>allRooms.push({...r,_lv:p.LevelName||allPlans[i].level,_pk:allPlans[i].key,_proj:p.ProjectName||allPlans[i].project||''})));
     buildFilters();buildPS();buildRList();
     await loadPlan(allPlans[allPlans.length-1].key);
     initSplit();
