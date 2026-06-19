@@ -229,7 +229,8 @@
 
     let loaded = false;
 
-    btn.onclick = async (e) => {
+    // Single listener — no double-binding with toggleDrop
+    btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       if (drop.style.display !== 'none') { drop.style.display = 'none'; return; }
       drop.style.display = 'block';
@@ -243,9 +244,12 @@
       } catch (err) {
         drop.innerHTML = `<div style="padding:10px 12px;font-size:12px;color:#f87171">Erreur : ${_esc(err.message)}</div>`;
       }
-    };
+    });
 
-    toggleDrop(btn, drop, wrap);
+    // Close on outside click; stop propagation inside dropdown
+    document.addEventListener('click', () => { drop.style.display = 'none'; });
+    drop.addEventListener('click', e => e.stopPropagation());
+
     wrap.appendChild(btn);
     wrap.appendChild(drop);
     tbr.insertBefore(wrap, tbr.firstChild);
