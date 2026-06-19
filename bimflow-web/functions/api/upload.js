@@ -9,7 +9,7 @@
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 const sanitize = (s) => String(s || "").replace(/[^a-zA-Z0-9_\-]/g, "_").substring(0, 80);
@@ -48,11 +48,21 @@ export async function onRequestPost({ request, env }) {
       date:        payload.ExportDate || new Date().toISOString(),
     }));
 
-    // Assign new project codes to admin (Revit plugin has no user session)
+    // Assign project owner — prefer authenticated user, fallback to admin
     if (code) {
       const ownerKey = "projowner:" + code;
       const existing = await env.BIMFLOW.get(ownerKey);
-      if (!existing) await env.BIMFLOW.put(ownerKey, "archi_moh@live.fr");
+      if (!existing) {
+        const token = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
+        let uploaderEmail = null;
+        if (token) uploaderEmail = await env.BIMFLOW.get("bfsession:" + token);
+        await env.BIMFLOW.put(ownerKey, uploaderEmail || "archi_moh@live.fr");
+        if (uploaderEmail) {
+          const nameKey = "projname:" + code;
+          if (!(await env.BIMFLOW.get(nameKey)))
+            await env.BIMFLOW.put(nameKey, payload.ProjectName || code);
+        }
+      }
     }
 
     return json({ ok: true, key, code, rooms: (payload.Rooms || []).length });

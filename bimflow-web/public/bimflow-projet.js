@@ -384,6 +384,31 @@
 
     drop.appendChild(bfpSep());
 
+    const delBtn = document.createElement('button');
+    delBtn.className = 'bfp-item';
+    delBtn.style.color = '#f87171';
+    delBtn.innerHTML =
+      `<span class="bfp-item-icon">🗑</span>` +
+      `<span class="bfp-item-body"><span class="bfp-item-label">Supprimer mon compte</span><span class="bfp-item-sub">Action irréversible</span></span>`;
+    delBtn.addEventListener('click', async () => {
+      if (!confirm('Supprimer définitivement votre compte ?\n\nVos projets seront transférés à l\'administrateur. Cette action est irréversible.')) return;
+      try {
+        const session = (window.BFUser.current || {}).session || '';
+        const r = await fetch('/api/auth/account', {
+          method: 'DELETE',
+          headers: session ? { 'Authorization': 'Bearer ' + session } : {},
+        });
+        const d = await r.json();
+        if (!r.ok) { alert('Erreur : ' + (d.error || r.status)); return; }
+        localStorage.removeItem('bimflow_user');
+        localStorage.removeItem('bimflow_project');
+        window.location.href = '/accueil.html';
+      } catch (e) { alert('Erreur réseau : ' + e.message); }
+    });
+    drop.appendChild(delBtn);
+
+    drop.appendChild(bfpSep());
+
     const logoutBtn = document.createElement('button');
     logoutBtn.className = 'bfp-item';
     logoutBtn.style.color = '#f87171';

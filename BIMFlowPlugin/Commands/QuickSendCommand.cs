@@ -57,6 +57,12 @@ namespace BIMFlowPlugin.Commands
                     return Result.Cancelled;
                 }
 
+                if (!BimFlowSender.EnsureAuthenticated())
+                {
+                    TaskDialog.Show("BIMFlow", "Connexion requise.\nCréez un compte sur bimatika-bimplan.pages.dev.");
+                    return Result.Cancelled;
+                }
+
                 // Send only rooms whose parameters changed since the last snapshot.
                 // No PNG export — much faster than a full send.
                 var (sent, failed, unchanged, errors) = BimFlowSender.SendParams(doc, views);

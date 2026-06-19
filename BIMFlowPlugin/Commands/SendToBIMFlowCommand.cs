@@ -1,6 +1,7 @@
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using BIMFlowPlugin.Commands;
 using BIMFlowPlugin.Exporters;
 using BIMFlowPlugin.UI;
 using Newtonsoft.Json;
@@ -58,6 +59,12 @@ namespace BIMFlowPlugin.Commands
                 if (selected.Count == 0)
                 {
                     TaskDialog.Show("BIMFlow", "Aucun plan sélectionné.");
+                    return Result.Cancelled;
+                }
+
+                if (!BimFlowSender.EnsureAuthenticated())
+                {
+                    TaskDialog.Show("BIMFlow", "Connexion requise.\nCréez un compte sur bimatika-bimplan.pages.dev.");
                     return Result.Cancelled;
                 }
 

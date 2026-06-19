@@ -72,6 +72,12 @@ namespace BIMFlowPlugin.Commands
                     return Result.Cancelled;
                 }
 
+                if (!BimFlowSender.EnsureAuthenticated())
+                {
+                    TaskDialog.Show("BIMFlow", "Connexion requise.\nCréez un compte sur bimatika-bimplan.pages.dev.");
+                    return Result.Cancelled;
+                }
+
                 // 3. Differential send — only rooms with changed parameters.
                 var (sent, failed, unchanged, errors) = BimFlowSender.SendParams(doc, views);
 

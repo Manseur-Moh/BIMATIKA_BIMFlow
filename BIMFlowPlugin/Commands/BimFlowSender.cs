@@ -1,4 +1,5 @@
 using Autodesk.Revit.DB;
+using BIMFlowPlugin.Auth;
 using BIMFlowPlugin.Exporters;
 using BIMFlowPlugin.Models;
 using Newtonsoft.Json;
@@ -7,20 +8,40 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace BIMFlowPlugin.Commands
 {
     internal static class BimFlowSender
     {
-        public const string UploadUrl  = "https://bimatika-bimplan.pages.dev/api/upload";
-        public const string ResetUrl   = "https://bimatika-bimplan.pages.dev/api/plans";
-        public const string ParamsUrl  = "https://bimatika-bimplan.pages.dev/api/params";
+        public const string UploadUrl   = "https://bimatika-bimplan.pages.dev/api/upload";
+        public const string ResetUrl    = "https://bimatika-bimplan.pages.dev/api/plans";
+        public const string ParamsUrl   = "https://bimatika-bimplan.pages.dev/api/params";
         public const string ProjectsUrl = "https://bimatika-bimplan.pages.dev/api/projets";
 
         // ── Reusable HttpClient (not disposed between calls) ──
         private static readonly HttpClient _http = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
+
+        // ── Ensure user is logged in — shows login dialog if needed ──
+        // Returns false if user cancels login.
+        public static bool EnsureAuthenticated()
+        {
+            if (BFSession.IsAuthenticated) return true;
+            using var dlg = new LoginDialog();
+            return dlg.ShowDialog() == DialogResult.OK && BFSession.IsAuthenticated;
+        }
+
+        // ── Build an HTTP request with Authorization header ──
+        private static HttpResponseMessage AuthSend(HttpMethod method, string url, HttpContent content = null)
+        {
+            var req = new HttpRequestMessage(method, url) { Content = content };
+            if (BFSession.IsAuthenticated)
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", BFSession.Current.Session);
+            return _http.SendAsync(req).GetAwaiter().GetResult();
+        }
 
         // ═══════════════════════════════════════════════════════════
         // FULL EXPORT — exports PNG + geometry + params, parallel uploads
@@ -43,7 +64,7 @@ namespace BIMFlowPlugin.Commands
             string deleteUrl = ResetUrl
                 + "?code=" + Uri.EscapeDataString(projectCode)
                 + "&project=" + Uri.EscapeDataString(projectName);
-            try { _http.DeleteAsync(deleteUrl).GetAwaiter().GetResult(); } catch { }
+            try { AuthSend(HttpMethod.Delete, deleteUrl); } catch { }
 
             // 2. Export ALL views sequentially — Revit API is single-threaded.
             var exports = new List<(ViewPlan view, PlanExport export, Exception err)>();
@@ -78,7 +99,7 @@ namespace BIMFlowPlugin.Commands
                 {
                     string json = JsonConvert.SerializeObject(x.export, Formatting.None);
                     using var content = new StringContent(json, Encoding.UTF8, "application/json");
-                    var resp = _http.PostAsync(UploadUrl, content).GetAwaiter().GetResult();
+                    var resp = AuthSend(HttpMethod.Post, UploadUrl, content);
                     string body = resp.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                     if (!resp.IsSuccessStatusCode)
                         throw new Exception($"HTTP {(int)resp.StatusCode}: {body}");
@@ -135,7 +156,7 @@ namespace BIMFlowPlugin.Commands
                     export.Rooms = toSend;
                     string json = JsonConvert.SerializeObject(export, Formatting.None);
                     using var content = new StringContent(json, Encoding.UTF8, "application/json");
-                    var resp = _http.PostAsync(ParamsUrl, content).GetAwaiter().GetResult();
+                    var resp = AuthSend(HttpMethod.Post, ParamsUrl, content);
                     string body = resp.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                     if (!resp.IsSuccessStatusCode)
                         throw new Exception($"HTTP {(int)resp.StatusCode}: {body}");
