@@ -1,15 +1,4 @@
-// Cloudflare Pages Function — project registry with per-user ownership.
-//
-// KV key scheme:
-//   projname:{code}   → { code, displayName, updatedAt }
-//   projowner:{code}  → email of owner (lowercase)
-//
-// ADMIN email: archi_moh@live.fr (always sees and manages everything)
-//
-// GET    /api/projets             → projects visible to the session user
-// GET    /api/projets?code=xxx    → verify a specific code (owner or admin)
-// POST   /api/projets?code=xxx   { displayName } → create / rename
-// DELETE /api/projets?code=xxx   → remove name + owner records
+import { getSupabase } from './_supabase.js';
 
 const ADMIN = "archi_moh@live.fr";
 
@@ -34,20 +23,10 @@ async function getSession(request, kv) {
   return { email: email.toLowerCase(), isAdmin: email.toLowerCase() === ADMIN };
 }
 
-// ── Load all projowner: keys into a map { code → email } ──
-async function loadOwners(kv) {
-  const list = await kv.list({ prefix: "projowner:" });
-  const owners = {};
-  await Promise.all(list.keys.map(async k => {
-    const e = await kv.get(k.name);
-    owners[k.name.replace("projowner:", "")] = (e || ADMIN).toLowerCase();
-  }));
-  return owners;
-}
-
 export async function onRequestGet({ request, env }) {
   try {
     const kv      = env.BIMFLOW;
+    const sb      = getSupabase(env);
     const session = await getSession(request, kv);
     const url     = new URL(request.url);
     const code    = url.searchParams.get("code");
@@ -56,76 +35,84 @@ export async function onRequestGet({ request, env }) {
     if (!session) return resp([]);
 
     if (code) {
-      // Verify a specific code
-      const listed = await kv.list({ prefix: "meta:" });
-      const metas  = await Promise.all(listed.keys.map(k => kv.get(k.name, { type: "json" }).catch(() => null)));
-      const match  = metas.filter(Boolean).find(m => (m.projectCode || "") === code);
-      if (!match) return resp({ error: "Code projet introuvable" }, 404);
+      // Vérifier un code projet spécifique
+      const { data: proj, error } = await sb
+        .from('projects')
+        .select('code, display_name, project_name, owner_email, plans(plan_key)')
+        .eq('code', code)
+        .maybeSingle();
+
+      if (error) return resp({ error: error.message }, 500);
+      if (!proj) return resp({ error: "Code projet introuvable" }, 404);
 
       if (!session.isAdmin) {
-        const owners = await loadOwners(kv);
-        const owner  = owners[code] || ADMIN;
-        const raw    = await kv.get("projmembers:" + code);
-        const members = raw ? JSON.parse(raw) : [];
-        if (owner !== session.email && !members.includes(session.email))
+        // Vérifier si le user est le propriétaire ou membre
+        const { data: member } = await sb
+          .from('project_members')
+          .select('id')
+          .eq('project_code', code)
+          .eq('member_email', session.email)
+          .maybeSingle();
+
+        if (proj.owner_email.toLowerCase() !== session.email && !member) {
           return resp({ error: "Accès non autorisé" }, 403);
+        }
       }
 
-      const nameRec = await kv.get("projname:" + code, { type: "json" }).catch(() => null);
       return resp({
-        code, found: true,
-        displayName: nameRec?.displayName || match.project || code,
-        projectName: match.project,
-        plans: metas.filter(Boolean).filter(m => m.projectCode === code).length,
+        code,
+        found: true,
+        displayName: proj.display_name || proj.project_name || code,
+        projectName: proj.project_name,
+        plans: proj.plans?.length || 0,
       });
     }
 
-    // List all projects from meta keys
-    const listed = await kv.list({ prefix: "meta:" });
-    const metas  = await Promise.all(listed.keys.map(k => kv.get(k.name, { type: "json" }).catch(() => null)));
-    const valid  = metas.filter(Boolean);
+    // Liste tous les projets
+    // Charger tous les projets avec le nombre de plans et la somme des rooms
+    const { data: projs, error: projsErr } = await sb
+      .from('projects')
+      .select('code, display_name, project_name, owner_email, created_at, updated_at, plans(plan_key, rooms_count, export_date)');
 
-    const byCode = {};
-    valid.forEach(m => {
-      const c = m.projectCode || "__legacy__";
-      if (!byCode[c]) byCode[c] = { code: c, projectName: m.project || "", plans: 0, rooms: 0, lastDate: "" };
-      byCode[c].plans++;
-      byCode[c].rooms += m.rooms || 0;
-      if ((m.date || "") > byCode[c].lastDate) byCode[c].lastDate = m.date || "";
-    });
+    if (projsErr) return resp({ error: projsErr.message }, 500);
 
-    // Merge display names
-    const nameList = await kv.list({ prefix: "projname:" });
-    const names    = await Promise.all(nameList.keys.map(k => kv.get(k.name, { type: "json" }).catch(() => null)));
-    names.filter(Boolean).forEach(n => {
-      if (byCode[n.code]) byCode[n.code].displayName = n.displayName;
-      else byCode[n.code] = { code: n.code, displayName: n.displayName, projectName: "", plans: 0, rooms: 0, lastDate: "" };
-    });
-
-    let projects = Object.values(byCode).sort((a, b) => b.lastDate.localeCompare(a.lastDate));
-
-    // Admin sees everything; regular user sees owned projects + projects they're a member of
-    if (!session.isAdmin) {
-      const owners = await loadOwners(kv);
-
-      // Find codes where the user is a team member
-      const memberList = await kv.list({ prefix: "projmembers:" });
-      const memberCodes = new Set();
-      await Promise.all(memberList.keys.map(async k => {
-        const raw = await kv.get(k.name);
-        const members = raw ? JSON.parse(raw) : [];
-        if (members.includes(session.email))
-          memberCodes.add(k.name.replace("projmembers:", ""));
-      }));
-
-      projects = projects.filter(p => {
-        const owner = owners[p.code] || ADMIN;
-        return owner === session.email || memberCodes.has(p.code);
+    let projects = projs.map(p => {
+      let rooms = 0;
+      let lastDate = p.created_at;
+      (p.plans || []).forEach(plan => {
+        rooms += plan.rooms_count || 0;
+        if (plan.export_date && plan.export_date > lastDate) {
+          lastDate = plan.export_date;
+        }
       });
 
-      // Tag shared projects so the UI can distinguish them
+      return {
+        code: p.code,
+        displayName: p.display_name,
+        projectName: p.project_name,
+        ownerEmail: p.owner_email,
+        plans: p.plans?.length || 0,
+        rooms,
+        lastDate,
+      };
+    }).sort((a, b) => b.lastDate.localeCompare(a.lastDate));
+
+    // Filtrer si ce n'est pas un admin
+    if (!session.isAdmin) {
+      // Récupérer les codes projets partagés avec l'utilisateur
+      const { data: shared, error: sharedErr } = await sb
+        .from('project_members')
+        .select('project_code')
+        .eq('member_email', session.email);
+
+      if (sharedErr) return resp({ error: sharedErr.message }, 500);
+      const sharedCodes = new Set(shared.map(m => m.project_code));
+
+      projects = projects.filter(p => p.ownerEmail.toLowerCase() === session.email || sharedCodes.has(p.code));
+
+      // Taguer les projets partagés
       projects.forEach(p => {
-        if (memberCodes.has(p.code)) p.shared = true;
+        if (sharedCodes.has(p.code)) p.shared = true;
       });
     }
 
@@ -138,6 +125,7 @@ export async function onRequestGet({ request, env }) {
 export async function onRequestPost({ request, env }) {
   try {
     const kv      = env.BIMFLOW;
+    const sb      = getSupabase(env);
     const session = await getSession(request, kv);
     if (!session) return resp({ error: "Non authentifié" }, 401);
 
@@ -149,20 +137,35 @@ export async function onRequestPost({ request, env }) {
     const displayName = String(body.displayName || "").trim();
     if (!displayName) return resp({ error: "displayName required" }, 400);
 
-    // Check ownership for rename (admin bypasses)
-    if (!session.isAdmin) {
-      const owners = await loadOwners(kv);
-      const owner  = owners[code] || ADMIN;
-      if (owner !== session.email) return resp({ error: "Non autorisé" }, 403);
+    // Vérifier l'owner existant si ce n'est pas un admin
+    const { data: existingProj, error: selectErr } = await sb
+      .from('projects')
+      .select('owner_email')
+      .eq('code', code)
+      .maybeSingle();
+
+    if (selectErr) return resp({ error: selectErr.message }, 500);
+
+    if (existingProj && !session.isAdmin) {
+      if (existingProj.owner_email.toLowerCase() !== session.email) {
+        return resp({ error: "Non autorisé" }, 403);
+      }
     }
 
-    // Set owner on first creation
-    const existingOwner = await kv.get("projowner:" + code);
-    if (!existingOwner) {
-      await kv.put("projowner:" + code, session.email);
-    }
+    const ownerToUse = existingProj ? existingProj.owner_email : session.email;
 
-    await kv.put("projname:" + code, JSON.stringify({ code, displayName, updatedAt: new Date().toISOString() }));
+    const { error: upsertErr } = await sb
+      .from('projects')
+      .upsert({
+        code,
+        display_name: displayName,
+        project_name: existingProj?.project_name || displayName,
+        owner_email: ownerToUse,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'code' });
+
+    if (upsertErr) return resp({ error: upsertErr.message }, 500);
+
     return resp({ ok: true, code, displayName });
   } catch (err) {
     return resp({ error: err.message }, 500);
@@ -172,6 +175,7 @@ export async function onRequestPost({ request, env }) {
 export async function onRequestDelete({ request, env }) {
   try {
     const kv      = env.BIMFLOW;
+    const sb      = getSupabase(env);
     const session = await getSession(request, kv);
     if (!session) return resp({ error: "Non authentifié" }, 401);
 
@@ -179,16 +183,30 @@ export async function onRequestDelete({ request, env }) {
     const code = url.searchParams.get("code");
     if (!code) return resp({ error: "code required" }, 400);
 
-    if (!session.isAdmin) {
-      const owners = await loadOwners(kv);
-      const owner  = owners[code] || ADMIN;
-      if (owner !== session.email) return resp({ error: "Non autorisé" }, 403);
+    // Récupérer le projet pour vérification
+    const { data: existingProj, error: selectErr } = await sb
+      .from('projects')
+      .select('owner_email')
+      .eq('code', code)
+      .maybeSingle();
+
+    if (selectErr) return resp({ error: selectErr.message }, 500);
+    if (!existingProj) return resp({ ok: true }); // Déjà supprimé
+
+    if (!session.isAdmin && existingProj.owner_email.toLowerCase() !== session.email) {
+      return resp({ error: "Non autorisé" }, 403);
     }
 
-    await kv.delete("projname:"  + code);
-    await kv.delete("projowner:" + code);
+    const { error: deleteErr } = await sb
+      .from('projects')
+      .delete()
+      .eq('code', code);
+
+    if (deleteErr) return resp({ error: deleteErr.message }, 500);
+
     return resp({ ok: true });
   } catch (err) {
     return resp({ error: err.message }, 500);
   }
 }
+

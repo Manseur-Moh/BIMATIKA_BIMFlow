@@ -47,7 +47,7 @@ namespace BIMFlowPlugin.Commands
         // FULL EXPORT — exports PNG + geometry + params, parallel uploads
         // Called by "Envoyer vers BIMFlow" and "Envoi rapide" (force mode)
         // ═══════════════════════════════════════════════════════════
-        public static (int sent, int failed, List<string> errors) Send(Document doc, IList<ViewPlan> views)
+        public static (int sent, int failed, List<string> errors) Send(Document doc, IList<Autodesk.Revit.DB.View> views)
         {
             int sent = 0, failed = 0;
             var errors  = new List<string>();
@@ -67,7 +67,7 @@ namespace BIMFlowPlugin.Commands
             try { AuthSend(HttpMethod.Delete, deleteUrl); } catch { }
 
             // 2. Export ALL views sequentially — Revit API is single-threaded.
-            var exports = new List<(ViewPlan view, PlanExport export, Exception err)>();
+            var exports = new List<(Autodesk.Revit.DB.View view, PlanExport export, Exception err)>();
             try
             {
                 foreach (var view in views)
@@ -75,7 +75,10 @@ namespace BIMFlowPlugin.Commands
                     try
                     {
                         string tempDir = Path.Combine(tempRoot, view.Id.Value.ToString());
-                        var export = new SvgPlanExporter(doc, view, tempDir).Run();
+                        // Floor plans → full room export; other views (sections/coupes) → image only.
+                        var export = (view is ViewPlan vp)
+                            ? new SvgPlanExporter(doc, vp, tempDir).Run()
+                            : SvgPlanExporter.ExportImageOnly(doc, view, tempDir);
                         export.ProjectCode = projectCode;
                         exports.Add((view, export, null));
                     }
@@ -104,8 +107,8 @@ namespace BIMFlowPlugin.Commands
                     if (!resp.IsSuccessStatusCode)
                         throw new Exception($"HTTP {(int)resp.StatusCode}: {body}");
 
-                    // Save param snapshot so SendParams can diff against this state.
-                    SaveSnapshot(doc, x.view, x.export.Rooms);
+                    // Save param snapshot so SendParams can diff against this state (plans only).
+                    if (x.view is ViewPlan vpSnap) SaveSnapshot(doc, vpSnap, x.export.Rooms);
                     lock (lockObj) { sent++; }
                 }
                 catch (Exception ex)

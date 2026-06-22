@@ -160,6 +160,9 @@
   }
 
   function injectReloadButton(tbr) {
+    // Skip pages that already provide their own refresh control (e.g. the plan
+    // page's #btnRefresh) to avoid a duplicate "🔄 Actualiser" button.
+    if (document.getElementById('btnRefresh')) return;
     const btn = document.createElement('button');
     btn.className = 'bfp-gear-btn';
     btn.style.marginRight = '4px';

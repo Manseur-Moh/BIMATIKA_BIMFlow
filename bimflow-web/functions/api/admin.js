@@ -2,6 +2,11 @@
 //
 // GET    /api/admin              → list all users + project counts
 // DELETE /api/admin?email=xxx   → delete a user account (cannot delete admin)
+//
+// Storage: user accounts remain in KV (bfuser:). Project ownership/membership
+// live in Supabase (projects.owner_email, project_members.member_email).
+
+import { getSupabase } from './_supabase.js';
 
 const ADMIN = "archi_moh@live.fr";
 
@@ -28,22 +33,23 @@ async function getSession(request, kv) {
 
 export async function onRequestGet({ request, env }) {
   const kv      = env.BIMFLOW;
+  const sb      = getSupabase(env);
   const session = await getSession(request, kv);
   if (!session?.isAdmin) return respErr("Non autorisé", 403);
 
-  // All users
+  // All users (still in KV)
   const userList = await kv.list({ prefix: "bfuser:" });
   const users    = (await Promise.all(
     userList.keys.map(k => kv.get(k.name, { type: "json" }).catch(() => null))
   )).filter(Boolean);
 
-  // Count projects per owner
-  const ownerList = await kv.list({ prefix: "projowner:" });
+  // Count projects per owner (Supabase)
   const projCount = {};
-  await Promise.all(ownerList.keys.map(async k => {
-    const owner = (await kv.get(k.name) || ADMIN).toLowerCase();
+  const { data: projs } = await sb.from('projects').select('owner_email');
+  (projs || []).forEach(p => {
+    const owner = (p.owner_email || ADMIN).toLowerCase();
     projCount[owner] = (projCount[owner] || 0) + 1;
-  }));
+  });
 
   return resp({
     users: users.map(u => ({
@@ -61,6 +67,7 @@ export async function onRequestGet({ request, env }) {
 export async function onRequestDelete({ request, env }) {
   try {
     const kv      = env.BIMFLOW;
+    const sb      = getSupabase(env);
     const session = await getSession(request, kv);
     if (!session?.isAdmin) return respErr("Non autorisé", 403);
 
@@ -68,27 +75,17 @@ export async function onRequestDelete({ request, env }) {
     if (!target)           return respErr("email required", 400);
     if (target === ADMIN)  return respErr("Impossible de supprimer le compte administrateur.", 400);
 
-    // 1. Delete user record
+    // 1. Delete user record (KV)
     await kv.delete("bfuser:" + target);
 
     // 2. Delete any pending confirmation token for this user
     //    (we can't easily enumerate bfconfirm: tokens by email, so skip)
 
-    // 3. Remove from all project member lists
-    const memberList = await kv.list({ prefix: "projmembers:" });
-    await Promise.all(memberList.keys.map(async k => {
-      const raw = await kv.get(k.name);
-      if (!raw) return;
-      const members = JSON.parse(raw).filter(e => e !== target);
-      await kv.put(k.name, JSON.stringify(members));
-    }));
+    // 3. Remove from all project member lists (Supabase)
+    await sb.from('project_members').delete().eq('member_email', target);
 
-    // 4. Transfer project ownership to admin
-    const ownerList = await kv.list({ prefix: "projowner:" });
-    await Promise.all(ownerList.keys.map(async k => {
-      const owner = (await kv.get(k.name) || "").toLowerCase();
-      if (owner === target) await kv.put(k.name, ADMIN);
-    }));
+    // 4. Transfer project ownership to admin (Supabase)
+    await sb.from('projects').update({ owner_email: ADMIN }).eq('owner_email', target);
 
     return resp({ ok: true, deleted: target });
   } catch (err) {

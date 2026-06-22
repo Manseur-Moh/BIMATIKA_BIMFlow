@@ -1,10 +1,13 @@
 // Team management for BIMFlow projects.
 //
-// KV key: projmembers:{code} → JSON array of lowercase email strings
+// Storage: Supabase `projects` (owner_email) + `project_members` (member_email).
+// Auth sessions and user accounts remain in KV (bfsession:, bfuser:).
 //
 // GET    /api/team?code=xxx             → { owner, members } (owner or admin)
 // POST   /api/team?code=xxx  { email } → add a member (owner or admin)
 // DELETE /api/team?code=xxx&email=yyy  → remove a member (owner or admin)
+
+import { getSupabase } from './_supabase.js';
 
 const ADMIN = "archi_moh@live.fr";
 
@@ -27,30 +30,35 @@ async function getSession(request, kv) {
   return { email: email.toLowerCase(), isAdmin: email.toLowerCase() === ADMIN };
 }
 
-async function canManage(session, code, kv) {
-  if (session.isAdmin) return true;
-  const owner = (await kv.get("projowner:" + code) || ADMIN).toLowerCase();
-  return owner === session.email;
+async function getOwner(code, sb) {
+  const { data } = await sb.from('projects').select('owner_email').eq('code', code).maybeSingle();
+  return (data?.owner_email || ADMIN).toLowerCase();
 }
 
-async function getMembers(code, kv) {
-  const raw = await kv.get("projmembers:" + code);
-  return raw ? JSON.parse(raw) : [];
+async function canManage(session, code, sb) {
+  if (session.isAdmin) return true;
+  return (await getOwner(code, sb)) === session.email;
+}
+
+async function getMembers(code, sb) {
+  const { data } = await sb.from('project_members').select('member_email').eq('project_code', code);
+  return (data || []).map(r => String(r.member_email).toLowerCase());
 }
 
 export async function onRequestGet({ request, env }) {
   try {
     const kv      = env.BIMFLOW;
+    const sb      = getSupabase(env);
     const session = await getSession(request, kv);
     if (!session) return respErr("Non authentifié", 401);
 
     const code = new URL(request.url).searchParams.get("code");
     if (!code) return respErr("code required", 400);
 
-    if (!await canManage(session, code, kv)) return respErr("Non autorisé", 403);
+    if (!await canManage(session, code, sb)) return respErr("Non autorisé", 403);
 
-    const owner   = (await kv.get("projowner:" + code) || ADMIN).toLowerCase();
-    const members = await getMembers(code, kv);
+    const owner   = await getOwner(code, sb);
+    const members = await getMembers(code, sb);
     return resp({ owner, members });
   } catch (err) {
     return respErr(err.message, 500);
@@ -60,6 +68,7 @@ export async function onRequestGet({ request, env }) {
 export async function onRequestPost({ request, env }) {
   try {
     const kv      = env.BIMFLOW;
+    const sb      = getSupabase(env);
     const session = await getSession(request, kv);
     if (!session) return respErr("Non authentifié", 401);
 
@@ -67,7 +76,7 @@ export async function onRequestPost({ request, env }) {
     const code = url.searchParams.get("code");
     if (!code) return respErr("code required", 400);
 
-    if (!await canManage(session, code, kv)) return respErr("Non autorisé", 403);
+    if (!await canManage(session, code, sb)) return respErr("Non autorisé", 403);
 
     const body  = await request.json();
     const email = String(body.email || "").toLowerCase().trim();
@@ -75,21 +84,24 @@ export async function onRequestPost({ request, env }) {
       return respErr("Adresse e-mail invalide.", 400);
 
     // Don't add the project owner as a member
-    const owner = (await kv.get("projowner:" + code) || ADMIN).toLowerCase();
+    const owner = await getOwner(code, sb);
     if (email === owner) return respErr("Cette personne est déjà propriétaire du projet.", 400);
 
-    const members = await getMembers(code, kv);
+    const members = await getMembers(code, sb);
     if (members.includes(email)) return resp({ ok: true, alreadyMember: true });
 
-    members.push(email);
-    await kv.put("projmembers:" + code, JSON.stringify(members));
+    const { error: insErr } = await sb
+      .from('project_members')
+      .insert({ project_code: code, member_email: email });
+    if (insErr) throw insErr;
 
     // Check if the invited user has a BIMFlow account
     const userExists = !!(await kv.get("bfuser:" + email));
 
     // Send invitation email if Resend is configured
     if (env.RESEND_API_KEY) {
-      const projname = (await kv.get("projname:" + code, { type: "json" }).catch(() => null))?.displayName || code;
+      const { data: proj } = await sb.from('projects').select('display_name').eq('code', code).maybeSingle();
+      const projname = proj?.display_name || code;
       const appUrl   = new URL(request.url).origin;
       await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -112,6 +124,7 @@ export async function onRequestPost({ request, env }) {
 export async function onRequestDelete({ request, env }) {
   try {
     const kv      = env.BIMFLOW;
+    const sb      = getSupabase(env);
     const session = await getSession(request, kv);
     if (!session) return respErr("Non authentifié", 401);
 
@@ -121,12 +134,16 @@ export async function onRequestDelete({ request, env }) {
     if (!code)   return respErr("code required", 400);
     if (!target) return respErr("email required", 400);
 
-    if (!await canManage(session, code, kv)) return respErr("Non autorisé", 403);
+    if (!await canManage(session, code, sb)) return respErr("Non autorisé", 403);
 
-    const members = await getMembers(code, kv);
-    const updated = members.filter(e => e !== target);
-    await kv.put("projmembers:" + code, JSON.stringify(updated));
-    return resp({ ok: true, removed: members.length - updated.length });
+    const { data: removed, error: delErr } = await sb
+      .from('project_members')
+      .delete()
+      .eq('project_code', code)
+      .eq('member_email', target)
+      .select('id');
+    if (delErr) throw delErr;
+    return resp({ ok: true, removed: (removed || []).length });
   } catch (err) {
     return respErr(err.message, 500);
   }

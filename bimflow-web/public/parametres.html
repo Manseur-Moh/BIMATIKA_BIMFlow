@@ -276,8 +276,13 @@ document.getElementById('btnClear').addEventListener('click',()=>{
 document.getElementById('btnSend').addEventListener('click',async()=>{
   const news=rows.filter(r=>r.Name&&r.Name.trim());
   if(!news.length) return;
+  // La file d'attente est indexée par code projet (pending_updates.project_code → FK projects).
+  // Sans ?code=, l'insert échoue (violation de FK).
+  let code=(window.BFProject&&window.BFProject.current&&window.BFProject.current.code)||'';
+  if(code==='__legacy__') code='';
+  const updUrl='/api/updates'+(code?('?code='+encodeURIComponent(code)):'');
   try{
-    const r=await fetch('/api/updates',{method:'POST',headers:{'Content-Type':'application/json'},
+    const r=await fetch(updUrl,{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({PlanKey:'',Updates:[],NewParameters:news})});
     if(!r.ok) throw new Error('HTTP '+r.status);
     const b=document.getElementById('btnSend'); b.textContent='✓ Envoyé !'; b.classList.add('ok');

@@ -1,11 +1,4 @@
-// Cloudflare Pages Function — read/clear stored plans in KV (binding: BIMFLOW).
-// GET    /api/plans                   → list ALL plans (admin) or empty (non-admin without code)
-// GET    /api/plans?code=xxx          → list metadata for one project (requires access)
-// GET    /api/plans?key=xxx           → full plan (with image) — key acts as token
-// GET    /api/plans?key=xxx&light=1   → plan without the heavy base64 image
-// DELETE /api/plans?code=xxx          → clear that project's plans (requires ownership or membership)
-// DELETE /api/plans                   → clear ALL plans (admin only)
-// PATCH  /api/plans?key=xxx           → update room parameters
+import { getSupabase } from './_supabase.js';
 
 const ADMIN = "archi_moh@live.fr";
 
@@ -29,13 +22,27 @@ async function getSession(request, kv) {
   return { email: email.toLowerCase(), isAdmin: email.toLowerCase() === ADMIN };
 }
 
-async function hasProjectAccess(session, code, kv) {
+async function hasProjectAccess(session, code, sb) {
   if (session.isAdmin) return true;
-  const owner = (await kv.get("projowner:" + code) || ADMIN).toLowerCase();
-  if (owner === session.email) return true;
-  const membersJson = await kv.get("projmembers:" + code);
-  if (!membersJson) return false;
-  return JSON.parse(membersJson).includes(session.email);
+  
+  // Récupérer le projet pour vérifier l'owner
+  const { data: proj } = await sb
+    .from('projects')
+    .select('owner_email')
+    .eq('code', code)
+    .maybeSingle();
+    
+  if (proj && proj.owner_email.toLowerCase() === session.email) return true;
+
+  // Récupérer les membres
+  const { data: member } = await sb
+    .from('project_members')
+    .select('id')
+    .eq('project_code', code)
+    .eq('member_email', session.email)
+    .maybeSingle();
+
+  return !!member;
 }
 
 export async function onRequestGet({ request, env }) {
@@ -45,13 +52,26 @@ export async function onRequestGet({ request, env }) {
     const light = url.searchParams.get("light") === "1";
     const code  = (url.searchParams.get("code") || "").trim();
     const kv    = env.BIMFLOW;
+    const sb    = getSupabase(env);
 
-    // ── Individual plan by key — key itself is the access token ──
+    // ── Individual plan by key ──
     if (key) {
-      const plan = await kv.get("plan:" + key, { type: "json" });
+      const { data: plan, error } = await sb
+        .from('plans')
+        .select(light ? 'plan_key, project_code, level_name, level_elev, rooms_count, export_date, plan_data' : 'plan_data, image_base64')
+        .eq('plan_key', key)
+        .maybeSingle();
+
+      if (error) return respErr(error.message, 500);
       if (!plan) return respErr("Not found", 404);
-      if (light) { const { ImageBase64, ...rest } = plan; return resp(rest, { "Cache-Control": NOCACHE }); }
-      return resp(plan, { "Cache-Control": NOCACHE });
+
+      if (light) {
+        // Le format original renvoie l'objet complet sans ImageBase64
+        const data = plan.plan_data || {};
+        const { ImageBase64, ...rest } = data;
+        return resp(rest, { "Cache-Control": NOCACHE });
+      }
+      return resp(plan.plan_data, { "Cache-Control": NOCACHE });
     }
 
     // ── List endpoint — requires auth ──
@@ -59,44 +79,64 @@ export async function onRequestGet({ request, env }) {
     if (!session) return resp([], { "Cache-Control": NOCACHE });
 
     if (code) {
-      if (!await hasProjectAccess(session, code, kv)) {
+      if (!await hasProjectAccess(session, code, sb)) {
         return resp([], { "Cache-Control": NOCACHE });
       }
     } else if (!session.isAdmin) {
-      // Non-admin with no project code → nothing to show
       return resp([], { "Cache-Control": NOCACHE });
     }
 
-    const project = url.searchParams.get("project");
-    const listed  = await kv.list({ prefix: "meta:" });
-    const metas   = await Promise.all(listed.keys.map(k => kv.get(k.name, { type: "json" }).catch(() => null)));
-    const all     = metas.filter(Boolean);
-    const index   = all
-      .filter(m => {
-        if (code)    return (m.projectCode || "") === code;
-        if (project) return (m.project || "") === project;
-        return true;
-      })
-      .sort((a, b) => (a.level || "").localeCompare(b.level || ""));
+    // Liste des métadonnées
+    let query = sb
+      .from('plans')
+      .select('plan_key, project_code, level_name, level_elev, rooms_count, export_date, projects(project_name)');
+
+    if (code) {
+      query = query.eq('project_code', code);
+    }
+
+    const { data: plansData, error } = await query;
+    if (error) return respErr(error.message, 500);
+
+    // Convertir les lignes SQL au format attendu par le frontend (metas de KV)
+    const index = plansData.map(p => ({
+      key: p.plan_key,
+      project: p.projects?.project_name || "",
+      projectCode: p.project_code,
+      level: p.level_name,
+      elev: p.level_elev,
+      rooms: p.rooms_count,
+      date: p.export_date,
+    })).sort((a, b) => (a.level || "").localeCompare(b.level || ""));
+
     return resp(index, { "Cache-Control": NOCACHE });
   } catch (err) {
     return respErr(err.message, 500);
   }
 }
 
-// Patch room parameters — key acts as the access token
+// Patch room parameters
 export async function onRequestPatch({ request, env }) {
   try {
     const url = new URL(request.url);
     const key = url.searchParams.get("key");
     if (!key) return respErr("key required", 400);
-    const kv   = env.BIMFLOW;
+    const sb   = getSupabase(env);
     const body = await request.json();
-    const plan = await kv.get("plan:" + key, { type: "json" });
-    if (!plan) return respErr("Not found", 404);
+
+    const { data: plan, error } = await sb
+      .from('plans')
+      .select('plan_data')
+      .eq('plan_key', key)
+      .maybeSingle();
+
+    if (error) return respErr(error.message, 500);
+    if (!plan || !plan.plan_data) return respErr("Not found", 404);
+
+    const fullPlan = plan.plan_data;
     const updates = body.rooms || {};
     let changed = 0;
-    (plan.Rooms || []).forEach(room => {
+    (fullPlan.Rooms || []).forEach(room => {
       const upd = updates[String(room.RevitId)];
       if (!upd) return;
       if (upd.Parameters) Object.assign(room.Parameters = room.Parameters || {}, upd.Parameters);
@@ -104,58 +144,57 @@ export async function onRequestPatch({ request, env }) {
       if (upd.Name   !== undefined) room.Name   = upd.Name;
       changed++;
     });
-    await kv.put("plan:" + key, JSON.stringify(plan));
+
+    const { error: updErr } = await sb
+      .from('plans')
+      .update({ plan_data: fullPlan, updated_at: new Date().toISOString() })
+      .eq('plan_key', key);
+
+    if (updErr) return respErr(updErr.message, 500);
+
     return resp({ ok: true, changed });
   } catch (err) {
     return respErr(err.message, 500);
   }
 }
 
-// Wipe plans — admin can wipe all; owner/member can wipe their project
+// Wipe plans
 export async function onRequestDelete({ request, env }) {
   try {
     const url     = new URL(request.url);
     const code    = (url.searchParams.get("code") || "").trim();
-    const project = url.searchParams.get("project");
     const kv      = env.BIMFLOW;
+    const sb      = getSupabase(env);
 
     const session = await getSession(request, kv);
     if (!session) return respErr("Non authentifié", 401);
 
     if (code && !session.isAdmin) {
-      if (!await hasProjectAccess(session, code, kv)) return respErr("Non autorisé", 403);
-    } else if (!code && !project && !session.isAdmin) {
+      if (!await hasProjectAccess(session, code, sb)) return respErr("Non autorisé", 403);
+    } else if (!code && !session.isAdmin) {
       return respErr("Non autorisé", 403);
     }
 
-    let cursor, removed = 0;
-    if (project || code) {
-      do {
-        const listed = await kv.list({ prefix: "meta:", cursor });
-        const metas = await Promise.all(listed.keys.map(k => kv.get(k.name, { type: "json" }).catch(() => null)));
-        for (let i = 0; i < listed.keys.length; i++) {
-          const meta = metas[i];
-          const match = meta && (
-            (code    && (meta.projectCode || "") === code) ||
-            (project && (meta.project || "") === project && !meta.projectCode)
-          );
-          if (match) { await kv.delete("plan:" + meta.key); await kv.delete("meta:" + meta.key); removed++; }
-        }
-        cursor = listed.list_complete ? null : listed.cursor;
-      } while (cursor);
-      return resp({ ok: true, removed, project, code });
+    if (code) {
+      const { error, count } = await sb
+        .from('plans')
+        .delete({ count: 'exact' })
+        .eq('project_code', code);
+
+      if (error) return respErr(error.message, 500);
+      return resp({ ok: true, removed: count || 0, code });
     }
 
     // Admin wipe-all
-    do {
-      const listed = await kv.list({ cursor });
-      for (const k of listed.keys) {
-        if (k.name.startsWith("plan:") || k.name.startsWith("meta:")) { await kv.delete(k.name); removed++; }
-      }
-      cursor = listed.list_complete ? null : listed.cursor;
-    } while (cursor);
-    return resp({ ok: true, removed });
+    const { error, count } = await sb
+      .from('plans')
+      .delete({ count: 'exact' })
+      .neq('plan_key', 'dummy_non_existent_key_for_select_all');
+
+    if (error) return respErr(error.message, 500);
+    return resp({ ok: true, removed: count || 0 });
   } catch (err) {
     return respErr(err.message, 500);
   }
 }
+

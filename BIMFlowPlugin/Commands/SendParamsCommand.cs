@@ -43,27 +43,35 @@ namespace BIMFlowPlugin.Commands
                     var allPlans = new FilteredElementCollector(doc)
                         .OfClass(typeof(ViewPlan))
                         .Cast<ViewPlan>()
-                        .Where(v => v.ViewType == ViewType.FloorPlan && !v.IsTemplate)
+                        .Where(v => v.ViewType == ViewType.FloorPlan && !v.IsTemplate && v.GenLevel != null)
                         .ToList();
 
                     if (allPlans.Count == 0)
                     {
-                        TaskDialog.Show("BIMFlow", "Aucun plan d'étage.");
+                        TaskDialog.Show("BIMFlow", "Aucun plan d'étage associé à un niveau.");
                         return Result.Cancelled;
                     }
 
                     var withCount = allPlans.Select(v =>
-                        (v, new FilteredElementCollector(doc, v.Id)
+                        ((View)v, new FilteredElementCollector(doc, v.Id)
                               .OfCategory(BuiltInCategory.OST_Rooms)
                               .WhereElementIsNotElementType()
                               .GetElementCount()))
+                        .Where(x => x.Item2 > 0)   // masquer les plans sans pièces
                         .ToList();
+
+                    if (withCount.Count == 0)
+                    {
+                        TaskDialog.Show("BIMFlow", "Aucun plan d'étage contenant des pièces.");
+                        return Result.Cancelled;
+                    }
 
                     var dialog = new PlanSelectionDialog(withCount);
                     if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
                         return Result.Cancelled;
 
-                    views = dialog.SelectedPlans;
+                    // Params-only flow handles plans (rooms); ignore any non-plan view.
+                    views = dialog.SelectedPlans.OfType<ViewPlan>().ToList();
                 }
 
                 if (views.Count == 0)

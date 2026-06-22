@@ -1,12 +1,14 @@
 // Cloudflare Pages Function — fast room-parameters-only update.
-// POST /api/params  body: { ProjectName, LevelName, Rooms:[{RevitId, Number, Name, Parameters,
-//        ParameterTypes, ParameterReadOnly, ParameterChoices, AreaM2, PerimeterM}] }
+// POST /api/params  body: { ProjectName, ProjectCode/ProjectNumber, LevelName, Rooms:[...] }
 // Merges the parameters into the ALREADY-uploaded plan (keeps image + room polygons).
 // Used by the Revit "Envoyer paramètres" button when the geometry hasn't changed.
+// Storage: Supabase `plans` table (plan_data JSONB). Auth sessions remain in KV.
+
+import { getSupabase } from './_supabase.js';
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Content-Type": "application/json",
 };
@@ -20,15 +22,25 @@ export async function onRequestPost({ request, env }) {
   try {
     const p = await request.json();
     if (!p || !p.LevelName) return json({ error: "Missing LevelName" }, 400);
-    const rawCode = clean(p.ProjectCode) || clean(p.ProjectNumber) || "";
-    const code    = sanitize(rawCode);
-    const key = code
-      ? sanitize(`${code}__${p.LevelName}`)
-      : sanitize(`${p.ProjectName}__${p.LevelName}`);
-    const kv = env.BIMFLOW;
 
-    const plan = await kv.get("plan:" + key, { type: "json" });
-    if (!plan) return json({ error: "Plan introuvable — envoyez d'abord le plan complet (Envoyer vers BIMFlow)." }, 404);
+    // Resolve plan key the SAME way upload.js does (LEGACY_ fallback keeps the FK valid).
+    const rawCode = clean(p.ProjectCode) || clean(p.ProjectNumber) || "";
+    let code = sanitize(rawCode);
+    if (!code) code = "LEGACY_" + sanitize(p.ProjectName || "unnamed");
+    const key = sanitize(`${code}__${p.LevelName}`);
+
+    const sb = getSupabase(env);
+
+    const { data: row, error: selErr } = await sb
+      .from('plans')
+      .select('plan_data')
+      .eq('plan_key', key)
+      .maybeSingle();
+    if (selErr) throw selErr;
+    if (!row || !row.plan_data)
+      return json({ error: "Plan introuvable — envoyez d'abord le plan complet (Envoyer vers BIMFlow)." }, 404);
+
+    const plan = row.plan_data;
 
     const byId = {};
     (plan.Rooms || []).forEach(r => { byId[String(r.RevitId)] = r; });
@@ -49,16 +61,21 @@ export async function onRequestPost({ request, env }) {
         updated++;
       } else {
         // new room with no geometry yet — params still available in the table
+        plan.Rooms = plan.Rooms || [];
         plan.Rooms.push({ ...src, SvgPolygon: src.SvgPolygon || "", CentroidX: src.CentroidX || 0, CentroidY: src.CentroidY || 0 });
         added++;
       }
     });
 
-    await kv.put("plan:" + key, JSON.stringify(plan));
-    await kv.put("meta:" + key, JSON.stringify({
-      key, project: plan.ProjectName, level: plan.LevelName, elev: plan.LevelElevation ?? 0,
-      rooms: (plan.Rooms || []).length, date: new Date().toISOString().slice(0, 16).replace("T", " "),
-    }));
+    const { error: updErr } = await sb
+      .from('plans')
+      .update({
+        plan_data:   plan,
+        rooms_count: (plan.Rooms || []).length,
+        updated_at:  new Date().toISOString(),
+      })
+      .eq('plan_key', key);
+    if (updErr) throw updErr;
 
     return json({ ok: true, key, updated, added });
   } catch (err) {

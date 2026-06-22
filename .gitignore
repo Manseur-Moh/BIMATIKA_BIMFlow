@@ -26,3 +26,7 @@ Release/
 packages/
 # Cloudflare Wrangler cache
 .wrangler/
+
+# Node / Supabase
+node_modules/
+.dev.vars
