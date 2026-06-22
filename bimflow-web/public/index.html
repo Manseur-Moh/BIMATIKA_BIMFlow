@@ -173,6 +173,17 @@
     .psearch{margin:5px 10px;flex-shrink:0}
     .psearch input{width:100%;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:4px 8px;font-size:12px;outline:none}
     .psearch input:focus{border-color:#3b82f6}
+    .pfilter-bar{display:flex;align-items:center;gap:6px;padding:4px 10px;background:#0d1526;border-bottom:1px solid #1e2b45;flex-shrink:0;flex-wrap:wrap}
+    .pfilter-bar select{background:#0f172a;color:#e2e8f0;border:1px solid #2a3a55;border-radius:4px;padding:3px 7px;font-size:11px;outline:none;max-width:220px}
+    .pfilter-bar select:focus{border-color:#3b82f6}
+    .pfbtn{background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:4px;padding:3px 9px;font-size:11px;font-weight:600;cursor:pointer}
+    .pfbtn:hover{background:#374151;color:#fff}
+    .pfbtn.on{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
+    .grp-row td{background:#0e1d35;font-weight:700;color:#38bdf8;border-left:3px solid #1d4ed8;cursor:pointer}
+    .grp-row:hover td{background:#0c1a2e}
+    [data-theme=light] .pfilter-bar{background:#f6f8fb;border-bottom-color:#dde2ec}
+    [data-theme=light] .pfilter-bar select{background:#fff;color:#1e2733;border-color:#d4dae6}
+    [data-theme=light] .grp-row td{background:#e7f3fc;color:#0284c7;border-left-color:#0284c7}
     .ptable-scroll{flex:1;overflow:auto}
     table.pt{width:100%;border-collapse:collapse;font-size:12px}
     table.pt th{position:sticky;top:0;background:#111c33;color:#64748b;font-weight:600;text-align:left;padding:5px 9px;border-bottom:1px solid #1e2b45;white-space:nowrap;font-size:10px;text-transform:uppercase;letter-spacing:.04em}
@@ -490,6 +501,13 @@
               <button id="btnExportParams" title="Exporter le tableau (Excel)">⬇ Excel</button>
               <label class="filebtn" title="Importer un Excel exporté">⬆ MAJ<input type="file" id="paramImport" accept=".xlsx,.xls,.csv" hidden/></label>
             </div>
+          </div>
+          <div class="pfilter-bar">
+            <select id="pfPar" title="Filtrer par paramètre"><option value="">— Paramètre —</option></select>
+            <select id="pfVal" title="Filtrer par valeur" style="display:none"><option value="">— Toutes valeurs —</option></select>
+            <button class="pfbtn" id="pfClr" style="display:none" title="Effacer le filtre">✕ Effacer</button>
+            <div style="flex:1"></div>
+            <button class="pfbtn" id="pfGrp" title="Regrouper les pièces par valeur du paramètre sélectionné">⊞ Regrouper</button>
           </div>
           <div class="ptable-scroll">
             <table class="pt matrix" id="matrixTable"><thead id="matrixHead"></thead><tbody id="matrixBody"></tbody></table>
@@ -886,10 +904,42 @@ function numericType(t){ return t==='number'||t==='integer'||t==='length'||t==='
 // Rows = selected rooms, or ALL rooms when nothing is selected.
 function matrixRooms(){ const s=selectedRooms(); return s.length?s:activeRooms(); }
 
+/* ─ Parameter filter state ─ */
+let mfPar='', mfVal='', mfGrp=false;
+
+function buildMatrixFilter(cols, rooms){
+  const sel=$('pfPar'), prev=sel.value;
+  sel.innerHTML='<option value="">— Paramètre —</option>';
+  cols.forEach(k=>sel.appendChild(new Option(k,k)));
+  if(prev&&cols.includes(prev)) sel.value=prev; else if(prev) mfPar='';
+  buildMatrixValFilter(rooms);
+  $('pfGrp').classList.toggle('on', mfGrp);
+}
+function buildMatrixValFilter(rooms){
+  const valSel=$('pfVal'), clrBtn=$('pfClr');
+  if(!mfPar){valSel.style.display='none';clrBtn.style.display='none';return;}
+  valSel.style.display=''; clrBtn.style.display='';
+  const vals=new Set();
+  rooms.forEach(r=>{const v=String((r.Parameters||{})[mfPar]||'');if(v)vals.add(v);});
+  const prev=valSel.value;
+  valSel.innerHTML='<option value="">— Toutes valeurs —</option>';
+  [...vals].sort().forEach(v=>valSel.appendChild(new Option(v,v)));
+  if(prev&&[...vals].includes(prev)) valSel.value=prev; else mfVal='';
+}
+$('pfPar').addEventListener('change',function(){mfPar=this.value;mfVal='';buildMatrixValFilter(matrixRooms());renderMatrix();});
+$('pfVal').addEventListener('change',function(){mfVal=this.value;renderMatrix();});
+$('pfClr').addEventListener('click',()=>{mfPar='';mfVal='';$('pfPar').value='';$('pfVal').style.display='none';$('pfClr').style.display='none';renderMatrix();});
+$('pfGrp').addEventListener('click',function(){mfGrp=!mfGrp;this.classList.toggle('on',mfGrp);renderMatrix();});
+
 function renderMatrix(){
   if(compareDiff){ compareDiff=null; document.querySelectorAll('.changed').forEach(p=>p.classList.remove('changed')); $('bpSub').textContent=''; }
-  const rooms=matrixRooms();
-  $('paramScope').textContent = selIds.size ? `${selIds.size} pièce(s) sélectionnée(s)` : `Toutes les pièces (${rooms.length})`;
+  let rooms=matrixRooms();
+  // Apply parameter filter
+  if(mfPar&&mfVal) rooms=rooms.filter(r=>String((r.Parameters||{})[mfPar]||'')===mfVal);
+  const totalShown=rooms.length;
+  $('paramScope').textContent = selIds.size
+    ? `${selIds.size} pièce(s) sélectionnée(s)${mfPar&&mfVal?' · filtre: '+mfVal:''}`
+    : `Toutes les pièces (${totalShown}${mfPar&&mfVal?' filtrées':''})`  ;
   const head=$('matrixHead'), body=$('matrixBody'), empty=$('matrixEmpty');
   if(!rooms.length){ head.innerHTML=''; body.innerHTML=''; empty.style.display=''; applyEditMode(); updateSendBtn(); return; }
   empty.style.display='none';
@@ -906,40 +956,73 @@ function renderMatrix(){
   attachResizers();
 
   body.innerHTML='';
-  rooms.forEach(room=>{
-    const tr=document.createElement('tr');
-    tr.classList.toggle('row-sel',selIds.has(room.RevitId));
-    tr.style.cursor='pointer';
-    tr.addEventListener('click',e=>{ if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
-      const toggle=e.ctrlKey||e.metaKey||e.shiftKey;
-      roomClicked(room.RevitId,toggle,room._planKey||currentPlanKey);
+  buildMatrixFilter(cols, rooms);
+
+  const grpKey=mfGrp&&(mfPar||cols[0]); // group by filter param or first column
+  if(grpKey){
+    // GROUP MODE — one row per unique value
+    const groups={};
+    rooms.forEach(r=>{ const v=String((r.Parameters||{})[grpKey]||'')||'—'; if(!groups[v])groups[v]=[]; groups[v].push(r); });
+    Object.entries(groups).sort(([a],[b])=>a.localeCompare(b,undefined,{numeric:true})).forEach(([val,grooms])=>{
+      const tr=document.createElement('tr'); tr.className='grp-row';
+      tr.addEventListener('click',()=>{
+        selIds.clear(); grooms.forEach(r=>selIds.add(r.RevitId));
+        markRoomSelection(); paintRooms(); renderList(); updateSendBtn();
+        if(typeof R3!=='undefined'&&R3.ready) recolor3D();
+        $('selCount').textContent=selIds.size?`${selIds.size} sélection(s)`:'';
+      });
+      const tdN=document.createElement('td');
+      tdN.textContent=`${val}  (${grooms.length} pièce${grooms.length>1?'s':''})`;
+      tdN.title=`Cliquer pour sélectionner les ${grooms.length} pièce(s)`;
+      tr.appendChild(tdN);
+      // For each column: show unique values or count
+      cols.forEach(k=>{
+        const td=document.createElement('td'); td.setAttribute('data-pname',k);
+        if(k===grpKey){ td.textContent=''; tr.appendChild(td); return; }
+        const vals=[...new Set(grooms.map(r=>String((r.Parameters||{})[k]||'')).filter(Boolean))];
+        td.textContent=vals.length===1?vals[0]:vals.length>1?`(${vals.length} valeurs)`:'';
+        td.title=vals.join(', ');
+        tr.appendChild(td);
+      });
+      body.appendChild(tr);
     });
-    const tdR=document.createElement('td'); tdR.className='k';
-    tdR.textContent=(room.Number?room.Number+' · ':'')+(room.Name||room.RevitId); tdR.title=tdR.textContent;
-    tr.appendChild(tdR);
-    const P=room.Parameters||{}, T=room.ParameterTypes||{}, RO=room.ParameterReadOnly||{}, CH=room.ParameterChoices||{};
-    cols.forEach(k=>{
-      const td=document.createElement('td'); td.setAttribute('data-pname',k);
-      if(!(k in P)){ td.className='empty-cell'; tr.appendChild(td); return; }
-      const orig=P[k]??'', pType=T[k]||'text', isRO=RO[k]===true, opts=CH[k]||[];
-      const hasChoice=opts.length>=2||pType==='boolean'||pType==='choice';
-      if(!editMode||isRO){
-        td.textContent=orig; if(isRO){ td.className='ro-cell'; td.title='Lecture seule'; }
-      } else if(hasChoice){
-        const sel=document.createElement('select'); sel.className='pv-select';
-        (opts.length>=2?opts:['Yes','No']).forEach(o=>{ const op=document.createElement('option'); op.value=o; op.textContent=o; if(o===orig)op.selected=true; sel.appendChild(op); });
-        sel.addEventListener('change',()=>{ sel.classList.toggle('changed',sel.value!==orig); trackEdit(room.RevitId,k,sel.value,orig); });
-        td.appendChild(sel);
-      } else {
-        const inp=document.createElement('input'); inp.className='pv-input';
-        inp.type=numericType(pType)?'number':'text'; inp.value=orig;
-        inp.addEventListener('input',()=>{ inp.classList.toggle('changed',inp.value!==orig); trackEdit(room.RevitId,k,inp.value,orig); });
-        td.appendChild(inp);
-      }
-      tr.appendChild(td);
+  } else {
+    // NORMAL MODE — one row per room
+    rooms.forEach(room=>{
+      const tr=document.createElement('tr');
+      tr.classList.toggle('row-sel',selIds.has(room.RevitId));
+      tr.style.cursor='pointer';
+      tr.addEventListener('click',e=>{ if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
+        const toggle=e.ctrlKey||e.metaKey||e.shiftKey;
+        roomClicked(room.RevitId,toggle,room._planKey||currentPlanKey);
+      });
+      const tdR=document.createElement('td'); tdR.className='k';
+      tdR.textContent=(room.Number?room.Number+' · ':'')+(room.Name||room.RevitId); tdR.title=tdR.textContent;
+      tr.appendChild(tdR);
+      const P=room.Parameters||{}, T=room.ParameterTypes||{}, RO=room.ParameterReadOnly||{}, CH=room.ParameterChoices||{};
+      cols.forEach(k=>{
+        const td=document.createElement('td'); td.setAttribute('data-pname',k);
+        if(!(k in P)){ td.className='empty-cell'; tr.appendChild(td); return; }
+        const orig=P[k]??'', pType=T[k]||'text', isRO=RO[k]===true, opts=CH[k]||[];
+        const hasChoice=opts.length>=2||pType==='boolean'||pType==='choice';
+        if(!editMode||isRO){
+          td.textContent=orig; if(isRO){ td.className='ro-cell'; td.title='Lecture seule'; }
+        } else if(hasChoice){
+          const sel=document.createElement('select'); sel.className='pv-select';
+          (opts.length>=2?opts:['Yes','No']).forEach(o=>{ const op=document.createElement('option'); op.value=o; op.textContent=o; if(o===orig)op.selected=true; sel.appendChild(op); });
+          sel.addEventListener('change',()=>{ sel.classList.toggle('changed',sel.value!==orig); trackEdit(room.RevitId,k,sel.value,orig); });
+          td.appendChild(sel);
+        } else {
+          const inp=document.createElement('input'); inp.className='pv-input';
+          inp.type=numericType(pType)?'number':'text'; inp.value=orig;
+          inp.addEventListener('input',()=>{ inp.classList.toggle('changed',inp.value!==orig); trackEdit(room.RevitId,k,inp.value,orig); });
+          td.appendChild(inp);
+        }
+        tr.appendChild(td);
+      });
+      body.appendChild(tr);
     });
-    body.appendChild(tr);
-  });
+  }
   applyEditMode(); updateSendBtn(); buildColChooser(cols); applyColVisibility();
 }
 function applyEditMode(){
