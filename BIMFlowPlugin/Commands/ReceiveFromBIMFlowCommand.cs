@@ -42,7 +42,13 @@ namespace BIMFlowPlugin.Commands
 
                 if (!hasUpdates && !hasNewParams)
                 {
-                    TaskDialog.Show("BIMFlow — Recevoir", "Aucune modification en attente depuis le site web.");
+                    TaskDialog.Show("BIMFlow — Recevoir",
+                        "Aucune modification en attente depuis le site web.\n\n" +
+                        $"Code projet utilisé : {Uri.UnescapeDataString(code)}\n" +
+                        $"URL interrogée : {url}\n\n" +
+                        "Si vous venez d'envoyer des modifications depuis le site, vérifiez que le " +
+                        "code projet affiché ci-dessus correspond à celui de votre projet sur le web " +
+                        "(bouton « Gérer le projet » dans Revit).");
                     return Result.Cancelled;
                 }
 
