@@ -72,6 +72,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
 .rlvl{font-size:9px;color:#334155;background:#111827;border-radius:3px;padding:1px 4px;flex-shrink:0}
 .rrow.on .rlvl{background:#1e3a58;color:#7dd3fc}
 .re{padding:10px;font-size:11px;color:#475569;text-align:center}
+.grp-hd{background:#0e1d35;border-left:3px solid #38bdf8;cursor:pointer}
+.grp-hd:hover{background:#0c1a2e}
+.grp-hd .rname{font-weight:700;color:#38bdf8!important;font-size:12px!important}
+.grp-hd .rlvl{background:#1d4ed8;color:#e0f2fe}
+.btnGrp-on{background:#1d4ed8!important;color:#fff!important;border-color:#1d4ed8!important}
 /* Sel footer */
 .sfoot{padding:6px 10px;border-top:1px solid #1f2937;display:flex;align-items:center;gap:6px;flex-shrink:0}
 .si{flex:1;font-size:11px;color:#64748b}
@@ -338,6 +343,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
           <select class="lsel" id="fPh"><option value="">Toutes les phases</option></select></div>
         <div class="lrow"><label class="llbl" data-en="Usage">Usage</label>
           <select class="lsel" id="fTy"><option value="">Tous les usages</option></select></div>
+        <div class="lrow">
+          <label class="llbl" data-en="Parameter">Paramètre</label>
+          <select class="lsel" id="fPar"><option value="">— Tous —</option></select>
+        </div>
+        <div class="lrow" id="fParValRow" style="display:none">
+          <label class="llbl" data-en="Value">Valeur</label>
+          <select class="lsel" id="fParVal"><option value="">— Toutes —</option></select>
+        </div>
       </div>
     </div>
 
@@ -350,8 +363,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a1120;color:#e2e8f
     </div>
 
     <div id="roomHalf">
-      <div class="rsw">
-        <input class="rs" id="rSrch" type="text" placeholder="Rechercher par nom ou N° de pièce…" data-en-ph="Search by name or room number…"/>
+      <div class="rsw" style="display:flex;gap:5px;align-items:center">
+        <input class="rs" id="rSrch" type="text" placeholder="Rechercher…" data-en-ph="Search…" style="flex:1;min-width:0"/>
+        <button class="tbtn" id="btnGrp" title="Regrouper par paramètre sélectionné" style="padding:3px 8px;font-size:11px;flex-shrink:0;height:28px">⊞</button>
       </div>
       <div class="rlist" id="rList"><div class="re">Aucune pièce</div></div>
       <div class="sfoot">
@@ -475,8 +489,9 @@ const SCHEMA=[
 let allPlans=[],allRooms=[];
 let plan=null,currentPlanKey='';
 let selIds=new Set();
-let fLvl='',fPh='',fTy='';
+let fLvl='',fPh='',fTy='',fPar='',fParVal='';
 let palP='',palV='';
+let groupMode=false;
 let zoom=1,panX=0,panY=0,W=0,H=0;
 let panning=false,panStart={x:0,y:0};
 const planCache={};
@@ -512,7 +527,7 @@ async function loadAll(){
     const res=await Promise.all(allPlans.map(p=>getPD(p.key)));
     allRooms=[];
     res.forEach((p,i)=>(p.Rooms||[]).forEach(r=>allRooms.push({...r,_lv:p.LevelName||allPlans[i].level,_pk:allPlans[i].key,_proj:p.ProjectName||allPlans[i].project||''})));
-    buildFilters();buildPS();buildRList();
+    buildFilters();buildPS();buildParamFilter();buildRList();
     await loadPlan(allPlans[allPlans.length-1].key);
     initSplit();
     setSt(`${allRooms.length} pièces · ${allPlans.length} niveaux`,'ok');
@@ -567,6 +582,7 @@ function allF(){
   return allRooms.filter(r=>{
     if(fPh&&findP(r,'phase')!==fPh)return false;
     if(fTy&&findP(r,'usage','occupation','type','fonction','function')!==fTy)return false;
+    if(fPar&&fParVal&&String((r.Parameters||{})[fPar]||'')!==fParVal)return false;
     return true;
   });
 }
@@ -575,9 +591,38 @@ function isVis(r){
   if(fLvl&&lv!==fLvl)return false;
   if(fPh&&findP(r,'phase')!==fPh)return false;
   if(fTy&&findP(r,'usage','occupation','type','fonction','function')!==fTy)return false;
+  if(fPar&&fParVal&&String((r.Parameters||{})[fPar]||'')!==fParVal)return false;
   return true;
 }
-function onFC(){palV='';selIds.clear();buildPS();buildVL();buildRList();paintRooms();renderFiche();updSel();}
+function onFC(){palV='';selIds.clear();buildPS();buildVL();buildParamFilter();buildRList();paintRooms();renderFiche();updSel();}
+
+/* ════ PARAM FILTER — filter param dropdown + value dropdown ════ */
+function buildParamFilter(){
+  const base=allRooms.filter(r=>{
+    if(fPh&&findP(r,'phase')!==fPh)return false;
+    if(fTy&&findP(r,'usage','occupation','type','fonction','function')!==fTy)return false;
+    if(fLvl&&(r._lv||'')!==fLvl)return false;
+    return true;
+  });
+  const params=new Set();
+  base.forEach(r=>Object.keys(r.Parameters||{}).forEach(k=>params.add(k)));
+  const parEl=$('fPar');const prevP=parEl.value;
+  parEl.innerHTML=`<option value="">— ${t('Tous','All')} —</option>`;
+  [...params].sort().forEach(k=>parEl.appendChild(new Option(k,k)));
+  if(prevP&&[...params].includes(prevP)){parEl.value=prevP;}else if(prevP){fPar='';fParVal='';}
+  buildParamValFilter(base);
+}
+function buildParamValFilter(base){
+  const valEl=$('fParVal');const row=$('fParValRow');
+  if(!fPar){row.style.display='none';return;}
+  row.style.display='';
+  const vals=new Set();
+  base.forEach(r=>{const v=String((r.Parameters||{})[fPar]||'');if(v)vals.add(v);});
+  const prevV=valEl.value;
+  valEl.innerHTML=`<option value="">— ${t('Toutes','All')} —</option>`;
+  [...vals].sort().forEach(v=>valEl.appendChild(new Option(v,v)));
+  if(prevV&&[...vals].includes(prevV))valEl.value=prevV; else fParVal='';
+}
 
 /* ════ PARAM SELECT — all rooms ════ */
 function buildPS(){
@@ -623,17 +668,71 @@ function palVClick(v){
 function buildRList(){
   const list=$('rList');list.innerHTML='';
   const q=($('rSrch').value||'').toLowerCase();
-  const rooms=allF().filter(r=>!q||(r.Name||'').toLowerCase().includes(q)||(r.Number||'').toLowerCase().includes(q)||(r._lv||'').toLowerCase().includes(q))
-    .sort((a,b)=>(a._lv||'').localeCompare(b._lv||'')+(a.Number||'').localeCompare(b.Number||'',undefined,{numeric:true}));
-  if(!rooms.length){list.innerHTML=`<div class="re">${t('Aucune pièce','No rooms')}</div>`;return;}
-  rooms.forEach(r=>{
-    const d=document.createElement('div');d.className='rrow'+(selIds.has(r.RevitId)?' on':'');
-    d.innerHTML=`<span class="rnum">${esc(r.Number||'')}</span><span class="rname">${esc(r.Name||'—')}</span><span class="rlvl">${esc(r._lv||'')}</span>`;
-    d.onclick=e=>roomClick(r.RevitId,e.ctrlKey||e.metaKey||e.shiftKey,r._pk);
-    list.appendChild(d);
-  });
+  let rooms=allF().filter(r=>!q||(r.Name||'').toLowerCase().includes(q)||(r.Number||'').toLowerCase().includes(q)||(r._lv||'').toLowerCase().includes(q));
+
+  const grpParam=fPar||palP; // group by filter param first, then palette param
+  if(groupMode&&grpParam){
+    // One row per unique value — clicking a group selects all its rooms
+    const groups={};
+    rooms.forEach(r=>{
+      const v=String((r.Parameters||{})[grpParam]||'')||t('(vide)','(empty)');
+      if(!groups[v])groups[v]=[];
+      groups[v].push(r);
+    });
+    const sorted=Object.entries(groups).sort(([a],[b])=>a.localeCompare(b,undefined,{numeric:true}));
+    if(!sorted.length){list.innerHTML=`<div class="re">${t('Aucune pièce','No rooms')}</div>`;return;}
+    sorted.forEach(([val,grooms])=>{
+      const allSel=grooms.every(r=>selIds.has(r.RevitId));
+      const d=document.createElement('div');
+      d.className='rrow grp-hd'+(allSel?' on':'');
+      d.innerHTML=`<span class="rname">${esc(val)}</span><span class="rlvl">${grooms.length} pièce${grooms.length>1?'s':''}</span>`;
+      d.onclick=e=>{
+        if(e.ctrlKey||e.metaKey){grooms.forEach(r=>selIds.has(r.RevitId)?selIds.delete(r.RevitId):selIds.add(r.RevitId));}
+        else{selIds.clear();grooms.forEach(r=>selIds.add(r.RevitId));}
+        const first=grooms[0];
+        if(first&&first._pk&&first._pk!==currentPlanKey)loadPlan(first._pk).then(()=>{buildVL();buildRList();paintRooms();renderFiche();updSel();if(R3.ready){recolor3D();focus3D();}});
+        else{buildVL();buildRList();paintRooms();renderFiche();updSel();if(R3.ready){recolor3D();focus3D();}}
+      };
+      list.appendChild(d);
+    });
+  } else {
+    rooms=rooms.sort((a,b)=>(a._lv||'').localeCompare(b._lv||'')||(a.Number||'').localeCompare(b.Number||'',undefined,{numeric:true}));
+    if(!rooms.length){list.innerHTML=`<div class="re">${t('Aucune pièce','No rooms')}</div>`;return;}
+    rooms.forEach(r=>{
+      const d=document.createElement('div');d.className='rrow'+(selIds.has(r.RevitId)?' on':'');
+      d.innerHTML=`<span class="rnum">${esc(r.Number||'')}</span><span class="rname">${esc(r.Name||'—')}</span><span class="rlvl">${esc(r._lv||'')}</span>`;
+      d.onclick=e=>roomClick(r.RevitId,e.ctrlKey||e.metaKey||e.shiftKey,r._pk);
+      list.appendChild(d);
+    });
+  }
 }
 $('rSrch').oninput=buildRList;
+
+/* Param filter events */
+$('fPar').onchange=function(){
+  fPar=this.value;fParVal='';
+  const base=allRooms.filter(r=>{
+    if(fPh&&findP(r,'phase')!==fPh)return false;
+    if(fTy&&findP(r,'usage','occupation','type','fonction','function')!==fTy)return false;
+    if(fLvl&&(r._lv||'')!==fLvl)return false;
+    return true;
+  });
+  buildParamValFilter(base);
+  palV='';selIds.clear();buildVL();buildRList();paintRooms();renderFiche();updSel();
+};
+$('fParVal').onchange=function(){
+  fParVal=this.value;
+  palV='';selIds.clear();buildVL();buildRList();paintRooms();renderFiche();updSel();
+};
+
+/* Group toggle */
+$('btnGrp').onclick=function(){
+  groupMode=!groupMode;
+  this.classList.toggle('btnGrp-on',groupMode);
+  this.title=groupMode?t('Vue liste normale','Normal list view'):t('Regrouper par paramètre sélectionné','Group by selected parameter');
+  buildRList();
+};
+
 $('rSrch').onkeydown=e=>{
   if(e.key!=='Enter')return;
   const q=($('rSrch').value||'').toLowerCase().trim();if(!q)return;

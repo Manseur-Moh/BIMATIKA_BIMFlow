@@ -464,6 +464,7 @@
         <span class="bp-sub" id="bpSub"></span>
         <div class="bp-spacer"></div>
         <button class="bp-btn" id="editToggle">✏ Éditer</button>
+        <span id="sendCodeTag" style="font-size:10px;color:#475569;background:#0f172a;border:1px solid #1f2937;border-radius:4px;padding:2px 7px;font-family:monospace;display:none"></span>
         <button class="bp-btn send" id="btnSendRevit" disabled title="Modifiez des valeurs ou ajoutez des paramètres">↑ Envoyer vers Revit</button>
       </div>
 
@@ -968,7 +969,7 @@ function attachResizers(){
 
 /* ═══ COLUMN CHOOSER (select which parameters to display) ═══ */
 function loadColHidden(){ try{ const a=JSON.parse(localStorage.getItem('bimflow_colhidden')); return new Set(Array.isArray(a)?a:[]); }catch(e){ return new Set(); } }
-function saveColHidden(){ try{ localStorage.setItem('bimflow_colhidden',JSON.stringify([...colHidden])); }catch(e){} }
+function saveColHidden(){ try{ lsSetSafe('bimflow_colhidden',JSON.stringify([...colHidden])); }catch(e){} }
 let colHidden=loadColHidden();   // remembered across reloads & plan loads (the "default")
 function applyColVisibility(){
   $('matrixHead').querySelectorAll('th[data-pname]').forEach(th=>{ th.style.display=colHidden.has(th.getAttribute('data-pname'))?'none':''; });
@@ -1007,13 +1008,30 @@ $('colNone').addEventListener('click',()=>{ $('matrixHead').querySelectorAll('th
 /* ── favorite column presets (saved selections of which params to show) ── */
 function curCols(){ return [...$('matrixHead').querySelectorAll('th[data-pname]')].map(th=>th.getAttribute('data-pname')); }
 function loadColPresets(){ try{ return JSON.parse(localStorage.getItem('bimflow_colpresets'))||{}; }catch(e){ return {}; } }
-function saveColPresetsObj(p){ localStorage.setItem('bimflow_colpresets',JSON.stringify(p)); }
+// Écrit dans localStorage en récupérant de l'espace si le quota est dépassé :
+// purge les grosses entrées orphelines (vestiges d'anciennes versions qui stockaient
+// des images/plans). Aucune clé légitime ne dépasse quelques Ko, donc >50Ko = à purger.
+function lsSetSafe(key,val){
+  try{ localStorage.setItem(key,val); return; }
+  catch(e){
+    const big=[];
+    for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k===key) continue; const v=localStorage.getItem(k)||''; if(v.length>50000) big.push([k,v.length]); }
+    big.sort((a,b)=>b[1]-a[1]).forEach(([k])=>{ try{ localStorage.removeItem(k); }catch(_){} });
+    localStorage.setItem(key,val); // relance ; propage l'erreur s'il n'y a rien à purger
+  }
+}
+function saveColPresetsObj(p){ lsSetSafe('bimflow_colpresets',JSON.stringify(p)); }
 function refreshPresetSelect(){ const sel=$('colPreset'); if(!sel) return; const p=loadColPresets();
   sel.innerHTML='<option value="">★ Favoris…</option>'+Object.keys(p).map(n=>`<option value="${escAttr(n)}">${esc(n)}</option>`).join(''); }
 $('colPresetSave').addEventListener('click',()=>{
-  const name=prompt('Nom du favori de colonnes :'); if(!name) return;
-  const visible=curCols().filter(c=>!colHidden.has(c));
-  const p=loadColPresets(); p[name]=visible; saveColPresetsObj(p); refreshPresetSelect(); $('colPreset').value=name;
+  const all=curCols();
+  if(!all.length){ alert('Ouvrez un plan (avec un tableau de paramètres) avant d\'enregistrer un favori de colonnes.'); return; }
+  const name=(prompt('Nom du favori de colonnes :')||'').trim(); if(!name) return;
+  const visible=all.filter(c=>!colHidden.has(c));
+  try{
+    const p=loadColPresets(); p[name]=visible; saveColPresetsObj(p); refreshPresetSelect(); $('colPreset').value=name;
+    alert('Favori « '+name+' » enregistré ('+visible.length+' colonne(s)).');
+  }catch(e){ alert('Impossible d\'enregistrer le favori : '+e.message); }
 });
 $('colPresetDel').addEventListener('click',()=>{ const name=$('colPreset').value; if(!name){ alert('Choisissez un favori à supprimer.'); return; }
   const p=loadColPresets(); delete p[name]; saveColPresetsObj(p); refreshPresetSelect(); });
@@ -1022,7 +1040,18 @@ $('colPreset').addEventListener('change',()=>{ const name=$('colPreset').value; 
   colHidden=new Set(curCols().filter(c=>!visible.includes(c))); saveColHidden(); renderMatrix(); });
 refreshPresetSelect();
 
-function updateSendBtn(){ $('btnSendRevit').disabled=!Object.keys(pendingEdits).length; }
+function updateSendBtn(){
+  const hasPending=Object.keys(pendingEdits).length>0;
+  $('btnSendRevit').disabled=!hasPending;
+  const tag=$('sendCodeTag');
+  if(hasPending){
+    let code=(currentPlanKey||'').split('__')[0]||'';
+    if(!code){const c=(window.BFProject&&window.BFProject.current&&window.BFProject.current.code)||'';if(c&&c!=='__legacy__')code=c;}
+    tag.textContent='Code: '+(code||'?');
+    tag.style.display='';
+    tag.title='Code projet utilisé pour Recevoir depuis BIMFlow dans Revit';
+  } else { tag.style.display='none'; }
+}
 
 /* ═══ SEND TO REVIT ═══ */
 async function sendToRevit(){
@@ -1030,8 +1059,31 @@ async function sendToRevit(){
   const payload={ PlanKey:currentPlanKey,
     Updates:Object.entries(pendingEdits).map(([id,p])=>({RevitId:id,Parameters:p})),
     NewParameters:[] };
+  // La file d'attente Revit est indexée par code projet (pending_updates.project_code → FK projects).
+  // On utilise le code DU PLAN chargé (préfixe de la clé) — c'est celui que Revit interroge
+  // (ComputeProjectCode). Repli sur le projet actif si besoin.
+  let code=(currentPlanKey||'').split('__')[0]||'';
+  if(!code){ const c=(window.BFProject&&window.BFProject.current&&window.BFProject.current.code)||''; if(c&&c!=='__legacy__') code=c; }
+  const updUrl='/api/updates'+(code?('?code='+encodeURIComponent(code)):'');
+  // Snapshot des éditions pour la persistance (pendingEdits sera vidé après envoi)
+  const edits={...pendingEdits};
   try{
-    await api('/api/updates',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    // 1. File d'attente pour Revit
+    await api(updUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    // 2. Persister les éditions dans CHAQUE plan concerné (les éditions peuvent
+    //    couvrir plusieurs niveaux via l'import Excel projet). On groupe par clé de plan.
+    const ridToKey={}; (allLevelsRooms||[]).forEach(r=>{ if(r._planKey) ridToKey[String(r.RevitId)]=r._planKey; });
+    const patchByKey={};
+    Object.entries(edits).forEach(([id,p])=>{ const k=ridToKey[id]||currentPlanKey; (patchByKey[k]=patchByKey[k]||{})[id]={Parameters:p}; });
+    for(const k of Object.keys(patchByKey)){
+      if(!k||!Object.keys(patchByKey[k]).length) continue;
+      await api('/api/plans?key='+encodeURIComponent(k),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({rooms:patchByKey[k]})});
+      delete planCache[k];
+    }
+    // Refléter localement (plan courant + cache all-levels) pour un affichage immédiat
+    (plan&&plan.Rooms||[]).forEach(r=>{ const e=edits[String(r.RevitId)]; if(e){ r.Parameters=Object.assign(r.Parameters||{},e); } });
+    (allLevelsRooms||[]).forEach(r=>{ const e=edits[String(r.RevitId)]; if(e){ r.Parameters=Object.assign(r.Parameters||{},e); } });
+    if(currentPlanKey) planCache[currentPlanKey]=plan;
     const btn=$('btnSendRevit'); btn.textContent='✓ Envoyé !';
     setTimeout(()=>{btn.textContent='↑ Envoyer vers Revit';},3000);
     pendingEdits={}; renderMatrix();
@@ -1068,15 +1120,22 @@ const IDENTITY_COLS=new Set(['revitid','niveau','numéro','numero','nom','name',
 
 // Export cross-table (rooms × parameters): bold header, per-column autofilter, frozen header, hidden RevitId key.
 async function exportParamsXLSX(){
-  const rooms=selIds.size?selectedRooms():(plan?.Rooms||[]); if(!rooms.length){ alert('Aucune pièce.'); return; }
+  // Export ALL project rooms (every level) by default; only restrict to the
+  // current selection when the user has explicitly selected rooms.
+  if(!allLevelsRooms.length){ try{ await loadAllLevels(); }catch(e){} }
+  const all = allLevelsRooms.length ? allLevelsRooms : (plan?.Rooms||[]);
+  const rooms = selIds.size ? all.filter(r=>selIds.has(String(r.RevitId))) : all;
+  if(!rooms.length){ alert('Aucune pièce.'); return; }
+  const wholeProject = !selIds.size;
   try{
     const ExcelJS=await loadExcelJS();
     const cols=matrixCols(rooms).filter(k=>!colHidden.has(k));
     const header=['RevitId','Niveau','Numéro','Nom',...cols];
     const wb=new ExcelJS.Workbook();
-    const ws=wb.addWorksheet((plan?.LevelName||'Pièces').replace(/[\\\/?*\[\]:]/g,'_').substring(0,28),{views:[{state:'frozen',xSplit:4,ySplit:1}]});
+    const wsName=(wholeProject?'Projet':(plan?.LevelName||'Sélection')).replace(/[\\\/?*\[\]:]/g,'_').substring(0,28);
+    const ws=wb.addWorksheet(wsName,{views:[{state:'frozen',xSplit:4,ySplit:1}]});
     ws.columns=header.map((h,i)=>({header:h,width: i===0?12 : i===3?26 : i<4?14 : Math.max(12,Math.round((colW[cols[i-4]]||DEF_COLW)/7))}));
-    rooms.forEach(r=>ws.addRow([r.RevitId,r.LevelName||'',r.Number||'',r.Name||'',...cols.map(k=>(r.Parameters||{})[k]??'')]));
+    rooms.forEach(r=>ws.addRow([r.RevitId,r._levelName||r.LevelName||'',r.Number||'',r.Name||'',...cols.map(k=>(r.Parameters||{})[k]??'')]));
     const hr=ws.getRow(1); hr.font=HDR_FONT; hr.fill=HDR_FILL; hr.alignment={vertical:'middle',wrapText:true};
     ws.getColumn(1).hidden=true;
     ws.autoFilter={from:{row:1,column:1},to:{row:1,column:header.length}};
@@ -1090,7 +1149,7 @@ async function exportParamsXLSX(){
         else { cell.fill=roBody; cell.font={italic:true,color:{argb:'FF6B7280'}}; }
       });
     });
-    dlBuf(await wb.xlsx.writeBuffer(),'BIMFlow_'+(plan?.LevelName||'plan')+'.xlsx');
+    dlBuf(await wb.xlsx.writeBuffer(),'BIMFlow_'+(wholeProject?'Projet':(plan?.LevelName||'plan'))+'.xlsx');
   }catch(e){ alert('Erreur Excel: '+e.message); }
 }
 
@@ -1102,10 +1161,15 @@ async function importParamsUpdate(file){
     if(hi<0){ alert('Fichier non reconnu — exportez d\'abord le tableau via « ⬇ Excel » (la colonne RevitId est nécessaire).'); return; }
     const header=rows[hi].map(c=>String(c).trim());
     const idCol=header.findIndex(c=>c.toLowerCase()==='revitid');
+    // L'export couvre TOUT le projet : matcher les pièces sur tous les niveaux,
+    // pas seulement le plan courant (sinon les modifs d'autres niveaux sont ignorées).
+    if(!allLevelsRooms.length){ try{ await loadAllLevels(); }catch(e){} }
+    const pool = allLevelsRooms.length ? allLevelsRooms : (plan?.Rooms||[]);
+    const byId={}; pool.forEach(r=>{ byId[String(r.RevitId)]=r; });
     let nRooms=0, nEdits=0;
     for(let i=hi+1;i<rows.length;i++){
       const row=rows[i]||[]; const rid=String(row[idCol]==null?'':row[idCol]).trim(); if(!rid) continue;
-      const room=(plan?.Rooms||[]).find(r=>String(r.RevitId)===rid); if(!room) continue;
+      const room=byId[rid]; if(!room) continue;
       let any=false;
       header.forEach((h,ci)=>{
         if(IDENTITY_COLS.has(h.toLowerCase())) return;
@@ -1552,7 +1616,11 @@ $('fit3d').addEventListener('click',fit3D);
 /* ═══ EVENTS ═══ */
 $('editToggle').addEventListener('click',()=>{ editMode=!editMode; renderMatrix(); });
 $('btnSendRevit').addEventListener('click',sendToRevit);
-$('btnRefresh').addEventListener('click',()=>{ lastLevelKeys=''; loadIndex(); });
+$('btnRefresh').addEventListener('click',()=>{
+  // Vider les caches pour forcer un vrai rechargement depuis le serveur
+  lastLevelKeys=''; for(const k in planCache) delete planCache[k]; allLevelsRooms=[];
+  loadIndex();
+});
 window.addEventListener('resize',()=>{ const s=$('mainSvg'); if(s&&plan){ const w=$('viewerWrap'); panX=w.clientWidth/2-W/2*zoom; panY=w.clientHeight/2-H/2*zoom; applyTx(s); } resize3D(); });
 
 
