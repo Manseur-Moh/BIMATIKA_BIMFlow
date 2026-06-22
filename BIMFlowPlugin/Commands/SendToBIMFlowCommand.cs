@@ -27,31 +27,28 @@ namespace BIMFlowPlugin.Commands
 
             try
             {
-                // Collect all non-template floor plan views
-                var allPlans = new FilteredElementCollector(doc)
+                // Floor plans associated with a level AND containing rooms (empty/level-less
+                // plans are hidden from the list to avoid mistakes).
+                var combined = new FilteredElementCollector(doc)
                     .OfClass(typeof(ViewPlan))
                     .Cast<ViewPlan>()
-                    .Where(v => v.ViewType == ViewType.FloorPlan && !v.IsTemplate)
+                    .Where(v => v.ViewType == ViewType.FloorPlan && !v.IsTemplate && v.GenLevel != null)
+                    .Select(v => ((View)v,
+                        new FilteredElementCollector(doc, v.Id)
+                            .OfCategory(BuiltInCategory.OST_Rooms)
+                            .WhereElementIsNotElementType()
+                            .GetElementCount()))
+                    .Where(x => x.Item2 > 0)
                     .ToList();
 
-                if (allPlans.Count == 0)
+                if (combined.Count == 0)
                 {
-                    TaskDialog.Show("BIMFlow", "Aucun plan d'étage trouvé dans ce projet.");
+                    TaskDialog.Show("BIMFlow", "Aucun plan avec pièces à envoyer.");
                     return Result.Cancelled;
                 }
 
-                // Count rooms per view for the dialog
-                var plansWithCount = allPlans.Select(v =>
-                {
-                    int n = new FilteredElementCollector(doc, v.Id)
-                        .OfCategory(BuiltInCategory.OST_Rooms)
-                        .WhereElementIsNotElementType()
-                        .GetElementCount();
-                    return (v, n);
-                }).ToList();
-
-                // Show multi-plan selection dialog
-                var dialog = new PlanSelectionDialog(plansWithCount);
+                // Show multi-view selection dialog
+                var dialog = new PlanSelectionDialog(combined);
                 if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
                     return Result.Cancelled;
 
