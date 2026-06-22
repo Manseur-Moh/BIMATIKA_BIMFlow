@@ -8,8 +8,9 @@
     <LangVersion>10</LangVersion>
     <Platforms>x64</Platforms>
     <OutputPath>bin\$(Configuration)\</OutputPath>
-    <!-- Copy output to Revit addins folder automatically -->
-    <PostBuildEvent>xcopy /Y "$(TargetPath)" "%APPDATA%\Autodesk\Revit\Addins\2024\" &amp;&amp; xcopy /Y "$(ProjectDir)BIMFlow.addin" "%APPDATA%\Autodesk\Revit\Addins\2024\"</PostBuildEvent>
+    <!-- Copy output to Revit addins folder automatically.
+         Use explicit paths ($(TargetPath) can resolve empty under `dotnet build`). -->
+    <PostBuildEvent>xcopy /Y "$(ProjectDir)bin\$(Configuration)\net48\$(AssemblyName).dll" "%APPDATA%\Autodesk\Revit\Addins\2024\" &amp; xcopy /Y "$(ProjectDir)bin\$(Configuration)\net48\Newtonsoft.Json.dll" "%APPDATA%\Autodesk\Revit\Addins\2024\" &amp; xcopy /Y "$(ProjectDir)BIMFlow.addin" "%APPDATA%\Autodesk\Revit\Addins\2024\"</PostBuildEvent>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +22,8 @@
     <EmbeddedResource Include="Icons\params_16.png" />
     <EmbeddedResource Include="Icons\receive_32.png" />
     <EmbeddedResource Include="Icons\receive_16.png" />
+    <EmbeddedResource Include="Icons\manage_32.png" />
+    <EmbeddedResource Include="Icons\manage_16.png" />
   </ItemGroup>
 
   <ItemGroup>

@@ -19,7 +19,6 @@ namespace BIMFlowPlugin
             {
                 const string tabName = "BIMATIKA-BIMFLOW";
                 app.CreateRibbonTab(tabName);
-                RibbonPanel panel = app.CreateRibbonPanel(tabName, "Export");
 
                 string assemblyPath = Assembly.GetExecutingAssembly().Location;
 
@@ -100,13 +99,16 @@ namespace BIMFlowPlugin
                     Image      = LoadIcon("manage_16.png"),
                 };
 
-                panel.AddItem(sendBtn);
-                panel.AddItem(quickBtn);
-                panel.AddItem(paramsBtn);
-                panel.AddSeparator();
-                panel.AddItem(receiveBtn);
-                panel.AddSeparator();
-                panel.AddItem(projectBtn);
+                RibbonPanel exportPanel = app.CreateRibbonPanel(tabName, "Export");
+                exportPanel.AddItem(sendBtn);
+                exportPanel.AddItem(quickBtn);
+                exportPanel.AddItem(paramsBtn);
+
+                RibbonPanel importPanel = app.CreateRibbonPanel(tabName, "Import");
+                importPanel.AddItem(receiveBtn);
+
+                RibbonPanel settingsPanel = app.CreateRibbonPanel(tabName, "Paramètres");
+                settingsPanel.AddItem(projectBtn);
 
                 return Result.Succeeded;
             }

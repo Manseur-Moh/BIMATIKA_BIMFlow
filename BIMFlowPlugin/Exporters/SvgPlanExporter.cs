@@ -29,6 +29,130 @@ namespace BIMFlowPlugin.Exporters
                 Directory.CreateDirectory(outputDir);
         }
 
+        // Export for non-plan views (sections / coupes): renders the view as a transparent
+        // PNG AND projects the rooms it cuts through onto the section plane, so the web shows
+        // editable room overlays on the coupe just like on a plan.
+        public static PlanExport ExportImageOnly(Document doc, View view, string outputDir)
+        {
+            Directory.CreateDirectory(outputDir);
+            string pngName = System.Text.RegularExpressions.Regex.Replace(view.Name, @"[^\w]", "_");
+            string pngPath = Path.Combine(outputDir, pngName + ".png");
+
+            var options = new ImageExportOptions
+            {
+                ExportRange           = ExportRange.SetOfViews,
+                FilePath              = Path.Combine(outputDir, pngName),
+                HLRandWFViewsFileType = ImageFileType.PNG,
+                ImageResolution       = ImageResolution.DPI_150,
+                ZoomType              = ZoomFitType.FitToPage,
+                PixelSize             = 1400,
+                ShadowViewsFileType   = ImageFileType.PNG,
+            };
+            options.SetViewsAndSheets(new List<ElementId> { view.Id });
+            doc.ExportImage(options);
+
+            var files = Directory.GetFiles(outputDir, pngName + "*.png");
+            if (files.Length > 0 && files[0] != pngPath)
+            {
+                if (File.Exists(pngPath)) File.Delete(pngPath);
+                File.Move(files[0], pngPath);
+            }
+            try { MakeTransparent(pngPath); } catch (Exception ex) { BFLog.Warn("Section MakeTransparent: " + ex.Message); }
+
+            var (w, h) = ReadImageSize(pngPath);
+            string base64 = File.Exists(pngPath) ? Convert.ToBase64String(File.ReadAllBytes(pngPath)) : "";
+
+            var rooms = ProjectRoomsOntoView(doc, view, w, h);
+
+            var info = doc.ProjectInformation;
+            return new PlanExport
+            {
+                ProjectName    = info.Name,
+                ProjectNumber  = info.Number,
+                LevelName      = view.Name,          // coupe name acts as the "level"
+                LevelElevation = 0,
+                ExportDate     = DateTime.Now.ToString("yyyy-MM-dd HH:mm"),
+                RevitVersion   = doc.Application.VersionNumber,
+                ImageWidth     = w,
+                ImageHeight    = h,
+                ImageBase64    = base64,
+                Rooms          = rooms,
+            };
+        }
+
+        // Project each room the view "sees" (within its crop depth) onto the view plane as a
+        // rectangle (horizontal extent × floor-to-ceiling), mapped to image pixels. Used for
+        // sections/coupes so rooms remain selectable & editable on the web.
+        private static List<RoomData> ProjectRoomsOntoView(Document doc, View view, int imgW, int imgH)
+        {
+            var rooms = new List<RoomData>();
+            try
+            {
+                var cb = view.CropBox;
+                Transform inv = cb.Transform.Inverse;
+                double minLZ = Math.Min(cb.Min.Z, cb.Max.Z), maxLZ = Math.Max(cb.Min.Z, cb.Max.Z);
+                double minX = cb.Min.X, maxY = cb.Max.Y;
+                double spanX = cb.Max.X - cb.Min.X, spanY = cb.Max.Y - cb.Min.Y;
+                if (spanX <= 1e-9 || spanY <= 1e-9) return rooms;
+                double scale = Math.Min(imgW / spanX, imgH / spanY);
+                double offX = (imgW - spanX * scale) / 2.0;
+                double offY = (imgH - spanY * scale) / 2.0;
+
+                var opts = new SpatialElementBoundaryOptions
+                { SpatialElementBoundaryLocation = SpatialElementBoundaryLocation.Finish };
+
+                foreach (Room room in new FilteredElementCollector(doc)
+                    .OfCategory(BuiltInCategory.OST_Rooms)
+                    .WhereElementIsNotElementType().Cast<Room>())
+                {
+                    if (room.Area < 0.01) continue;
+                    var segs = room.GetBoundarySegments(opts);
+                    if (segs == null || segs.Count == 0) continue;
+
+                    double baseZ = room.Level?.Elevation ?? 0;
+                    double height = room.UnboundedHeight; if (height <= 0.1) height = 9.0; // ~2.8 m in ft
+                    double topZ = baseZ + height;
+
+                    var pts = new List<XYZ>();
+                    foreach (var seg in segs[0])
+                    {
+                        var c = seg.GetCurve();
+                        if (c is Line) pts.Add(c.GetEndPoint(0));
+                        else { var tess = c.Tessellate(); for (int i = 0; i < tess.Count - 1; i++) pts.Add(tess[i]); }
+                    }
+                    if (pts.Count < 2) continue;
+
+                    double lxMin = double.MaxValue, lxMax = double.MinValue, lyMin = double.MaxValue, lyMax = double.MinValue;
+                    bool any = false;
+                    foreach (var p in pts)
+                        foreach (double z in new[] { baseZ, topZ })
+                        {
+                            var lp = inv.OfPoint(new XYZ(p.X, p.Y, z));
+                            if (lp.Z < minLZ - 0.5 || lp.Z > maxLZ + 0.5) continue;   // outside cut depth
+                            any = true;
+                            if (lp.X < lxMin) lxMin = lp.X; if (lp.X > lxMax) lxMax = lp.X;
+                            if (lp.Y < lyMin) lyMin = lp.Y; if (lp.Y > lyMax) lyMax = lp.Y;
+                        }
+                    if (!any) continue;
+
+                    lxMin = Math.Max(lxMin, cb.Min.X); lxMax = Math.Min(lxMax, cb.Max.X);
+                    lyMin = Math.Max(lyMin, cb.Min.Y); lyMax = Math.Min(lyMax, cb.Max.Y);
+                    if (lxMax - lxMin < 1e-6 || lyMax - lyMin < 1e-6) continue;
+
+                    double X0 = offX + (lxMin - minX) * scale, X1 = offX + (lxMax - minX) * scale;
+                    double Y0 = offY + (maxY - lyMax) * scale, Y1 = offY + (maxY - lyMin) * scale;
+
+                    var data = ExtractRoomData(doc, room);
+                    data.SvgPolygon = $"{X0:F2},{Y0:F2} {X1:F2},{Y0:F2} {X1:F2},{Y1:F2} {X0:F2},{Y1:F2}";
+                    data.CentroidX = (X0 + X1) / 2.0;
+                    data.CentroidY = (Y0 + Y1) / 2.0;
+                    rooms.Add(data);
+                }
+            }
+            catch (Exception ex) { BFLog.Warn("Section rooms projection: " + ex.Message); }
+            return rooms;
+        }
+
         public PlanExport Run()
         {
             // 1. Gather every room's boundary in WORLD coordinates + its data.
@@ -90,7 +214,7 @@ namespace BIMFlowPlugin.Exporters
             {
                 if (room.Area < 0.01) continue;
                 if (levelId != ElementId.InvalidElementId && room.LevelId != levelId) continue;
-                rooms.Add(ExtractRoomData(room));
+                rooms.Add(ExtractRoomData(_doc, room));
             }
 
             var info = _doc.ProjectInformation;
@@ -128,12 +252,21 @@ namespace BIMFlowPlugin.Exporters
             options.SetViewsAndSheets(new List<ElementId> { _view.Id });
             _doc.ExportImage(options);
 
-            var files = Directory.GetFiles(_outputDir, pngName + "*.png");
-            if (files.Length > 0 && files[0] != pngPath)
+            // Revit appends its own suffix (e.g. "_Floor Plan_0001") — find whatever it created.
+            var files = Directory.GetFiles(_outputDir, "*.png");
+            if (files.Length > 0)
             {
-                if (File.Exists(pngPath)) File.Delete(pngPath);
-                File.Move(files[0], pngPath);
+                // Pick the most-recently written file (the one Revit just created).
+                string newest = files.OrderByDescending(f => File.GetLastWriteTimeUtc(f)).First();
+                if (newest != pngPath)
+                {
+                    if (File.Exists(pngPath)) File.Delete(pngPath);
+                    File.Move(newest, pngPath);
+                }
             }
+
+            if (!File.Exists(pngPath))
+                throw new Exception($"L'export PNG a échoué pour la vue « {_view.Name} » — aucun fichier PNG généré dans {_outputDir}.");
 
             // Make the white background transparent so the plan blends on any viewer theme.
             try { MakeTransparent(pngPath); } catch (Exception ex) { BFLog.Warn("MakeTransparent: " + ex.Message); }
@@ -236,7 +369,7 @@ namespace BIMFlowPlugin.Exporters
                 var segments = room.GetBoundarySegments(opts);
                 if (segments == null || segments.Count == 0) continue;
 
-                var g = new RoomGeom { Data = ExtractRoomData(room) };
+                var g = new RoomGeom { Data = ExtractRoomData(_doc, room) };
 
                 // Outer boundary only (loop 0), tessellating arcs/splines.
                 foreach (var seg in segments[0])
@@ -479,7 +612,7 @@ namespace BIMFlowPlugin.Exporters
         }
 
         // ── Export ALL room parameters (including hidden and read-only) ──
-        private RoomData ExtractRoomData(Room room)
+        private static RoomData ExtractRoomData(Document doc, Room room)
         {
             var data = new RoomData
             {
@@ -556,10 +689,10 @@ namespace BIMFlowPlugin.Exporters
                                 var targetId = param.AsElementId();
                                 if (targetId != ElementId.InvalidElementId)
                                 {
-                                    var targetElem = _doc.GetElement(targetId);
+                                    var targetElem = doc.GetElement(targetId);
                                     if (targetElem != null)
                                     {
-                                        var choices = new FilteredElementCollector(_doc)
+                                        var choices = new FilteredElementCollector(doc)
                                             .OfClass(targetElem.GetType())
                                             .Select(e => e.Name ?? "")
                                             .Where(n => !string.IsNullOrEmpty(n))
