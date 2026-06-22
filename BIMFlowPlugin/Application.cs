@@ -96,8 +96,8 @@ namespace BIMFlowPlugin
                         "Utiliser un code unique par projet évite que les plans d'un projet\n" +
                         "écrasent ceux d'un autre (problème fréquent avec les fichiers copiés).\n\n" +
                         "Le code peut être partagé avec l'équipe pour accéder au projet sur le web.",
-                    LargeImage = LoadIcon("send_32.png"),
-                    Image      = LoadIcon("send_16.png"),
+                    LargeImage = LoadIcon("manage_32.png"),
+                    Image      = LoadIcon("manage_16.png"),
                 };
 
                 panel.AddItem(sendBtn);
