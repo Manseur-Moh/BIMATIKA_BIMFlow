@@ -17,7 +17,7 @@ namespace BIMFlowPlugin
         {
             try
             {
-                const string tabName = "BIMFlow";
+                const string tabName = "BIMATIKA-BIMFLOW";
                 app.CreateRibbonTab(tabName);
                 RibbonPanel panel = app.CreateRibbonPanel(tabName, "Export");
 
