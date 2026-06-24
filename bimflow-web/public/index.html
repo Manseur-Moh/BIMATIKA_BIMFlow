@@ -339,6 +339,7 @@
     [data-theme=light] .pfbtn:hover{background:#dde2ec;color:#0f172a}
     [data-theme=light] .pfbtn.on{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
     [data-theme=light] select#pfPar,[data-theme=light] select#pfVal{background:#fff;color:#1e2733;border-color:#d4dae6}
+    #pfTxt{background:#0f172a;border:1px solid #374151;color:#e2e8f0;border-radius:4px;padding:3px 7px;font-size:11px;flex:1;min-width:60px;max-width:160px}
     [data-theme=light] #pfTxt{background:#fff;color:#1e2733;border-color:#d4dae6}
     /* light: Colonnes button */
     [data-theme=light] #colSelBtn{background:#eef2f8;border-color:#d4dae6;color:#334155}
@@ -573,7 +574,7 @@
           <div class="pfilter-bar">
             <select id="pfPar" title="Filtrer par paramètre"><option value="">— Paramètre —</option></select>
             <select id="pfVal" title="Filtrer par valeur fixe" style="display:none"><option value="">— Toutes valeurs —</option></select>
-            <input id="pfTxt" type="text" placeholder="Rechercher…" style="display:none;flex:1;min-width:60px;max-width:160px;background:#0f172a;border:1px solid #374151;color:#e2e8f0;border-radius:4px;padding:3px 7px;font-size:11px"/>
+            <input id="pfTxt" type="text" placeholder="Rechercher…" style="display:none"/>
             <button class="pfbtn" id="pfClr" style="display:none" title="Effacer le filtre">✕ Effacer</button>
             <div style="flex:1"></div>
             <button class="pfbtn" id="pfGrp" title="Regrouper les pièces par valeur du paramètre sélectionné">⊞ Regrouper</button>
@@ -957,6 +958,12 @@ function applyRoomSearch(){
       const val=room?String(roomColorValue(room,sk)||''):'';
       el.style.display=searchFilterVals.has(val)?'':'none';
     }
+  });
+  // Hide color-group headers when all their members are hidden
+  document.querySelectorAll('.room-grp-hd').forEach(hd=>{
+    let sib=hd.nextElementSibling, anyVisible=false;
+    while(sib&&!sib.classList.contains('room-grp-hd')){ if(sib.style.display!=='none') anyVisible=true; sib=sib.nextElementSibling; }
+    hd.style.display=anyVisible?'':'none';
   });
 }
 
