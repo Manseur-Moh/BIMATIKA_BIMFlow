@@ -1264,19 +1264,23 @@ const IDENTITY_COLS=new Set(['revitid','niveau','numéro','numero','nom','name',
 
 // Export cross-table (rooms × parameters): bold header, per-column autofilter, frozen header, hidden RevitId key.
 async function exportParamsXLSX(){
-  // Export ALL project rooms (every level) by default; only restrict to the
-  // current selection when the user has explicitly selected rooms.
-  if(!allLevelsRooms.length){ try{ await loadAllLevels(); }catch(e){} }
-  const all = allLevelsRooms.length ? allLevelsRooms : (plan?.Rooms||[]);
-  const rooms = selIds.size ? all.filter(r=>selIds.has(String(r.RevitId))) : all;
+  // Mirrors renderMatrix(): respect level selection, room selection, and parameter filter
+  let rooms = matrixRooms();
+  if(mfPar && mfVal) rooms = rooms.filter(r=>String((r.Parameters||{})[mfPar]||'')===mfVal);
   if(!rooms.length){ alert('Aucune pièce.'); return; }
-  const wholeProject = !selIds.size;
+  const isFiltered = !!(mfPar && mfVal);
+  const isSel = selIds.size > 0;
+  const isAllLevels = allLevelsMode || selectedLevelKeys.size > 1;
+  let exportName = isSel ? 'Selection'
+    : isAllLevels ? 'Projet'
+    : (plan?.LevelName || 'plan');
+  if(isFiltered) exportName += '_'+mfVal.replace(/[^a-zA-Z0-9]/g,'_').substring(0,20);
   try{
     const ExcelJS=await loadExcelJS();
     const cols=matrixCols(rooms).filter(k=>!colHidden.has(k));
     const header=['RevitId','Niveau','Numéro','Nom',...cols];
     const wb=new ExcelJS.Workbook();
-    const wsName=(wholeProject?'Projet':(plan?.LevelName||'Sélection')).replace(/[\\\/?*\[\]:]/g,'_').substring(0,28);
+    const wsName=exportName.replace(/[\\\/?*\[\]:]/g,'_').substring(0,28);
     const ws=wb.addWorksheet(wsName,{views:[{state:'frozen',xSplit:4,ySplit:1}]});
     ws.columns=header.map((h,i)=>({header:h,width: i===0?12 : i===3?26 : i<4?14 : Math.max(12,Math.round((colW[cols[i-4]]||DEF_COLW)/7))}));
     rooms.forEach(r=>ws.addRow([r.RevitId,r._levelName||r.LevelName||'',r.Number||'',r.Name||'',...cols.map(k=>(r.Parameters||{})[k]??'')]));
@@ -1293,7 +1297,7 @@ async function exportParamsXLSX(){
         else { cell.fill=roBody; cell.font={italic:true,color:{argb:'FF6B7280'}}; }
       });
     });
-    dlBuf(await wb.xlsx.writeBuffer(),'BIMFlow_'+(wholeProject?'Projet':(plan?.LevelName||'plan'))+'.xlsx');
+    dlBuf(await wb.xlsx.writeBuffer(),'BIMFlow_'+exportName+'.xlsx');
   }catch(e){ alert('Erreur Excel: '+e.message); }
 }
 
