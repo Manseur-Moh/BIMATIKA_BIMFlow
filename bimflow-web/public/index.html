@@ -1053,7 +1053,7 @@ function renderMatrix(){
       body.appendChild(tr);
     });
   }
-  applyEditMode(); updateSendBtn(); buildColChooser(cols); applyColVisibility();
+  applyEditMode(); updateSendBtn(); buildColChooser(cols); applyColVisibility(); updateMatrixWidth();
 }
 function applyEditMode(){
   const btn=$('editToggle'); btn.textContent=editMode?'✓ Terminé':'✏ Éditer'; btn.classList.toggle('on',editMode);
@@ -1067,6 +1067,16 @@ function trackEdit(id,key,val,orig){
 /* ═══ COLUMN WIDTH (resizable, ≈10-char default) ═══ */
 const DEF_COLW=90; // ~10 uppercase chars at 10px — header text wraps beyond this
 let colW={};       // only stores user-explicitly-dragged widths
+// Set the table's pixel width = exact sum of visible column widths so that
+// table-layout:fixed gives each column exactly its specified width.
+function updateMatrixWidth(){
+  const tbl=$('matrixTable'); if(!tbl) return;
+  let w=colW['__piece']||170;
+  $('matrixHead').querySelectorAll('th[data-pname]').forEach(th=>{
+    if(th.style.display!=='none') w+=colW[th.getAttribute('data-pname')]||DEF_COLW;
+  });
+  tbl.style.width=w+'px';
+}
 function attachResizers(){
   $('matrixHead').querySelectorAll('.col-resizer').forEach(rz=>{
     rz.addEventListener('mousedown',e=>{
@@ -1074,7 +1084,7 @@ function attachResizers(){
       const th=rz.parentElement, col=rz.getAttribute('data-col');
       const startX=e.clientX;
       const startW=colW[col]||DEF_COLW;
-      const mv=ev=>{ ev.preventDefault(); const w=Math.max(40,startW+(ev.clientX-startX)); th.style.width=w+'px'; colW[col]=w; };
+      const mv=ev=>{ ev.preventDefault(); const w=Math.max(40,startW+(ev.clientX-startX)); th.style.width=w+'px'; colW[col]=w; updateMatrixWidth(); };
       const up=()=>{ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); };
       document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
     });
@@ -1088,6 +1098,7 @@ let colHidden=loadColHidden();   // remembered across reloads & plan loads (the 
 function applyColVisibility(){
   $('matrixHead').querySelectorAll('th[data-pname]').forEach(th=>{ th.style.display=colHidden.has(th.getAttribute('data-pname'))?'none':''; });
   $('matrixBody').querySelectorAll('td[data-pname]').forEach(td=>{ td.style.display=colHidden.has(td.getAttribute('data-pname'))?'none':''; });
+  updateMatrixWidth();
 }
 function updateColBtn(cols){ const shown=cols.filter(c=>!colHidden.has(c)).length; $('colSelBtn').textContent=`▦ Colonnes (${shown}/${cols.length}) ▾`; }
 function buildColChooser(cols){
