@@ -1206,6 +1206,7 @@ function renderMatrix(){
       const groups={};
       rooms.forEach(r=>{ const v=String((r.Parameters||{})[grpKey]||'')||'—'; if(!groups[v])groups[v]=[]; groups[v].push(r); });
       Object.entries(groups).sort(([a],[b])=>a.localeCompare(b,undefined,{numeric:true})).forEach(([val,grooms])=>addGroupRow(val,grooms));
+    }
   } else {
     // NORMAL MODE — one row per room
     rooms.forEach(room=>{
