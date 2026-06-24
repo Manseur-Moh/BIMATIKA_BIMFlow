@@ -330,6 +330,12 @@
     .split-h:hover,.split-h.dragging{background:#3b82f6}
     .split-v::after{content:"";position:absolute;left:1.5px;top:50%;transform:translateY(-50%);width:2px;height:34px;background:#374151;border-radius:2px}
     .split-h::after{content:"";position:absolute;top:1.5px;left:50%;transform:translateX(-50%);height:2px;width:40px;background:#374151;border-radius:2px}
+    #roomTip{position:fixed;background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:7px 10px;font-size:12px;pointer-events:none;z-index:9999;display:none;max-width:230px;line-height:1.6;box-shadow:0 4px 14px rgba(0,0,0,.55)}
+    #roomTip strong{color:#93c5fd;font-size:13px;display:block;margin-bottom:2px}
+    #roomTip .tip-row{display:flex;align-items:center;gap:5px}
+    #roomTip .tip-swatch{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+    [data-theme=light] #roomTip{background:#fff;color:#1e2733;border-color:#cbd5e1;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+    [data-theme=light] #roomTip strong{color:#1d4ed8}
     .sv-pop{position:fixed;min-width:190px;max-width:280px;background:#1f2937;border:1px solid #374151;border-radius:6px;z-index:1100;display:none;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,.7);overflow:hidden}
     .sv-pop.open{display:flex}
     .sv-pop-actions{display:flex;gap:4px;padding:5px 8px;border-bottom:1px solid #374151;flex-shrink:0}
@@ -416,6 +422,8 @@
   <div style="font-weight:700;color:#cbd5e1;margin-bottom:8px">Disposition des panneaux</div>
   <div class="row"><button id="tplReset" style="flex:1;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:6px;cursor:pointer">⟲ Réinitialiser la disposition</button></div>
 </div>
+
+<div id="roomTip"></div>
 
 <!-- Multi-value room search popup -->
 <div class="sv-pop" id="searchValPop">
@@ -731,6 +739,9 @@ function renderPlan(){
     const poly=document.createElementNS(ns,'polygon');
     poly.id='poly-'+room.RevitId; poly.setAttribute('class','bimflow-room'); poly.setAttribute('points',room.SvgPolygon);
     poly.addEventListener('click',e=>{e.stopPropagation(); roomClicked(room.RevitId,e.ctrlKey||e.metaKey||e.shiftKey);});
+    poly.addEventListener('mouseenter',e=>showTip(room,e.clientX,e.clientY));
+    poly.addEventListener('mousemove',e=>positionTip(e.clientX,e.clientY));
+    poly.addEventListener('mouseleave',hideTip);
     svg.appendChild(poly);
   });
   $('viewerWrap').appendChild(svg);
@@ -1454,6 +1465,28 @@ function populateFiltVal(){
 }
 function hexA(hex,a){ const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex); if(!m)return hex;
   return `rgba(${parseInt(m[1],16)},${parseInt(m[2],16)},${parseInt(m[3],16)},${a})`; }
+
+function showTip(room, x, y){
+  const tip=$('roomTip');
+  let html=`<strong>${esc(room.Number?room.Number+' · ':'')}${esc(room.Name||'—')}</strong>`;
+  html+=`<div>ID Revit: ${esc(room.RevitId)}</div>`;
+  if(colorKey){
+    const v=roomColorValue(room,colorKey)||'—';
+    const hex=colorMap[v]||'#64748b';
+    html+=`<div class="tip-row"><span class="tip-swatch" style="background:${hex}"></span>${esc(colorByLabel(colorKey))}: <b>${esc(v)}</b></div>`;
+  }
+  const sk=$('searchKey').value;
+  if(sk && sk!==colorKey){ const v=roomColorValue(room,sk)||'—'; html+=`<div>${esc(colorByLabel(sk))}: <b>${esc(v)}</b></div>`; }
+  tip.innerHTML=html; tip.style.display='block';
+  positionTip(x,y);
+}
+function positionTip(x,y){
+  const tip=$('roomTip'); if(tip.style.display==='none') return;
+  const w=tip.offsetWidth||200, h=tip.offsetHeight||60;
+  tip.style.left=(x+14+w>window.innerWidth?x-w-8:x+14)+'px';
+  tip.style.top=(y+10+h>window.innerHeight?y-h-8:y+10)+'px';
+}
+function hideTip(){ $('roomTip').style.display='none'; }
 function applyColorBy(key){
   colorKey=key; const legend=$('legend');
   if(!key){ colorMap={}; paintRooms(); legend.style.display='none'; if(typeof R3!=='undefined'&&R3.ready) recolor3D(); return; }
@@ -1469,8 +1502,11 @@ function applyColorBy(key){
 function paintRooms(){
   (plan?.Rooms||[]).forEach(r=>{
     const sel=selIds.has(r.RevitId);
-    let fill=''; if(colorKey){ const v=roomColorValue(r,colorKey)||'(vide)'; fill=hexA(colorMap[v]||'#64748b',0.55); }
+    let fill='', hex='';
+    if(colorKey){ const v=roomColorValue(r,colorKey)||'(vide)'; hex=colorMap[v]||'#64748b'; fill=hexA(hex,0.55); }
     [$('poly-'+r.RevitId),$('mp-'+r.RevitId)].forEach(p=>{ if(!p)return; p.classList.toggle('selected',sel); p.style.fill=sel?'':fill; });
+    const li=document.querySelector('.room-item[data-id="'+r.RevitId+'"]');
+    if(li) li.style.borderLeftColor=(!sel&&hex)?hex:'';
   });
 }
 $('colorBy').addEventListener('change',function(){ applyColorBy(this.value); populateFiltVal(); });
@@ -1726,6 +1762,23 @@ function init3D(){
   R3.meshes={}; R3.ready=true; resize3D();
   (function loop(){ R3.raf=requestAnimationFrame(loop); R3.controls.update(); R3.renderer.render(R3.scene,R3.camera); })();
   const ray=new THREE.Raycaster(), v=new THREE.Vector2();
+  /* 3D hover tooltip */
+  let _tip3Id=null, _tip3t=0;
+  cv.addEventListener('mousemove',e=>{
+    const now=Date.now(); if(now-_tip3t<40) return; _tip3t=now;
+    const rc=cv.getBoundingClientRect();
+    v.x=((e.clientX-rc.left)/rc.width)*2-1; v.y=-((e.clientY-rc.top)/rc.height)*2+1;
+    ray.setFromCamera(v,R3.camera);
+    const hit=ray.intersectObjects(Object.values(R3.meshes).filter(m=>m&&m.visible),true)[0];
+    let o=hit&&hit.object; while(o&&!o.userData.id) o=o.parent;
+    if(o&&o.userData.id){
+      if(o.userData.id!==_tip3Id){ _tip3Id=o.userData.id;
+        const rm=rooms3D().find(r=>String(r.RevitId)===String(o.userData.id));
+        if(rm) showTip(rm,e.clientX,e.clientY); }
+      else positionTip(e.clientX,e.clientY);
+    } else { _tip3Id=null; hideTip(); }
+  });
+  cv.addEventListener('mouseleave',()=>{ _tip3Id=null; hideTip(); });
   cv.addEventListener('pointerdown',e=>{ cv._pd={x:e.clientX,y:e.clientY}; });
   cv.addEventListener('click',e=>{
     /* ignore drags (OrbitControls rotate) — only act on short clicks */
