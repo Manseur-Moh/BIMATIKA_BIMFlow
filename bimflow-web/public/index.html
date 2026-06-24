@@ -1500,13 +1500,22 @@ function applyColorBy(key){
   if(typeof R3!=='undefined'&&R3.ready) recolor3D();
 }
 function paintRooms(){
+  // SVG polygons (single plan)
   (plan?.Rooms||[]).forEach(r=>{
     const sel=selIds.has(r.RevitId);
-    let fill='', hex='';
-    if(colorKey){ const v=roomColorValue(r,colorKey)||'(vide)'; hex=colorMap[v]||'#64748b'; fill=hexA(hex,0.55); }
+    let fill='';
+    if(colorKey){ const v=roomColorValue(r,colorKey)||'(vide)'; fill=hexA(colorMap[v]||'#64748b',0.55); }
     [$('poly-'+r.RevitId),$('mp-'+r.RevitId)].forEach(p=>{ if(!p)return; p.classList.toggle('selected',sel); p.style.fill=sel?'':fill; });
-    const li=document.querySelector('.room-item[data-id="'+r.RevitId+'"]');
-    if(li) li.style.borderLeftColor=(!sel&&hex)?hex:'';
+  });
+  // Room list items — inline background beats CSS hover so color persists
+  const allR=activeRooms(); const byId={};
+  allR.forEach(r=>{ byId[String(r.RevitId)]=r; });
+  document.querySelectorAll('.room-item[data-id]').forEach(li=>{
+    const rid=li.getAttribute('data-id'), sel=selIds.has(rid);
+    let hex='';
+    if(colorKey){ const room=byId[rid]; if(room){ const v=roomColorValue(room,colorKey)||'(vide)'; hex=colorMap[v]||'#64748b'; } }
+    if(sel||!hex){ li.style.backgroundColor=''; li.style.borderLeftColor=''; }
+    else { li.style.backgroundColor=hexA(hex,0.22); li.style.borderLeftColor=hex; }
   });
 }
 $('colorBy').addEventListener('change',function(){ applyColorBy(this.value); populateFiltVal(); });
