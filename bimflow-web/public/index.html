@@ -584,7 +584,8 @@ const TYPE_LABELS={text:'Texte',multitext:'Texte multi',integer:'Entier',number:
 
 /* ═══ STATE ═══ */
 let plan=null, editMode=false, colorKey='', currentPlanKey='';
-let selIds=new Set(), lastSel=null, compareDiff=null;
+// Always stores string IDs so .has() works regardless of JSON number vs DOM string
+let selIds=new (class extends Set{ add(v){return super.add(String(v));} has(v){return super.has(String(v));} delete(v){return super.delete(String(v));} })(), lastSel=null, compareDiff=null;
 let pendingEdits={};
 let zoom=1,panX=0,panY=0,W=0,H=0,isPan=false,panStart={x:0,y:0},isRightPan=false;
 const planCache={}; let lastLevelKeys=''; let colorMap={};
@@ -1054,7 +1055,10 @@ $('btnAllLevels').addEventListener('click',async()=>{
 
 /* ═══ PARAMETERS — table of ROOMS × PARAMETERS ═══ */
 function isCore(k){ return CORE_KEYS.some(c=>k.toLowerCase().includes(c)||c.includes(k.toLowerCase())); }
-function selectedRooms(){ return (plan?.Rooms||[]).filter(r=>selIds.has(r.RevitId)); }
+function selectedRooms(){
+  if(!selIds.size) return [];
+  return activeRooms().filter(r=>selIds.has(r.RevitId));
+}
 function escAttr(s){ return String(s).replace(/"/g,'&quot;'); }
 function numericType(t){ return t==='number'||t==='integer'||t==='length'||t==='area'||t==='volume'||t==='mass'||t==='currency'; }
 
