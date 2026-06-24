@@ -560,7 +560,7 @@
             <div style="flex:1"></div>
             <button class="pfbtn" id="pfGrp" title="Regrouper les pièces par valeur du paramètre sélectionné">⊞ Regrouper</button>
           </div>
-          <div class="ptable-scroll">
+          <div class="ptable-scroll" id="matrixScroll">
             <table class="pt matrix" id="matrixTable"><thead id="matrixHead"></thead><tbody id="matrixBody"></tbody></table>
             <div class="bp-empty" id="matrixEmpty">Aucune pièce</div>
           </div>
@@ -822,10 +822,11 @@ function roomClicked(id,additive,planKey){
 function clearSelection(){
   if(compareDiff||!selIds.size)return; selIds.clear(); lastSel=null;
   if(isolateMode){
-    if(selectedLevelKeys.size>0){ recolor3D(); } // level-based isolate stays
+    if(selectedLevelKeys.size>0){ recolor3D(); }
     else { isolateMode=false; rooms3D().forEach(r=>{ const m=R3.meshes[r.RevitId]; if(m) m.visible=true; }); $('btn3dIsolate').classList.remove('active'); }
   }
   onSelectionChanged(false);
+  refitPlan(); // return 2D to initial fit-to-view position
 }
 function selectMatching(){
   const key=$('colorBy').value, val=$('filtVal').value;
@@ -1565,6 +1566,12 @@ function paintRooms(){
 $('colorBy').addEventListener('change',function(){ applyColorBy(this.value); populateFiltVal(); });
 $('btnSelectMatch').addEventListener('click',selectMatching);
 $('btnClearSel').addEventListener('click',clearSelection);
+
+/* Click on blank area in matrix → clear selection (same as clicking empty 2D/3D space) */
+$('matrixScroll').addEventListener('click',e=>{
+  if(!e.target.closest('tr')&&!e.target.closest('input')&&!e.target.closest('select')&&!e.target.closest('button'))
+    clearSelection();
+});
 $('btnSelectAllList').addEventListener('click',()=>{
   $('roomsList').querySelectorAll('.room-item[data-id]').forEach(el=>{
     if(el.style.display==='none') return;
