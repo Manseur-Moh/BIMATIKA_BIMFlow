@@ -131,8 +131,8 @@
     .mini-room.selected{fill:rgba(239,68,68,.5)!important;stroke:#ef4444!important;stroke-width:1.5}
     #mini-vp{fill:rgba(255,255,255,.04);stroke:rgba(255,255,255,.5);stroke-width:.7}
 
-    /* RIGHT PARAMETER PANEL (was bottom, now side-by-side) */
-    .bottom-panel{flex:1;min-width:280px;background:#0d1526;border-left:1px solid #1f2937;display:flex;flex-direction:column;overflow:hidden}
+    /* BOTTOM PARAMETER PANEL — 50% height */
+    .bottom-panel{flex:1;min-height:80px;background:#0d1526;border-top:1px solid #1f2937;display:flex;flex-direction:column;overflow:hidden}
     .bp-bar{display:flex;align-items:center;gap:10px;padding:6px 12px;border-bottom:1px solid #1f2937;flex-shrink:0}
     .bp-title{font-size:13px;font-weight:700;color:#f1f5f9}
     .bp-sub{font-size:11px;color:#38bdf8}
@@ -297,7 +297,7 @@
     [data-theme=light] .view-modes button:hover{color:#0f172a}
     [data-theme=light] .colsel-opt{color:#334155}
     [data-theme=light] .colsel-opt:hover{background:#eef2f8}
-    [data-theme=light] .bottom-panel{background:#f6f8fb;border-left-color:#dde2ec}
+    [data-theme=light] .bottom-panel{background:#f6f8fb;border-top-color:#dde2ec}
     [data-theme=light] .bp-bar{border-bottom-color:#dde2ec}
     [data-theme=light] .bp-title{color:#0f172a}
     [data-theme=light] .bp-btn{border-color:#cdd5e3;color:#334155}
@@ -322,8 +322,7 @@
 
     /* ===== LAYOUT FIXE ===== */
     #appMain{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
-    #centerCol{flex:1;display:flex;flex-direction:row;overflow:hidden;min-width:0}
-    #leftHalf{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;min-height:0}
+    #centerCol{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
     #viewerRow{flex:1;display:flex;flex-direction:row;overflow:hidden;min-height:0;min-width:0}
     .split-v{width:5px;cursor:col-resize;background:#0d1526;flex-shrink:0;transition:background .15s;position:relative}
     .split-v:hover,.split-v.dragging{background:#3b82f6}
@@ -420,9 +419,6 @@
   <!-- COLONNE CENTRALE -->
   <div id="centerCol">
 
-    <!-- LEFT HALF: viewer modes + 2D/3D/rooms -->
-    <div id="leftHalf">
-
     <!-- VM BAR — 2D / 2D+3D / 3D toggle (like fiches.html) -->
     <div class="vmbar" id="vmBar">
       <button class="vmbtn" data-m="m2d">🗺 2D</button>
@@ -481,10 +477,8 @@
       </aside>
     </div>
 
-    </div><!-- /#leftHalf -->
-
-    <!-- SÉPARATEUR PARAMÈTRES — vertical, redimensionnable -->
-    <div class="split-v" id="splitBottom"></div>
+    <!-- SÉPARATEUR PARAMÈTRES (redimensionnable) -->
+    <div class="split-h" id="splitBottom"></div>
 
     <!-- PARAMÈTRES EN BAS -->
     <div class="bottom-panel" id="bottomPanel">
@@ -1584,11 +1578,11 @@ $('toggleRooms').addEventListener('click',function(){
   refitPlan();
 });
 $('togglePlan').addEventListener('click',function(){
-  const lh=$('leftHalf'), sp=$('splitBottom'), bp=$('bottomPanel');
-  const hidden=lh.style.display==='none';
-  lh.style.display=hidden?'':'none';
+  const vr=$('viewerRow'), sp=$('splitBottom'), bp=$('bottomPanel');
+  const hidden=vr.style.display==='none';
+  vr.style.display=hidden?'':'none';
   if(sp) sp.style.display=hidden?'':'none';
-  if(bp){ if(hidden){ bp.style.flex=''; bp.style.width=''; } else { bp.style.flex='1'; bp.style.width='100%'; } }
+  if(bp){ if(hidden){ bp.style.flex=''; bp.style.height=''; } else { bp.style.flex='1'; bp.style.height='100%'; } }
   this.classList.toggle('on',!hidden);
   refitPlan(); setTimeout(()=>{ resize3D(); update3D(); },50);
 });
@@ -1794,7 +1788,7 @@ function setupSplitBottom(id,el,min){
   });
 }
 setupSplitLeft('splitLevels', document.querySelector('.levels-aside'), 80);
-setupSplitRight('splitBottom', document.getElementById('bottomPanel'), 200);
+setupSplitBottom('splitBottom', document.getElementById('bottomPanel'), 80);
 // Keep 3D aspect ratio correct whenever pane3d changes size
 if(window.ResizeObserver) new ResizeObserver(()=>resize3D()).observe(document.getElementById('pane3d'));
 
@@ -1803,8 +1797,7 @@ document.addEventListener('click',e=>{ const p=$('layoutPop'); if(p&&p.style.dis
 $('tplReset').addEventListener('click',()=>{
   const la=document.querySelector('.levels-aside'); if(la){la.style.width=''; la.style.flex='';}
   const ra=document.querySelector('.rooms-aside'); if(ra){ra.style.width=''; ra.style.flex=''; ra.style.display='';}
-  const bp=document.getElementById('bottomPanel'); if(bp){bp.style.width=''; bp.style.flex='';}
-  const lh=document.getElementById('leftHalf'); if(lh){lh.style.display=''; lh.style.flex='';}
+  const bp=document.getElementById('bottomPanel'); if(bp){bp.style.height=''; bp.style.flex='';}
   const vr=document.getElementById('viewerRow'); if(vr){vr.style.display=''; vr.style.flex='';}
   const sb=document.getElementById('splitBottom'); if(sb) sb.style.display='';
   $('layoutPop').style.display='none'; refitPlan(); setTimeout(resize3D,60);
