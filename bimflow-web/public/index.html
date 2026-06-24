@@ -223,7 +223,7 @@
     #colSelBtn{background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:4px;padding:3px 8px;font-size:10px;font-weight:600;cursor:pointer}
     #colSelBtn:hover{background:#374151;color:#fff}
     /* position:fixed so the popup escapes the bottom panel's overflow clipping */
-    .colsel-pop{position:fixed;width:230px;max-height:60vh;background:#1f2937;border:1px solid #374151;border-radius:6px;z-index:1000;display:none;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,.7)}
+    .colsel-pop{position:fixed;width:230px;max-height:60vh;background:#1f2937;border:1px solid #374151;border-radius:6px;z-index:1000;display:none;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,.7);overflow:hidden}
     .colsel-pop.open{display:flex}
     #colSearch{margin:6px;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:4px;padding:4px 7px;font-size:11px;outline:none}
     .colsel-tools{display:flex;gap:5px;padding:0 6px 5px}
@@ -1126,9 +1126,21 @@ $('colSelBtn').addEventListener('click',e=>{
   const pop=$('colSelPop'); const opening=!pop.classList.contains('open');
   pop.classList.toggle('open');
   if(opening){ const r=$('colSelBtn').getBoundingClientRect();
+    const spaceBelow=window.innerHeight-r.bottom-8;
+    const spaceAbove=r.top-8;
+    const popH=Math.min(window.innerHeight*0.6, 400); // max height the popup could reach
     pop.style.left=Math.max(8,Math.min(r.right-230,window.innerWidth-238))+'px';
-    pop.style.bottom=(window.innerHeight-r.top+6)+'px';   // open upward above the button
-    pop.style.top='auto';
+    if(spaceBelow>=popH||spaceBelow>=spaceAbove){
+      // open downward
+      pop.style.top=Math.min(r.bottom+4, window.innerHeight-popH-8)+'px';
+      pop.style.bottom='auto';
+      pop.style.maxHeight=Math.max(80,spaceBelow)+'px';
+    } else {
+      // open upward
+      pop.style.bottom=(window.innerHeight-r.top+4)+'px';
+      pop.style.top='auto';
+      pop.style.maxHeight=Math.max(80,spaceAbove)+'px';
+    }
     setTimeout(()=>$('colSearch').focus(),0);
   }
 });
