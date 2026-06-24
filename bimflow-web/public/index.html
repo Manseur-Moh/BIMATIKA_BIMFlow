@@ -1590,9 +1590,10 @@ $('toggleRooms').addEventListener('click',function(){
   refitPlan();
 });
 $('togglePlan').addEventListener('click',function(){
-  const vr=$('viewerRow'), sp=$('splitBottom'), bp=$('bottomPanel');
+  const vr=$('viewerRow'), sp=$('splitBottom'), bp=$('bottomPanel'), vm=$('vmBar');
   const hidden=vr.style.display==='none';
   vr.style.display=hidden?'':'none';
+  if(vm) vm.style.display=hidden?'':'none';
   if(sp) sp.style.display=hidden?'':'none';
   if(bp){ if(hidden){ bp.style.flex=''; bp.style.height=''; } else { bp.style.flex='1'; bp.style.height='100%'; } }
   this.classList.toggle('on',!hidden);
