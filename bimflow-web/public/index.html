@@ -381,8 +381,7 @@
     <button class="refresh-btn" id="toggleLevels" data-en="🏢 Levels" title="Afficher / masquer les niveaux">🏢 Niveaux</button>
     <button class="refresh-btn" id="toggleRooms" data-en="👥 Rooms" title="Afficher / masquer le panneau des pièces">👥 Pièces</button>
     <button class="refresh-btn" id="togglePlan" data-en="🗺 Plan" title="Afficher / masquer le plan">🗺 Plan</button>
-    <button class="refresh-btn" id="btnSaveVersion" data-en="💾 Version" title="Enregistrer une copie horodatée">💾 Version</button>
-    <button class="refresh-btn" id="btnCompare" data-en="⇆ Compare" title="Comparer deux versions">⇆ Comparer</button>
+    <button class="refresh-btn" id="btnCompare" data-en="💾⇆ Versions" title="Sauvegarder / comparer des versions">💾⇆ Versions</button>
     <button class="refresh-btn" id="btnLayout" data-en="⟲ Layout" title="Ancrer / réinitialiser la disposition des panneaux">⟲ Disposition</button>
     <button class="refresh-btn" id="btnRefresh" data-en="🔄 Refresh" title="Recharger les plans">🔄 Actualiser</button>
     <div class="status-dot loading" id="statusDot"></div>
@@ -1738,7 +1737,6 @@ $('cmpRunAll').addEventListener('click',async()=>{
 
 $('cmpSave').addEventListener('click',saveVersion);
 $('cmpSaveAll').addEventListener('click',saveAllVersions);
-$('btnSaveVersion').addEventListener('click',saveVersion);
 $('btnCompare').addEventListener('click',openCompare);
 $('cmpClose').addEventListener('click',()=>$('cmpPop').style.display='none');
 function renderCompare(){
