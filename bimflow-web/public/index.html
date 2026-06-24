@@ -981,7 +981,6 @@ function renderMatrix(){
       // For each column: show unique values, or editable field in edit mode
       cols.forEach(k=>{
         const td=document.createElement('td'); td.setAttribute('data-pname',k);
-        if(k===grpKey){ td.textContent=''; tr.appendChild(td); return; }
         const allVals=grooms.map(r=>String((r.Parameters||{})[k]??''));
         const uniqVals=[...new Set(allVals.filter(v=>v!==''))];
         const singleVal=uniqVals.length===1?uniqVals[0]:'';
@@ -1072,17 +1071,14 @@ function autoFitCol(th, col){
   const text=(lbl?lbl.textContent:th.textContent).trim();
   if(!text) return;
   _ctx.font='600 10px system-ui,sans-serif';
-  const fullW=Math.ceil(_ctx.measureText(text).width);
   let w;
   if(text.length<=10){
-    w=fullW+24;
+    w=Math.ceil(_ctx.measureText(text).width)+24;
   } else {
-    // wrap near the midpoint — find a space close to the middle
-    const mid=Math.ceil(text.length/2);
-    let brk=mid;
-    for(let i=mid;i<Math.min(text.length,mid+8);i++) if(text[i]===' '){brk=i;break;}
-    if(brk===mid) for(let i=mid;i>Math.max(0,mid-8);i--) if(text[i]===' '){brk=i;break;}
-    w=Math.max(60,Math.ceil(_ctx.measureText(text.slice(0,brk).trim()).width)+24);
+    // find the first word boundary AT OR AFTER position 10 (never break mid-word)
+    let brk=text.length; // fallback: no wrap (single long word)
+    for(let i=10;i<text.length;i++){ if(text[i]===' '){ brk=i; break; } }
+    w=Math.max(50, Math.ceil(_ctx.measureText(text.slice(0,brk).trim()).width)+24);
   }
   const clamped=Math.max(40,w);
   th.style.width=clamped+'px'; colW[col]=clamped;
