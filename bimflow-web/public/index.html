@@ -417,6 +417,15 @@
   <div class="row"><button id="tplReset" style="flex:1;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:6px;cursor:pointer">⟲ Réinitialiser la disposition</button></div>
 </div>
 
+<!-- Multi-value room search popup -->
+<div class="sv-pop" id="searchValPop">
+  <div class="sv-pop-actions">
+    <button class="mini-btn" id="svSelectAll" style="flex:1;font-size:11px">Tout</button>
+    <button class="mini-btn" id="svClearAll" style="flex:1;font-size:11px">Aucun</button>
+  </div>
+  <div class="sv-pop-list" id="searchValList"></div>
+</div>
+
 <main id="appMain">
 
   <!-- NIVEAUX — colonne gauche, pleine hauteur -->
@@ -1932,14 +1941,5 @@ themeBtn.addEventListener('click',()=>applyTheme(document.documentElement.getAtt
 /* ═══ INIT ═══ */
 loadIndex();
 </script>
-
-<!-- Multi-value room search popup -->
-<div class="sv-pop" id="searchValPop">
-  <div class="sv-pop-actions">
-    <button class="mini-btn" id="svSelectAll" style="flex:1;font-size:11px">Tout</button>
-    <button class="mini-btn" id="svClearAll" style="flex:1;font-size:11px">Aucun</button>
-  </div>
-  <div class="sv-pop-list" id="searchValList"></div>
-</div>
 </body>
 </html>
