@@ -1807,7 +1807,8 @@ function init3D(){
   R3.renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
   R3.renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
   R3.scene=new THREE.Scene();
-  R3.camera=new THREE.PerspectiveCamera(45,1,0.1,1e6);
+  R3.frustumSize=100;
+  R3.camera=new THREE.OrthographicCamera(-50,50,50,-50,-1e4,1e6);
   R3.controls=new THREE.OrbitControls(R3.camera,cv); R3.controls.enableDamping=true; R3.controls.dampingFactor=.08;
   R3.scene.add(new THREE.AmbientLight(0xffffff,.78));
   const dl=new THREE.DirectionalLight(0xffffff,.55); dl.position.set(1,2,1.2); R3.scene.add(dl);
@@ -1855,7 +1856,10 @@ function init3D(){
   });
 }
 function resize3D(){ if(!R3.ready)return; const p=$('pane3d'); const w=p.clientWidth||1,h=p.clientHeight||1;
-  R3.renderer.setSize(w,h,false); R3.camera.aspect=w/h; R3.camera.updateProjectionMatrix(); }
+  R3.renderer.setSize(w,h,false);
+  const asp=w/h, f=(R3.frustumSize||100)/2;
+  R3.camera.left=-f*asp; R3.camera.right=f*asp; R3.camera.top=f; R3.camera.bottom=-f;
+  R3.camera.updateProjectionMatrix(); }
 function rooms3D(){ return allLevelsRooms.length ? allLevelsRooms : (plan?.Rooms||[]); }
 function build3D(){
   if(!R3.ready)return;
@@ -1877,11 +1881,16 @@ function build3D(){
 }
 function fit3D(){
   if(!R3.ready)return; const box=new THREE.Box3().setFromObject(R3.group); if(box.isEmpty())return;
-  const c=box.getCenter(new THREE.Vector3()), s=box.getSize(new THREE.Vector3()); const d=Math.max(s.x,s.y,s.z,5);
-  // More overhead angle — camera above and slightly to the front so all rooms fit
-  R3.controls.target.set(c.x, c.y, c.z);
-  R3.camera.position.set(c.x, c.y+d*1.3, c.z+d*0.55);
-  R3.camera.near=Math.max(.05,d/2000); R3.camera.far=d*200; R3.camera.updateProjectionMatrix(); R3.controls.update();
+  const c=box.getCenter(new THREE.Vector3()), s=box.getSize(new THREE.Vector3());
+  const d=Math.max(s.x,s.y,s.z,5);
+  // Isometric: equal angle from right (+X), top (+Y), front (+Z)
+  const iso=d*2;
+  R3.controls.target.copy(c);
+  R3.camera.position.set(c.x+iso, c.y+iso, c.z+iso);
+  // Frustum size to encompass widest horizontal extent with margin
+  R3.frustumSize=Math.max(s.x,s.z)*1.6+s.y*0.4;
+  R3.camera.near=-d*10; R3.camera.far=d*20;
+  resize3D(); R3.controls.update();
 }
 /* fit camera to all currently-visible (isolated) meshes */
 function fitToIsolated(){
@@ -1890,8 +1899,11 @@ function fitToIsolated(){
   Object.values(R3.meshes).forEach(m=>{ if(m&&m.visible) box.expandByObject(m); });
   if(box.isEmpty())return;
   const c=box.getCenter(new THREE.Vector3()), s=box.getSize(new THREE.Vector3()); const d=Math.max(s.x,s.y,s.z,2);
-  R3.controls.target.copy(c); R3.camera.position.set(c.x+d*.5,c.y+d*.7,c.z+d*.5);
-  R3.camera.near=Math.max(.05,d/500); R3.camera.far=d*200; R3.camera.updateProjectionMatrix(); R3.controls.update();
+  const iso=d*2;
+  R3.controls.target.copy(c); R3.camera.position.set(c.x+iso,c.y+iso,c.z+iso);
+  R3.frustumSize=Math.max(s.x,s.z)*1.4+s.y*0.3;
+  R3.camera.near=-d*10; R3.camera.far=d*20;
+  resize3D(); R3.controls.update();
 }
 $('btn3dShade').addEventListener('click',()=>{
   isolateMode=false;
