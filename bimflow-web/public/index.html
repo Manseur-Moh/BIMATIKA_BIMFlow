@@ -154,7 +154,7 @@
     .bp-view{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
     table.matrix{table-layout:fixed}
     table.matrix th:first-child,table.matrix td:first-child{position:sticky;left:0;background:#0d1526;z-index:2}
-    table.matrix thead th:first-child{background:#111c33}
+    table.matrix thead th:first-child{background:#111c33;top:0;z-index:4}
     table.matrix th{white-space:normal;word-break:break-word;vertical-align:bottom}
     table.matrix td{white-space:normal;word-break:break-word;vertical-align:top}
     table.matrix td.ro-cell{color:#475569}
@@ -953,7 +953,7 @@ function renderMatrix(){
   const keys=new Set(); rooms.forEach(r=>Object.keys(r.Parameters||{}).forEach(k=>keys.add(k)));
   const cols=[...keys].sort((a,b)=>{ const ca=isCore(a),cb=isCore(b); if(ca!==cb)return ca?-1:1; return a.localeCompare(b); });
 
-  const wP=colW['__piece']||170;
+  const wP=colW['__piece']||DEF_COLW;
   let th='<tr><th style="width:'+wP+'px"><span class="col-lbl">Pièce</span><span class="col-resizer" data-col="__piece"></span></th>';
   cols.forEach(k=>{ const w=colW[k]||DEF_COLW;
     th+=`<th data-pname="${escAttr(k)}" title="${escAttr(k)}" style="width:${w}px"><span class="col-lbl">${k}</span><span class="col-resizer" data-col="${escAttr(k)}"></span></th>`; });
@@ -1065,13 +1065,13 @@ function trackEdit(id,key,val,orig){
   updateSendBtn();
 }
 /* ═══ COLUMN WIDTH (resizable, ≈10-char default) ═══ */
-const DEF_COLW=90; // ~10 uppercase chars at 10px — header text wraps beyond this
+const DEF_COLW=170; // ~22 uppercase chars at 10px with letter-spacing:0.04em
 let colW={};       // only stores user-explicitly-dragged widths
 // Set the table's pixel width = exact sum of visible column widths so that
 // table-layout:fixed gives each column exactly its specified width.
 function updateMatrixWidth(){
   const tbl=$('matrixTable'); if(!tbl) return;
-  let w=colW['__piece']||170;
+  let w=colW['__piece']||DEF_COLW;
   $('matrixHead').querySelectorAll('th[data-pname]').forEach(th=>{
     if(th.style.display!=='none') w+=colW[th.getAttribute('data-pname')]||DEF_COLW;
   });
