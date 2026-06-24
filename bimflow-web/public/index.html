@@ -330,6 +330,16 @@
     .split-h:hover,.split-h.dragging{background:#3b82f6}
     .split-v::after{content:"";position:absolute;left:1.5px;top:50%;transform:translateY(-50%);width:2px;height:34px;background:#374151;border-radius:2px}
     .split-h::after{content:"";position:absolute;top:1.5px;left:50%;transform:translateX(-50%);height:2px;width:40px;background:#374151;border-radius:2px}
+    .sv-pop{position:fixed;min-width:190px;max-width:280px;background:#1f2937;border:1px solid #374151;border-radius:6px;z-index:1100;display:none;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,.7);overflow:hidden}
+    .sv-pop.open{display:flex}
+    .sv-pop-actions{display:flex;gap:4px;padding:5px 8px;border-bottom:1px solid #374151;flex-shrink:0}
+    .sv-pop-list{overflow-y:auto;flex:1;padding:4px 0}
+    .sv-pop-item{display:flex;align-items:center;gap:7px;padding:4px 10px;cursor:pointer;font-size:12px;color:#cbd5e1;user-select:none}
+    .sv-pop-item:hover{background:#2d3748}
+    .sv-pop-item input[type=checkbox]{pointer-events:none;accent-color:#3b82f6;flex-shrink:0}
+    [data-theme=light] .sv-pop{background:#fff;border-color:#dde2ec;box-shadow:0 6px 20px rgba(0,0,0,.15)}
+    [data-theme=light] .sv-pop-item{color:#1e2733}
+    [data-theme=light] .sv-pop-item:hover{background:#f1f5f9}
     #layoutPop{position:fixed;top:52px;right:12px;z-index:1200;background:#1f2937;border:1px solid #374151;border-radius:8px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.7);width:220px;font-size:12px;display:none}
     #layoutPop .row{display:flex;gap:6px;margin-top:8px}
     #layoutPop button{background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:6px;font-size:12px;cursor:pointer;width:100%}
@@ -469,9 +479,10 @@
           <button class="mini-btn" id="btnSelectAllList" data-en="Select all in list" style="width:100%">Sélect. tout (liste)</button>
         </div>
         <div class="ctrl-wrap" style="border-bottom:1px solid #1f2937">
-          <label data-en="🔍 Search / select by">🔍 Rechercher / sélectionner par</label>
+          <label data-en="🔍 Filter rooms by">🔍 Filtrer les pièces par</label>
           <select id="searchKey"><option value="">Nom / Numéro</option></select>
           <input id="roomSearch" type="text" placeholder="Rechercher…" data-en-ph="Search…"/>
+          <button class="mini-btn" id="searchValBtn" style="width:100%;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:none">— toutes valeurs —</button>
         </div>
         <div class="rooms-list" id="roomsList"><div class="empty-hint">Aucun plan chargé</div></div>
       </aside>
@@ -850,14 +861,58 @@ function renderList(){
 function markRoomSelection(){
   document.querySelectorAll('.room-item').forEach(el=>el.classList.toggle('active',selIds.has(el.getAttribute('data-id'))));
 }
+let searchFilterVals=new Set();
+
 function applyRoomSearch(){
-  const q=($('roomSearch').value||'').toLowerCase(), sk=$('searchKey').value;
+  const sk=$('searchKey').value;
+  const q=($('roomSearch').value||'').toLowerCase();
+  const allR=activeRooms();
   document.querySelectorAll('.room-item').forEach(el=>{
-    let hay;
-    if(sk){ const room=plan?.Rooms.find(r=>r.RevitId===el.getAttribute('data-id')); hay=(roomColorValue(room,sk)||'').toLowerCase(); }
-    else hay=el.textContent.toLowerCase();
-    el.style.display=!q||hay.includes(q)?'':'none';
+    const rid=el.getAttribute('data-id');
+    if(!sk){
+      el.style.display=(!q||el.textContent.toLowerCase().includes(q))?'':'none';
+    } else {
+      if(searchFilterVals.size===0){ el.style.display=''; return; }
+      const room=allR.find(r=>String(r.RevitId)===rid);
+      const val=room?String(roomColorValue(room,sk)||''):'';
+      el.style.display=searchFilterVals.has(val)?'':'none';
+    }
   });
+}
+
+function buildSearchValPop(){
+  const sk=$('searchKey').value;
+  searchFilterVals.clear();
+  const inp=$('roomSearch'), btn=$('searchValBtn'), list=$('searchValList');
+  if(!sk){
+    inp.style.display=''; btn.style.display='none';
+    $('searchValPop').classList.remove('open');
+    applyRoomSearch(); return;
+  }
+  inp.style.display='none'; btn.style.display='';
+  list.innerHTML='';
+  const vals=new Map();
+  activeRooms().forEach(r=>{ const v=String(roomColorValue(r,sk)||''); if(v) vals.set(v,(vals.get(v)||0)+1); });
+  [...vals.keys()].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).forEach(v=>{
+    const lbl=document.createElement('label'); lbl.className='sv-pop-item';
+    const cb=document.createElement('input'); cb.type='checkbox'; cb.value=v;
+    cb.addEventListener('change',()=>{
+      if(cb.checked) searchFilterVals.add(v); else searchFilterVals.delete(v);
+      updateSearchBtn(); applyRoomSearch();
+    });
+    lbl.appendChild(cb);
+    lbl.appendChild(document.createTextNode(' '+v+' ('+vals.get(v)+')'));
+    list.appendChild(lbl);
+  });
+  btn.disabled=vals.size===0;
+  updateSearchBtn(); applyRoomSearch();
+}
+
+function updateSearchBtn(){
+  const btn=$('searchValBtn');
+  if(searchFilterVals.size===0) btn.textContent='— toutes valeurs —';
+  else if(searchFilterVals.size===1) btn.textContent=[...searchFilterVals][0];
+  else btn.textContent=searchFilterVals.size+' valeurs sélectionnées';
 }
 function populateSearchKey(){
   const sel=$('searchKey'); sel.innerHTML='<option value="">Nom / Numéro</option>';
@@ -866,9 +921,39 @@ function populateSearchKey(){
   if(names.size){ const sep=document.createElement('option'); sep.disabled=true; sep.textContent='──────────'; sel.appendChild(sep);
     [...names].sort((a,b)=>a.localeCompare(b)).forEach(n=>sel.appendChild(new Option(n,n))); }
   sel.value='';
+  buildSearchValPop(); // reset to text-input mode
 }
 $('roomSearch').addEventListener('input',applyRoomSearch);
-$('searchKey').addEventListener('change',renderList);
+$('searchKey').addEventListener('change',()=>{ buildSearchValPop(); });
+
+/* Search-value popup open/close */
+$('searchValBtn').addEventListener('click',()=>{
+  const pop=$('searchValPop'), opening=!pop.classList.contains('open');
+  document.querySelectorAll('.sv-pop.open').forEach(p=>p.classList.remove('open'));
+  if(opening){
+    const r=$('searchValBtn').getBoundingClientRect();
+    const spaceBelow=window.innerHeight-r.bottom-8, spaceAbove=r.top-8;
+    pop.style.left=r.left+'px'; pop.style.width=Math.max(r.width,190)+'px';
+    if(spaceBelow>=80||spaceBelow>=spaceAbove){
+      pop.style.top=(r.bottom+4)+'px'; pop.style.bottom='auto'; pop.style.maxHeight=Math.max(80,spaceBelow)+'px';
+    } else {
+      pop.style.bottom=(window.innerHeight-r.top+4)+'px'; pop.style.top='auto'; pop.style.maxHeight=Math.max(80,spaceAbove)+'px';
+    }
+    pop.classList.add('open');
+  }
+});
+document.addEventListener('click',e=>{
+  if(!$('searchValBtn').contains(e.target)&&!$('searchValPop').contains(e.target))
+    $('searchValPop').classList.remove('open');
+});
+$('svSelectAll').addEventListener('click',()=>{
+  $('searchValList').querySelectorAll('input[type=checkbox]').forEach(cb=>{ cb.checked=true; searchFilterVals.add(cb.value); });
+  updateSearchBtn(); applyRoomSearch();
+});
+$('svClearAll').addEventListener('click',()=>{
+  $('searchValList').querySelectorAll('input[type=checkbox]').forEach(cb=>{ cb.checked=false; });
+  searchFilterVals.clear(); updateSearchBtn(); applyRoomSearch();
+});
 
 /* ═══ ALL-LEVELS MODE ═══ */
 let allLevelsMode=false, allLevelsRooms=[];
@@ -1384,6 +1469,7 @@ $('btnSelectMatch').addEventListener('click',selectMatching);
 $('btnClearSel').addEventListener('click',clearSelection);
 $('btnSelectAllList').addEventListener('click',()=>{
   $('roomsList').querySelectorAll('.room-item[data-id]').forEach(el=>{
+    if(el.style.display==='none') return;
     const id=el.getAttribute('data-id'); if(id) selIds.add(id);
   });
   lastSel=[...selIds][0]||null;
@@ -1846,5 +1932,14 @@ themeBtn.addEventListener('click',()=>applyTheme(document.documentElement.getAtt
 /* ═══ INIT ═══ */
 loadIndex();
 </script>
+
+<!-- Multi-value room search popup -->
+<div class="sv-pop" id="searchValPop">
+  <div class="sv-pop-actions">
+    <button class="mini-btn" id="svSelectAll" style="flex:1;font-size:11px">Tout</button>
+    <button class="mini-btn" id="svClearAll" style="flex:1;font-size:11px">Aucun</button>
+  </div>
+  <div class="sv-pop-list" id="searchValList"></div>
+</div>
 </body>
 </html>
