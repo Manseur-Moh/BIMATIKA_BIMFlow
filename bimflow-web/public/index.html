@@ -159,8 +159,8 @@
     table.matrix td{white-space:normal;word-break:break-word;vertical-align:top}
     table.matrix td.ro-cell{color:#475569}
     table.matrix td.empty-cell{background:#0b1322}
-    .col-resizer{position:absolute;top:0;right:0;width:6px;height:100%;cursor:col-resize;user-select:none}
-    .col-resizer:hover{background:#3b82f6}
+    .col-resizer{position:absolute;top:0;right:0;width:8px;height:100%;cursor:col-resize;user-select:none;z-index:3}
+    .col-resizer:hover,.col-resizer:active{background:#3b82f6}
     .col-lbl{display:block;padding-right:6px}
     table.matrix th{cursor:default;position:relative}
     table.matrix th:hover .col-lbl{color:#e2e8f0}
@@ -1070,36 +1070,42 @@ function autoFitCol(th, col){
   const lbl=th.querySelector('.col-lbl');
   const text=(lbl?lbl.textContent:th.textContent).trim();
   if(!text) return;
-  _ctx.font='600 10px system-ui,sans-serif';
+  // measure with the actual rendered font of the label
+  const cs=window.getComputedStyle(lbl||th);
+  _ctx.font=`${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const ls=parseFloat(cs.letterSpacing)||0;
+  const measure=s=>Math.ceil(_ctx.measureText(s).width + ls*s.length);
+  // padding: left + right + 8px for resizer handle
+  const ths=window.getComputedStyle(th);
+  const pad=parseFloat(ths.paddingLeft)+parseFloat(ths.paddingRight)+8;
   let w;
   if(text.length<=10){
-    w=Math.ceil(_ctx.measureText(text).width)+24;
+    w=measure(text)+pad;
   } else {
-    // find the first word boundary AT OR AFTER position 10 (never break mid-word)
-    let brk=text.length; // fallback: no wrap (single long word)
+    // first word boundary at or after char 10 — never break mid-word
+    let brk=text.length;
     for(let i=10;i<text.length;i++){ if(text[i]===' '){ brk=i; break; } }
-    w=Math.max(50, Math.ceil(_ctx.measureText(text.slice(0,brk).trim()).width)+24);
+    w=Math.max(50, measure(text.slice(0,brk).trim())+pad);
   }
   const clamped=Math.max(40,w);
   th.style.width=clamped+'px'; colW[col]=clamped;
 }
 function attachResizers(){
   $('matrixHead').querySelectorAll('.col-resizer').forEach(rz=>{
+    // drag to resize — use stored colW so there is no jump on start
     rz.addEventListener('mousedown',e=>{
       e.preventDefault(); e.stopPropagation();
       const th=rz.parentElement, col=rz.getAttribute('data-col');
-      const startX=e.clientX, startW=th.getBoundingClientRect().width;
-      const mv=ev=>{ const w=Math.max(40,startW+(ev.clientX-startX)); th.style.width=w+'px'; colW[col]=w; };
+      const startX=e.clientX;
+      const startW=colW[col]||parseInt(th.style.width,10)||DEF_COLW;
+      const mv=ev=>{ ev.preventDefault(); const w=Math.max(40,startW+(ev.clientX-startX)); th.style.width=w+'px'; colW[col]=w; };
       const up=()=>{ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); };
       document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
     });
-  });
-  // double-click header → auto-fit column to title text
-  $('matrixHead').querySelectorAll('th').forEach(th=>{
-    th.addEventListener('dblclick',e=>{
-      if(e.target.classList.contains('col-resizer')) return;
-      const rz=th.querySelector('.col-resizer'); if(!rz) return;
-      autoFitCol(th, rz.getAttribute('data-col'));
+    // double-click the resizer line → auto-fit to title text
+    rz.addEventListener('dblclick',e=>{
+      e.preventDefault(); e.stopPropagation();
+      autoFitCol(rz.parentElement, rz.getAttribute('data-col'));
     });
   });
 }
