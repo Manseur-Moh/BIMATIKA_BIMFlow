@@ -1148,59 +1148,64 @@ function renderMatrix(){
   body.innerHTML='';
   buildMatrixFilter(cols, rooms);
 
-  const grpKey=mfGrp&&(mfPar||cols[0]); // group by filter param or first column
-  if(grpKey){
-    // GROUP MODE — one row per unique value
-    const groups={};
-    rooms.forEach(r=>{ const v=String((r.Parameters||{})[grpKey]||'')||'—'; if(!groups[v])groups[v]=[]; groups[v].push(r); });
-    Object.entries(groups).sort(([a],[b])=>a.localeCompare(b,undefined,{numeric:true})).forEach(([val,grooms])=>{
-      const tr=document.createElement('tr'); tr.className='grp-row';
-      tr.addEventListener('click',()=>{
-        selIds.clear(); grooms.forEach(r=>selIds.add(r.RevitId));
-        markRoomSelection(); paintRooms(); renderList(); updateSendBtn();
-        if(typeof R3!=='undefined'&&R3.ready) recolor3D();
-        $('selCount').textContent=selIds.size?`${selIds.size} sélection(s)`:'';
-      });
-      const tdN=document.createElement('td');
-      tdN.textContent=`${val}  (${grooms.length} pièce${grooms.length>1?'s':''})`;
-      tdN.title=`Cliquer pour sélectionner les ${grooms.length} pièce(s)`;
-      tr.appendChild(tdN);
-      // For each column: show unique values, or editable field in edit mode
-      cols.forEach(k=>{
-        const td=document.createElement('td'); td.setAttribute('data-pname',k);
-        const allVals=grooms.map(r=>String((r.Parameters||{})[k]??''));
-        const uniqVals=[...new Set(allVals.filter(v=>v!==''))];
-        const singleVal=uniqVals.length===1?uniqVals[0]:'';
-        const firstHas=k in (grooms[0]?.Parameters||{});
-        const pType=(grooms[0]?.ParameterTypes||{})[k]||'text';
-        const isRO=grooms.every(r=>(r.ParameterReadOnly||{})[k]===true);
-        const opts=(grooms[0]?.ParameterChoices||{})[k]||[];
-        const hasChoice=opts.length>=2||pType==='boolean'||pType==='choice';
-        if(editMode&&firstHas&&!isRO){
-          if(hasChoice){
-            const sel=document.createElement('select'); sel.className='pv-select';
-            if(uniqVals.length!==1){ const ph=new Option(uniqVals.length>0?`— ${uniqVals.length} val. —`:'—',''); sel.appendChild(ph); }
-            (opts.length>=2?opts:['Yes','No']).forEach(o=>{ const op=new Option(o,o); if(o===singleVal)op.selected=true; sel.appendChild(op); });
-            sel.addEventListener('change',()=>{ if(!sel.value)return; sel.classList.add('changed');
-              grooms.forEach(r=>{ const orig=String((r.Parameters||{})[k]??''); trackEdit(r.RevitId,k,sel.value,orig); }); });
-            td.appendChild(sel);
-          } else {
-            const inp=document.createElement('input'); inp.className='pv-input';
-            inp.type=numericType(pType)?'number':'text'; inp.value=singleVal;
-            if(uniqVals.length>1) inp.placeholder=`(${uniqVals.length} valeurs)`;
-            inp.addEventListener('input',()=>{ inp.classList.toggle('changed',inp.value!==singleVal);
-              grooms.forEach(r=>{ const orig=String((r.Parameters||{})[k]??''); trackEdit(r.RevitId,k,inp.value,orig); }); });
-            td.appendChild(inp);
-          }
-        } else {
-          td.textContent=uniqVals.length===1?singleVal:uniqVals.length>1?`(${uniqVals.length} valeurs)`:'';
-          td.title=uniqVals.join(', ');
-          if(isRO&&firstHas) td.className='ro-cell';
-        }
-        tr.appendChild(td);
-      });
-      body.appendChild(tr);
+  function addGroupRow(label, grooms){
+    const tr=document.createElement('tr'); tr.className='grp-row';
+    tr.addEventListener('click',()=>{
+      selIds.clear(); grooms.forEach(r=>selIds.add(r.RevitId));
+      markRoomSelection(); paintRooms(); renderList(); updateSendBtn();
+      if(typeof R3!=='undefined'&&R3.ready) recolor3D();
+      $('selCount').textContent=selIds.size?`${selIds.size} sélection(s)`:'';
     });
+    const tdN=document.createElement('td');
+    tdN.textContent=`${label}  (${grooms.length} pièce${grooms.length>1?'s':''})`;
+    tdN.title=`Cliquer pour sélectionner les ${grooms.length} pièce(s)`;
+    tr.appendChild(tdN);
+    cols.forEach(k=>{
+      const td=document.createElement('td'); td.setAttribute('data-pname',k);
+      const allVals=grooms.map(r=>String((r.Parameters||{})[k]??''));
+      const uniqVals=[...new Set(allVals.filter(v=>v!==''))];
+      const singleVal=uniqVals.length===1?uniqVals[0]:'';
+      const firstHas=k in (grooms[0]?.Parameters||{});
+      const pType=(grooms[0]?.ParameterTypes||{})[k]||'text';
+      const isRO=grooms.every(r=>(r.ParameterReadOnly||{})[k]===true);
+      const opts=(grooms[0]?.ParameterChoices||{})[k]||[];
+      const hasChoice=opts.length>=2||pType==='boolean'||pType==='choice';
+      if(editMode&&firstHas&&!isRO){
+        if(hasChoice){
+          const sel=document.createElement('select'); sel.className='pv-select';
+          if(uniqVals.length!==1){ const ph=new Option(uniqVals.length>0?`— ${uniqVals.length} val. —`:'—',''); sel.appendChild(ph); }
+          (opts.length>=2?opts:['Yes','No']).forEach(o=>{ const op=new Option(o,o); if(o===singleVal)op.selected=true; sel.appendChild(op); });
+          sel.addEventListener('change',()=>{ if(!sel.value)return; sel.classList.add('changed');
+            grooms.forEach(r=>{ const orig=String((r.Parameters||{})[k]??''); trackEdit(r.RevitId,k,sel.value,orig); }); });
+          td.appendChild(sel);
+        } else {
+          const inp=document.createElement('input'); inp.className='pv-input';
+          inp.type=numericType(pType)?'number':'text'; inp.value=singleVal;
+          if(uniqVals.length>1) inp.placeholder=`(${uniqVals.length} valeurs)`;
+          inp.addEventListener('input',()=>{ inp.classList.toggle('changed',inp.value!==singleVal);
+            grooms.forEach(r=>{ const orig=String((r.Parameters||{})[k]??''); trackEdit(r.RevitId,k,inp.value,orig); }); });
+          td.appendChild(inp);
+        }
+      } else {
+        td.textContent=uniqVals.length===1?singleVal:uniqVals.length>1?`(${uniqVals.length} valeurs)`:'';
+        td.title=uniqVals.join(', ');
+        if(isRO&&firstHas) td.className='ro-cell';
+      }
+      tr.appendChild(td);
+    });
+    body.appendChild(tr);
+  }
+
+  const grpKey=mfGrp&&(mfPar||cols[0]);
+  if(grpKey){
+    if(mfTxt){
+      // Text search active → ONE single aggregate row for all matching rooms
+      addGroupRow(`"${mfTxt}"`, rooms);
+    } else {
+      // No text filter → one row per unique parameter value
+      const groups={};
+      rooms.forEach(r=>{ const v=String((r.Parameters||{})[grpKey]||'')||'—'; if(!groups[v])groups[v]=[]; groups[v].push(r); });
+      Object.entries(groups).sort(([a],[b])=>a.localeCompare(b,undefined,{numeric:true})).forEach(([val,grooms])=>addGroupRow(val,grooms));
   } else {
     // NORMAL MODE — one row per room
     rooms.forEach(room=>{
