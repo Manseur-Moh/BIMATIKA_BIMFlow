@@ -155,6 +155,11 @@
     table.matrix{table-layout:fixed}
     table.matrix th:first-child,table.matrix td:first-child{position:sticky;left:0;background:#0d1526;z-index:2}
     table.matrix thead th:first-child{background:#111c33;top:0;z-index:4}
+    /* Pièce column must stay fully opaque — override semi-transparent hover/sel rgba */
+    #matrixBody tr:hover td:first-child{background:#132035!important}
+    #matrixBody tr.row-sel td:first-child{background:#0d2658!important}
+    #matrixBody .grp-row td:first-child{background:#0e1d35!important}
+    #matrixBody .grp-row:hover td:first-child{background:#0c1a2e!important}
     table.matrix th{white-space:normal;word-break:break-word;vertical-align:bottom}
     table.matrix td{white-space:normal;word-break:break-word;vertical-align:top}
     table.matrix td.ro-cell{color:#475569}
@@ -306,6 +311,8 @@
     [data-theme=light] .ptable-hd .htools button,[data-theme=light] .ptable-hd .htools .filebtn{background:#eef2f8;border:1px solid #d4dae6;color:#334155}
     [data-theme=light] table.matrix th:first-child,[data-theme=light] table.matrix td:first-child{background:#f6f8fb}
     [data-theme=light] table.matrix thead th:first-child,[data-theme=light] table.pt th{background:#eef2f8;color:#475569}
+    [data-theme=light] #matrixBody tr:hover td:first-child{background:#e8edf5!important}
+    [data-theme=light] #matrixBody tr.row-sel td:first-child{background:#c7d9f7!important}
     [data-theme=light] table.pt td{border-bottom-color:#e6e9f0}
     [data-theme=light] table.pt td.k{color:#334155}
     [data-theme=light] table.matrix td.empty-cell{background:#f0f2f6}
