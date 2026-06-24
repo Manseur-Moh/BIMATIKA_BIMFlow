@@ -412,44 +412,44 @@
 <div id="cmpPop" style="display:none;position:fixed;top:52px;right:12px;z-index:1200;background:#1f2937;border:1px solid #374151;border-radius:8px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.7);width:320px;font-size:12px">
   <!-- mode tabs -->
   <div style="display:flex;gap:4px;margin-bottom:10px">
-    <button id="cmpTabLevel" style="flex:1;padding:5px;border-radius:5px;border:1px solid #3b82f6;background:#1d4ed8;color:#e0f2fe;font-weight:700;cursor:pointer;font-size:11px">📄 Ce niveau</button>
-    <button id="cmpTabAll" style="flex:1;padding:5px;border-radius:5px;border:1px solid #374151;background:#0f172a;color:#94a3b8;font-weight:700;cursor:pointer;font-size:11px">🌍 Tout le projet</button>
+    <button id="cmpTabLevel" data-en="📄 This level" style="flex:1;padding:5px;border-radius:5px;border:1px solid #3b82f6;background:#1d4ed8;color:#e0f2fe;font-weight:700;cursor:pointer;font-size:11px">📄 Ce niveau</button>
+    <button id="cmpTabAll" data-en="🌍 Whole project" style="flex:1;padding:5px;border-radius:5px;border:1px solid #374151;background:#0f172a;color:#94a3b8;font-weight:700;cursor:pointer;font-size:11px">🌍 Tout le projet</button>
     <button id="cmpClose" style="padding:5px 8px;border-radius:5px;border:1px solid #374151;background:#30415b;color:#94a3b8;cursor:pointer">✕</button>
   </div>
 
   <!-- Section niveau courant -->
   <div id="cmpSecLevel">
-    <label style="font-size:10px;color:#64748b">Version A (avant)</label>
+    <label id="cmpLblA" data-en="Version A (before)" style="font-size:10px;color:#64748b">Version A (avant)</label>
     <select id="cmpA" style="width:100%;margin:2px 0 8px;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:4px"></select>
-    <label style="font-size:10px;color:#64748b">Version B (après)</label>
+    <label id="cmpLblB" data-en="Version B (after)" style="font-size:10px;color:#64748b">Version B (après)</label>
     <select id="cmpB" style="width:100%;margin:2px 0 8px;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:4px"></select>
-    <button id="cmpRun" style="width:100%;background:#1d4ed8;color:#e0f2fe;border:none;border-radius:5px;padding:6px;font-weight:700;cursor:pointer">⇆ Comparer ce niveau</button>
-    <div style="font-size:10px;color:#64748b;margin-top:8px">Versions sauvegardées :</div>
+    <button id="cmpRun" data-en="⇆ Compare this level" style="width:100%;background:#1d4ed8;color:#e0f2fe;border:none;border-radius:5px;padding:6px;font-weight:700;cursor:pointer">⇆ Comparer ce niveau</button>
+    <div id="cmpSavedLbl" data-en="Saved versions:" style="font-size:10px;color:#64748b;margin-top:8px">Versions sauvegardées :</div>
     <div id="cmpManage" style="margin-top:4px;font-size:11px;max-height:100px;overflow:auto"></div>
   </div>
 
   <!-- Section tout le projet -->
   <div id="cmpSecAll" style="display:none">
-    <label style="font-size:10px;color:#64748b">Instantané A (avant)</label>
+    <label id="cmpLblBatchA" data-en="Snapshot A (before)" style="font-size:10px;color:#64748b">Instantané A (avant)</label>
     <select id="cmpBatchA" style="width:100%;margin:2px 0 8px;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:4px"></select>
-    <label style="font-size:10px;color:#64748b">Instantané B (après)</label>
+    <label id="cmpLblBatchB" data-en="Snapshot B (after)" style="font-size:10px;color:#64748b">Instantané B (après)</label>
     <select id="cmpBatchB" style="width:100%;margin:2px 0 8px;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:4px"></select>
-    <button id="cmpRunAll" style="width:100%;background:#7c3aed;color:#ede9fe;border:none;border-radius:5px;padding:6px;font-weight:700;cursor:pointer">⇆ Comparer tout le projet</button>
-    <div style="font-size:10px;color:#64748b;margin-top:6px">Instantanés disponibles :</div>
+    <button id="cmpRunAll" data-en="⇆ Compare whole project" style="width:100%;background:#7c3aed;color:#ede9fe;border:none;border-radius:5px;padding:6px;font-weight:700;cursor:pointer">⇆ Comparer tout le projet</button>
+    <div id="cmpSnapshotLbl" data-en="Available snapshots:" style="font-size:10px;color:#64748b;margin-top:6px">Instantanés disponibles :</div>
     <div id="cmpBatchManage" style="margin-top:4px;font-size:11px;max-height:100px;overflow:auto"></div>
   </div>
 
   <div style="border-top:1px solid #374151;margin-top:10px;padding-top:8px;display:flex;gap:4px">
-    <button id="cmpSave" style="flex:1;background:#0e4429;color:#3fb950;border:1px solid #238636;border-radius:5px;padding:5px;font-weight:600;cursor:pointer;font-size:11px">💾 Sauver ce niveau</button>
-    <button id="cmpSaveAll" style="flex:1;background:#0e3020;color:#3fb950;border:1px solid #238636;border-radius:5px;padding:5px;font-weight:600;cursor:pointer;font-size:11px">💾 Sauver tout le projet</button>
+    <button id="cmpSave" data-en="💾 Save this level" style="flex:1;background:#0e4429;color:#3fb950;border:1px solid #238636;border-radius:5px;padding:5px;font-weight:600;cursor:pointer;font-size:11px">💾 Sauver ce niveau</button>
+    <button id="cmpSaveAll" data-en="💾 Save whole project" style="flex:1;background:#0e3020;color:#3fb950;border:1px solid #238636;border-radius:5px;padding:5px;font-weight:600;cursor:pointer;font-size:11px">💾 Sauver tout le projet</button>
   </div>
   <div id="cmpStatus" style="font-size:10px;color:#64748b;margin-top:6px;text-align:center"></div>
 </div>
 
 <!-- Layout reset popup -->
 <div id="layoutPop">
-  <div style="font-weight:700;color:#cbd5e1;margin-bottom:8px">Disposition des panneaux</div>
-  <div class="row"><button id="tplReset" style="flex:1;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:6px;cursor:pointer">⟲ Réinitialiser la disposition</button></div>
+  <div data-en="Panel Layout" style="font-weight:700;color:#cbd5e1;margin-bottom:8px">Disposition des panneaux</div>
+  <div class="row"><button id="tplReset" data-en="⟲ Reset layout" style="flex:1;background:#0f172a;color:#e2e8f0;border:1px solid #374151;border-radius:5px;padding:6px;cursor:pointer">⟲ Réinitialiser la disposition</button></div>
 </div>
 
 <div id="roomTip"></div>
@@ -457,8 +457,8 @@
 <!-- Multi-value room search popup -->
 <div class="sv-pop" id="searchValPop">
   <div class="sv-pop-actions">
-    <button class="mini-btn" id="svSelectAll" style="flex:1;font-size:11px">Tout</button>
-    <button class="mini-btn" id="svClearAll" style="flex:1;font-size:11px">Aucun</button>
+    <button class="mini-btn" id="svSelectAll" data-en="All" style="flex:1;font-size:11px">Tout</button>
+    <button class="mini-btn" id="svClearAll" data-en="None" style="flex:1;font-size:11px">Aucun</button>
   </div>
   <div class="sv-pop-list" id="searchValList"></div>
 </div>
@@ -467,8 +467,8 @@
 
   <!-- NIVEAUX — colonne gauche, pleine hauteur -->
   <aside class="levels-aside">
-    <div class="sidebar-hd" style="display:flex;align-items:center;gap:4px"><span data-en="Levels">Niveaux</span><button id="btnAllLevels" title="Afficher toutes les pièces de tous les niveaux" style="margin-left:auto;background:transparent;border:1px solid #374151;color:#94a3b8;border-radius:4px;font-size:9px;font-weight:700;padding:2px 5px;cursor:pointer;flex-shrink:0;line-height:1.4">Tous</button></div>
-    <div class="levels-list" id="levelsList"><div class="empty-hint">Aucun plan</div></div>
+    <div class="sidebar-hd" style="display:flex;align-items:center;gap:4px"><span data-en="Levels">Niveaux</span><button id="btnAllLevels" data-en="All" title="Afficher toutes les pièces de tous les niveaux" style="margin-left:auto;background:transparent;border:1px solid #374151;color:#94a3b8;border-radius:4px;font-size:9px;font-weight:700;padding:2px 5px;cursor:pointer;flex-shrink:0;line-height:1.4">Tous</button></div>
+    <div class="levels-list" id="levelsList"><div class="empty-hint" data-en="No plans">Aucun plan</div></div>
   </aside>
   <div class="split-v" id="splitLevels"></div>
 
@@ -494,7 +494,7 @@
           <p data-en="Choose a level on the left, or send from Revit via &quot;Send to BIMFlow&quot;">Choisissez un niveau à gauche, ou envoyez depuis Revit via <strong>"Envoyer vers BIMFlow"</strong></p>
         </div>
         <div id="legend" class="legend"></div>
-        <div id="minimap"><div id="minimap-lbl">Vue d'ensemble</div><svg id="minimapSvg"></svg></div>
+        <div id="minimap"><div id="minimap-lbl" data-en="Overview">Vue d'ensemble</div><svg id="minimapSvg"></svg></div>
         <div class="zoom-wrap">
           <button class="zbtn" id="zReset" title="Ajuster">⌖</button>
         </div>
@@ -516,8 +516,8 @@
         <div class="sidebar-hd"><span data-en="Rooms">Pièces</span><span class="sel-count" id="selCount"></span></div>
         <div class="ctrl-wrap">
           <label data-en="🎨 Color / filter by">🎨 Colorer / filtrer par</label>
-          <select id="colorBy"><option value="">Aucun (par défaut)</option></select>
-          <select id="filtVal"><option value="">— toutes les valeurs —</option></select>
+          <select id="colorBy"><option value="" data-en="None (default)">Aucun (par défaut)</option></select>
+          <select id="filtVal"><option value="" data-en="— all values —">— toutes les valeurs —</option></select>
           <div class="ctrl-row">
             <button class="mini-btn" id="btnSelectMatch" data-en="Select">Sélectionner</button>
             <button class="mini-btn" id="btnClearSel" data-en="Deselect all">Tout désélect.</button>
@@ -526,11 +526,11 @@
         </div>
         <div class="ctrl-wrap" style="border-bottom:1px solid #1f2937">
           <label data-en="🔍 Filter rooms by">🔍 Filtrer les pièces par</label>
-          <select id="searchKey"><option value="">Nom / Numéro</option></select>
+          <select id="searchKey"><option value="" data-en="Name / Number">Nom / Numéro</option></select>
           <input id="roomSearch" type="text" placeholder="Rechercher…" data-en-ph="Search…"/>
           <button class="mini-btn" id="searchValBtn" style="width:100%;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:none">— toutes valeurs —</button>
         </div>
-        <div class="rooms-list" id="roomsList"><div class="empty-hint">Aucun plan chargé</div></div>
+        <div class="rooms-list" id="roomsList"><div class="empty-hint" data-en="No plan loaded">Aucun plan chargé</div></div>
       </aside>
     </div>
 
@@ -540,12 +540,12 @@
     <!-- PARAMÈTRES EN BAS -->
     <div class="bottom-panel" id="bottomPanel">
       <div class="bp-bar">
-        <span class="bp-title">Paramètres</span>
+        <span class="bp-title" data-en="Parameters">Paramètres</span>
         <span class="bp-sub" id="bpSub"></span>
         <div class="bp-spacer"></div>
-        <button class="bp-btn" id="editToggle">✏ Éditer</button>
+        <button class="bp-btn" id="editToggle" data-en="✏ Edit">✏ Éditer</button>
         <span id="sendCodeTag" style="font-size:10px;color:#475569;background:#0f172a;border:1px solid #1f2937;border-radius:4px;padding:2px 7px;font-family:monospace;display:none"></span>
-        <button class="bp-btn send" id="btnSendRevit" disabled title="Modifiez des valeurs ou ajoutez des paramètres">↑ Envoyer vers Revit</button>
+        <button class="bp-btn send" id="btnSendRevit" disabled data-en="↑ Send to Revit" title="Modifiez des valeurs ou ajoutez des paramètres">↑ Envoyer vers Revit</button>
       </div>
 
       <div class="bp-content">
@@ -555,33 +555,33 @@
             <span id="paramScope">Toutes les pièces</span>
             <div class="htools">
               <div class="colsel" id="colSel">
-                <button id="colSelBtn" title="Choisir les colonnes à afficher">▦ Colonnes ▾</button>
+                <button id="colSelBtn" data-en="▦ Columns ▾" title="Choisir les colonnes à afficher">▦ Colonnes ▾</button>
                 <div class="colsel-pop" id="colSelPop">
                   <div class="colsel-tools" style="border-bottom:1px solid #2a3a55;padding-bottom:6px">
-                    <select id="colPreset" title="Favoris de colonnes"><option value="">★ Favoris…</option></select>
+                    <select id="colPreset" title="Favoris de colonnes"><option value="" data-en="★ Presets…">★ Favoris…</option></select>
                     <button id="colPresetSave" title="Enregistrer la sélection comme favori">💾</button>
                     <button id="colPresetDel" title="Supprimer le favori">🗑</button>
                   </div>
-                  <input id="colSearch" type="text" placeholder="Filtrer…"/>
-                  <div class="colsel-tools"><button id="colAll">Tout</button><button id="colNone">Aucun</button></div>
+                  <input id="colSearch" type="text" placeholder="Filtrer…" data-en-ph="Filter…"/>
+                  <div class="colsel-tools"><button id="colAll" data-en="All">Tout</button><button id="colNone" data-en="None">Aucun</button></div>
                   <div class="colsel-list" id="colSelList"></div>
                 </div>
               </div>
-              <button id="btnExportParams" title="Exporter le tableau (Excel)">⬇ Excel</button>
-              <label class="filebtn" title="Importer un Excel exporté">⬆ MAJ<input type="file" id="paramImport" accept=".xlsx,.xls,.csv" hidden/></label>
+              <button id="btnExportParams" data-en="⬇ Excel" title="Exporter le tableau (Excel)">⬇ Excel</button>
+              <label class="filebtn" id="importLabel" data-en="⬆ Import" title="Importer un Excel exporté">⬆ MAJ<input type="file" id="paramImport" accept=".xlsx,.xls,.csv" hidden/></label>
             </div>
           </div>
           <div class="pfilter-bar">
-            <select id="pfPar" title="Filtrer par paramètre"><option value="">— Paramètre —</option></select>
-            <select id="pfVal" title="Filtrer par valeur fixe" style="display:none"><option value="">— Toutes valeurs —</option></select>
-            <input id="pfTxt" type="text" placeholder="Rechercher…" style="display:none"/>
-            <button class="pfbtn" id="pfClr" style="display:none" title="Effacer le filtre">✕ Effacer</button>
+            <select id="pfPar" title="Filtrer par paramètre"><option value="" data-en="— Parameter —">— Paramètre —</option></select>
+            <select id="pfVal" title="Filtrer par valeur fixe" style="display:none"><option value="" data-en="— All values —">— Toutes valeurs —</option></select>
+            <input id="pfTxt" type="text" placeholder="Rechercher…" data-en-ph="Search…" style="display:none"/>
+            <button class="pfbtn" id="pfClr" data-en="✕ Clear" style="display:none" title="Effacer le filtre">✕ Effacer</button>
             <div style="flex:1"></div>
-            <button class="pfbtn" id="pfGrp" title="Regrouper les pièces par valeur du paramètre sélectionné">⊞ Regrouper</button>
+            <button class="pfbtn" id="pfGrp" data-en="⊞ Group" title="Regrouper les pièces par valeur du paramètre sélectionné">⊞ Regrouper</button>
           </div>
           <div class="ptable-scroll" id="matrixScroll">
             <table class="pt matrix" id="matrixTable"><thead id="matrixHead"></thead><tbody id="matrixBody"></tbody></table>
-            <div class="bp-empty" id="matrixEmpty">Aucune pièce</div>
+            <div class="bp-empty" id="matrixEmpty" data-en="No rooms">Aucune pièce</div>
           </div>
         </div>
 
@@ -597,6 +597,82 @@
 /* ═══ CORE PARAMS shown first ═══ */
 const CORE_KEYS=['nom','name','numéro','numero','number','surface','area','aire','niveau','level',
   'département','department','occupation','occupancy','usage','commentaires','comments','phase'];
+
+/* ═══ I18N ═══ */
+const TRANSLATIONS={
+  fr:{
+    loading:'Chargement…', noPlans:'Aucun plan — envoyez depuis Revit', noPlan:'Aucun plan',
+    loadingPlan:'Chargement…', loadErr:'Erreur: ', allLevels:'Chargement tous niveaux…',
+    allLevelsDone:(n)=>`${n} pièce(s) · tous niveaux`,
+    planDone:(n,lv)=>`${n} pièce(s) · ${lv}`, levels:(n)=>`${n} niveau(x)`,
+    noRooms:'Aucune pièce', noRoomsLoaded:'Aucun plan chargé',
+    selCount:(n)=>`${n} sélection(s)`,
+    allRoomsScope:'Toutes les pièces', selScope:(n,d)=>`${n} pièce(s) sélectionnée(s)${d}`,
+    allScope:(n,d)=>`Toutes les pièces (${n}${d})`,
+    filterEq:(v)=>` · = "${v}"`, filterTxt:(v)=>` · "${v}"`,
+    roomCol:'Pièce', pieceUnit:(n)=>`pièce${n>1?'s':''}`,
+    clickSel:(n)=>`Cliquer pour sélectionner les ${n} pièce(s)`,
+    grpLabel:(lbl,n,u)=>`${lbl}  (${n} ${u})`,
+    valCount:(n)=>`(${n} valeurs)`, valCountPh:(n)=>`(${n} valeurs)`,
+    multiVal:(n)=>`— ${n} val. —`, readOnly:'Lecture seule',
+    editOn:'✓ Terminé', editOff:'✏ Éditer',
+    sendBtn:'↑ Envoyer vers Revit', sentBtn:'✓ Envoyé !',
+    colBtn:(s,t)=>`▦ Colonnes (${s}/${t}) ▾`, colBtnDefault:'▦ Colonnes ▾',
+    presetDefault:'★ Favoris…', allValuesSearch:'— toutes valeurs —',
+    multiValSearch:(n)=>`${n} valeurs sélectionnées`,
+    nameNum:'Nom / Numéro', paramFilter:'— Paramètre —', allValuesFilter:'— Toutes valeurs —',
+    saveOk:(n,p)=>`${n} valeur(s) sur ${p} pièce(s) prêtes à envoyer. Cliquez « ↑ Envoyer vers Revit ».`,
+    saveNone:'Aucune différence détectée par rapport au plan chargé.',
+    sendOk:'Envoyé !\nDans Revit : cliquez "Recevoir depuis BIMFlow".',
+    noRoom:'Aucune pièce.', noPresetSel:'Choisissez un favori à supprimer.',
+    noPresetData:'Ouvrez un plan (avec un tableau de paramètres) avant d\'enregistrer un favori de colonnes.',
+    presetSaved:(n,c)=>`Favori « ${n} » enregistré (${c} colonne(s)).`,
+    selBtn:'Sélect.',
+    noParamForSel:'Choisissez d\'abord un paramètre dans "Colorer / filtrer par".',
+    noValForSel:'Choisissez une valeur à sélectionner.',
+    typeLabels:{text:'Texte',multitext:'Texte multi',integer:'Entier',number:'Nombre',length:'Longueur',
+      area:'Surface',volume:'Volume',angle:'Angle',slope:'Pente',yesno:'Oui/Non',url:'URL',
+      material:'Matériau',currency:'Devise',mass:'Masse'},
+    codeTag:(c)=>'Code: '+(c||'?'),
+  },
+  en:{
+    loading:'Loading…', noPlans:'No plan — send from Revit', noPlan:'No plans',
+    loadingPlan:'Loading…', loadErr:'Error: ', allLevels:'Loading all levels…',
+    allLevelsDone:(n)=>`${n} room(s) · all levels`,
+    planDone:(n,lv)=>`${n} room(s) · ${lv}`, levels:(n)=>`${n} level(s)`,
+    noRooms:'No rooms', noRoomsLoaded:'No plan loaded',
+    selCount:(n)=>`${n} selected`,
+    allRoomsScope:'All rooms', selScope:(n,d)=>`${n} room(s) selected${d}`,
+    allScope:(n,d)=>`All rooms (${n}${d})`,
+    filterEq:(v)=>` · = "${v}"`, filterTxt:(v)=>` · "${v}"`,
+    roomCol:'Room', pieceUnit:(n)=>`room${n>1?'s':''}`,
+    clickSel:(n)=>`Click to select ${n} room(s)`,
+    grpLabel:(lbl,n,u)=>`${lbl}  (${n} ${u})`,
+    valCount:(n)=>`(${n} values)`, valCountPh:(n)=>`(${n} values)`,
+    multiVal:(n)=>`— ${n} val. —`, readOnly:'Read only',
+    editOn:'✓ Done', editOff:'✏ Edit',
+    sendBtn:'↑ Send to Revit', sentBtn:'✓ Sent!',
+    colBtn:(s,t)=>`▦ Columns (${s}/${t}) ▾`, colBtnDefault:'▦ Columns ▾',
+    presetDefault:'★ Presets…', allValuesSearch:'— all values —',
+    multiValSearch:(n)=>`${n} values selected`,
+    nameNum:'Name / Number', paramFilter:'— Parameter —', allValuesFilter:'— All values —',
+    saveOk:(n,p)=>`${n} value(s) on ${p} room(s) ready to send. Click « ↑ Send to Revit ».`,
+    saveNone:'No differences detected from the loaded plan.',
+    sendOk:'Sent!\nIn Revit: click "Receive from BIMFlow".',
+    selBtn:'Select',
+    noRoom:'No rooms.', noPresetSel:'Choose a preset to delete.',
+    noPresetData:'Open a plan (with a parameter table) before saving a column preset.',
+    presetSaved:(n,c)=>`Preset "${n}" saved (${c} column(s)).`,
+    noParamForSel:'First choose a parameter in "Color / filter by".',
+    noValForSel:'Choose a value to select.',
+    typeLabels:{text:'Text',multitext:'Multiline text',integer:'Integer',number:'Number',length:'Length',
+      area:'Area',volume:'Volume',angle:'Angle',slope:'Slope',yesno:'Yes/No',url:'URL',
+      material:'Material',currency:'Currency',mass:'Mass'},
+    codeTag:(c)=>'Code: '+(c||'?'),
+  }
+};
+function t(k,...a){ const d=document.documentElement.lang||'fr'; const T=(TRANSLATIONS[d]||TRANSLATIONS.fr); const v=T[k]??TRANSLATIONS.fr[k]??k; return typeof v==='function'?v(...a):v; }
+
 const TYPE_LABELS={text:'Texte',multitext:'Texte multi',integer:'Entier',number:'Nombre',length:'Longueur',
   area:'Surface',volume:'Volume',angle:'Angle',slope:'Pente',yesno:'Oui/Non',url:'URL',material:'Matériau',
   currency:'Devise',mass:'Masse'};
@@ -626,8 +702,8 @@ async function loadIndex(){
       const k=list.find(p=>p.key===currentPlanKey)?currentPlanKey:list[list.length-1].key;
       if(!plan||k!==currentPlanKey) loadPlan(k); else setActivePlan(k);
     }
-    setStatus(list.length?`${list.length} niveau(x)`:'Aucun plan — envoyez depuis Revit',list.length?'ok':'');
-  }catch(e){ setStatus('Erreur: '+e.message,'err'); }
+    setStatus(list.length?t('levels',list.length):t('noPlans'),list.length?'ok':'');
+  }catch(e){ setStatus(t('loadErr')+e.message,'err'); }
 }
 async function getPlanData(key){
   if(planCache[key]) return planCache[key];
@@ -635,7 +711,7 @@ async function getPlanData(key){
 }
 async function loadPlan(key){
   if(!key)return;
-  setStatus('Chargement…','loading');
+  setStatus(t('loadingPlan'),'loading');
   /* switch to 2D+3D view when user selects a specific level/room */
   if(allLevelsMode){ allLevelsMode=false; updateAllLevelsBtn(); }
   const vr=$('viewerRow');
@@ -650,8 +726,8 @@ async function loadPlan(key){
     renderPlan(); populateColorBy(); populateSearchKey(); renderList();
     document.querySelectorAll('.thumb-sel').forEach(g=>g.innerHTML='');
     renderMatrix(); setActivePlan(key); update3D();
-    setStatus(`${plan.Rooms.length} pièce(s) · ${plan.LevelName}`,'ok');
-  }catch(e){ setStatus('Erreur: '+e.message,'err'); }
+    setStatus(t('planDone',plan.Rooms.length,plan.LevelName),'ok');
+  }catch(e){ setStatus(t('loadErr')+e.message,'err'); }
 }
 
 /* ═══ LEVELS THUMBNAILS ═══ */
@@ -684,7 +760,7 @@ function renderLevels(list){
   if(keys===lastLevelKeys){ setActivePlan(currentPlanKey); return; }
   lastLevelKeys=keys;
   const box=$('levelsList'); box.innerHTML='';
-  if(!list.length){ box.innerHTML='<div class="empty-hint">Aucun plan</div>'; return; }
+  if(!list.length){ box.innerHTML=`<div class="empty-hint">${t('noPlan')}</div>`; return; }
   list.forEach(p=>{
     const item=document.createElement('div'); item.className='level-item'; item.setAttribute('data-key',p.key);
     item.innerHTML=`<div class="level-thumb"><span class="ph">⏳</span>`+
@@ -849,8 +925,8 @@ function clearSelection(){
 }
 function selectMatching(){
   const key=$('colorBy').value, val=$('filtVal').value;
-  if(!key){ alert('Choisissez d\'abord un paramètre dans "Colorer / filtrer par".'); return; }
-  if(!val){ alert('Choisissez une valeur à sélectionner.'); return; }
+  if(!key){ alert(t('noParamForSel')); return; }
+  if(!val){ alert(t('noValForSel')); return; }
   selIds.clear();
   (plan?.Rooms||[]).forEach(r=>{ if((roomColorValue(r,key)||'(vide)')===val) selIds.add(r.RevitId); });
   lastSel=[...selIds][0]||null;
@@ -859,7 +935,7 @@ function selectMatching(){
 function onSelectionChanged(center){
   paintRooms();
   markRoomSelection();
-  $('selCount').textContent=selIds.size?`${selIds.size} sélection(s)`:'';
+  $('selCount').textContent=selIds.size?t('selCount',selIds.size):'';
   if(center && lastSel){
     const room=plan?.Rooms.find(r=>r.RevitId===lastSel);
     const item=document.querySelector('.room-item[data-id="'+lastSel+'"]'); if(item) item.scrollIntoView({block:'nearest'});
@@ -897,7 +973,7 @@ function makeRoomItem(room){
       markRoomSelection(); renderMatrix(); paintRooms();
       if(typeof R3!=='undefined'&&R3.ready) recolor3D();
       updateActiveThumbSel(); updateMinimap();
-      $('selCount').textContent=selIds.size?`${selIds.size} sélection(s)`:'';
+      $('selCount').textContent=selIds.size?t('selCount',selIds.size):'';
     } else {
       roomClicked(room.RevitId, e.ctrlKey||e.metaKey, pk);
     }
@@ -907,7 +983,7 @@ function makeRoomItem(room){
 function renderList(){
   const list=$('roomsList'); list.innerHTML='';
   const rooms=activeRooms();
-  if(!rooms.length){ list.innerHTML='<div class="empty-hint">Aucune pièce</div>'; return; }
+  if(!rooms.length){ list.innerHTML=`<div class="empty-hint">${t('noRooms')}</div>`; return; }
   const sorted=[...rooms].sort((a,b)=>(a.Number||'').localeCompare(b.Number||'',undefined,{numeric:true}));
   if(colorKey){
     // Group by color-parameter value, keeping colorMap order
@@ -922,10 +998,10 @@ function renderList(){
       const sw=document.createElement('span'); sw.className='room-grp-sw'; sw.style.background=hex;
       const lbl=document.createElement('span'); lbl.className='room-grp-lbl';
       lbl.textContent=val+' ('+grpRooms.length+')';
-      const btn=document.createElement('button'); btn.className='room-grp-btn'; btn.textContent='Sélect.';
+      const btn=document.createElement('button'); btn.className='room-grp-btn'; btn.textContent=t('selBtn');
       btn.addEventListener('click',e=>{ e.stopPropagation();
         grpRooms.forEach(r=>selIds.add(r.RevitId)); lastSel=grpRooms[0]?.RevitId||null;
-        $('selCount').textContent=selIds.size?`${selIds.size} sélection(s)`:'';
+        $('selCount').textContent=selIds.size?t('selCount',selIds.size):'';
         markRoomSelection(); renderMatrix(); paintRooms();
         if(typeof R3!=='undefined'&&R3.ready) recolor3D(); updateActiveThumbSel(); updateMinimap();
       });
@@ -997,12 +1073,12 @@ function buildSearchValPop(){
 
 function updateSearchBtn(){
   const btn=$('searchValBtn');
-  if(searchFilterVals.size===0) btn.textContent='— toutes valeurs —';
+  if(searchFilterVals.size===0) btn.textContent=t('allValuesSearch');
   else if(searchFilterVals.size===1) btn.textContent=[...searchFilterVals][0];
-  else btn.textContent=searchFilterVals.size+' valeurs sélectionnées';
+  else btn.textContent=t('multiValSearch',searchFilterVals.size);
 }
 function populateSearchKey(){
-  const sel=$('searchKey'); sel.innerHTML='<option value="">Nom / Numéro</option>';
+  const sel=$('searchKey'); sel.innerHTML=`<option value="">${t('nameNum')}</option>`;
   SPECIAL_FIELDS.forEach(f=>sel.appendChild(new Option(f.label,f.key)));
   const names=new Set(); (plan?.Rooms||[]).forEach(r=>Object.keys(r.Parameters||{}).forEach(k=>names.add(k)));
   if(names.size){ const sep=document.createElement('option'); sep.disabled=true; sep.textContent='──────────'; sel.appendChild(sep);
@@ -1047,14 +1123,14 @@ let allLevelsMode=false, allLevelsRooms=[];
 let selectedLevelKeys=new Set(); // multi-level selection (Ctrl/Shift on level thumbnails)
 let isolateMode=false;           // 3D isolate — hide non-selected rooms completely
 async function loadAllLevels(){
-  setStatus('Chargement tous niveaux…','loading');
+  setStatus(t('allLevels'),'loading');
   try{
     const list=await api((window.BFProject?.plansUrl?.()||'/api/plans'));
     const results=await Promise.all(list.map(p=>getPlanData(p.key)));
     allLevelsRooms=[];
     results.forEach((p,i)=>{ (p.Rooms||[]).forEach(r=>allLevelsRooms.push({...r,_levelName:p.LevelName,_planKey:list[i].key})); });
-    setStatus(`${allLevelsRooms.length} pièce(s) · tous niveaux`,'ok');
-  }catch(e){ setStatus('Erreur: '+e.message,'err'); allLevelsMode=false; updateAllLevelsBtn(); }
+    setStatus(t('allLevelsDone',allLevelsRooms.length),'ok');
+  }catch(e){ setStatus(t('loadErr')+e.message,'err'); allLevelsMode=false; updateAllLevelsBtn(); }
 }
 function updateAllLevelsBtn(){
   const b=$('btnAllLevels');
@@ -1096,7 +1172,7 @@ let mfPar='', mfVal='', mfTxt='', mfGrp=false;
 
 function buildMatrixFilter(cols, rooms){
   const sel=$('pfPar'), prev=sel.value;
-  sel.innerHTML='<option value="">— Paramètre —</option>';
+  sel.innerHTML=`<option value="">${t('paramFilter')}</option>`;
   cols.forEach(k=>sel.appendChild(new Option(k,k)));
   if(prev&&cols.includes(prev)) sel.value=prev; else if(prev) mfPar='';
   buildMatrixValFilter(rooms);
@@ -1109,7 +1185,7 @@ function buildMatrixValFilter(rooms){
   const vals=new Set();
   rooms.forEach(r=>{const v=String((r.Parameters||{})[mfPar]||'');if(v)vals.add(v);});
   const prev=valSel.value;
-  valSel.innerHTML='<option value="">— Toutes valeurs —</option>';
+  valSel.innerHTML=`<option value="">${t('allValuesFilter')}</option>`;
   [...vals].sort().forEach(v=>valSel.appendChild(new Option(v,v)));
   if(prev&&[...vals].includes(prev)) valSel.value=prev; else mfVal='';
 }
@@ -1126,10 +1202,10 @@ function renderMatrix(){
   if(mfPar&&mfVal) rooms=rooms.filter(r=>String((r.Parameters||{})[mfPar]||'')===mfVal);
   if(mfPar&&mfTxt) rooms=rooms.filter(r=>String((r.Parameters||{})[mfPar]||'').toLowerCase().includes(mfTxt));
   const totalShown=rooms.length;
-  const filterDesc=mfPar?(mfVal?` · = "${mfVal}"`:'')+(mfTxt?` · "${mfTxt}"`:''):'';
+  const filterDesc=mfPar?(mfVal?t('filterEq',mfVal):'')+(mfTxt?t('filterTxt',mfTxt):''):'';
   $('paramScope').textContent = selIds.size
-    ? `${selIds.size} pièce(s) sélectionnée(s)${filterDesc}`
-    : `Toutes les pièces (${totalShown}${filterDesc})`;
+    ? t('selScope',selIds.size,filterDesc)
+    : t('allScope',totalShown,filterDesc);
   const head=$('matrixHead'), body=$('matrixBody'), empty=$('matrixEmpty');
   if(!rooms.length){ head.innerHTML=''; body.innerHTML=''; empty.style.display=''; applyEditMode(); updateSendBtn(); return; }
   empty.style.display='none';
@@ -1139,7 +1215,7 @@ function renderMatrix(){
   const cols=[...keys].sort((a,b)=>{ const ca=isCore(a),cb=isCore(b); if(ca!==cb)return ca?-1:1; return a.localeCompare(b); });
 
   const wP=colW['__piece']||DEF_COLW;
-  let th='<tr><th style="width:'+wP+'px"><span class="col-lbl">Pièce</span><span class="col-resizer" data-col="__piece"></span></th>';
+  let th='<tr><th style="width:'+wP+'px"><span class="col-lbl">'+t('roomCol')+'</span><span class="col-resizer" data-col="__piece"></span></th>';
   cols.forEach(k=>{ const w=colW[k]||DEF_COLW;
     th+=`<th data-pname="${escAttr(k)}" title="${escAttr(k)}" style="width:${w}px"><span class="col-lbl">${k}</span><span class="col-resizer" data-col="${escAttr(k)}"></span></th>`; });
   th+='</tr>'; head.innerHTML=th;
@@ -1154,11 +1230,11 @@ function renderMatrix(){
       selIds.clear(); grooms.forEach(r=>selIds.add(r.RevitId));
       markRoomSelection(); paintRooms(); renderList(); updateSendBtn();
       if(typeof R3!=='undefined'&&R3.ready) recolor3D();
-      $('selCount').textContent=selIds.size?`${selIds.size} sélection(s)`:'';
+      $('selCount').textContent=selIds.size?t('selCount',selIds.size):'';
     });
     const tdN=document.createElement('td');
-    tdN.textContent=`${label}  (${grooms.length} pièce${grooms.length>1?'s':''})`;
-    tdN.title=`Cliquer pour sélectionner les ${grooms.length} pièce(s)`;
+    tdN.textContent=t('grpLabel',label,grooms.length,t('pieceUnit',grooms.length));
+    tdN.title=t('clickSel',grooms.length);
     tr.appendChild(tdN);
     cols.forEach(k=>{
       const td=document.createElement('td'); td.setAttribute('data-pname',k);
@@ -1173,7 +1249,7 @@ function renderMatrix(){
       if(editMode&&firstHas&&!isRO){
         if(hasChoice){
           const sel=document.createElement('select'); sel.className='pv-select';
-          if(uniqVals.length!==1){ const ph=new Option(uniqVals.length>0?`— ${uniqVals.length} val. —`:'—',''); sel.appendChild(ph); }
+          if(uniqVals.length!==1){ const ph=new Option(uniqVals.length>0?t('multiVal',uniqVals.length):'—',''); sel.appendChild(ph); }
           (opts.length>=2?opts:['Yes','No']).forEach(o=>{ const op=new Option(o,o); if(o===singleVal)op.selected=true; sel.appendChild(op); });
           sel.addEventListener('change',()=>{ if(!sel.value)return; sel.classList.add('changed');
             grooms.forEach(r=>{ const orig=String((r.Parameters||{})[k]??''); trackEdit(r.RevitId,k,sel.value,orig); }); });
@@ -1181,13 +1257,13 @@ function renderMatrix(){
         } else {
           const inp=document.createElement('input'); inp.className='pv-input';
           inp.type=numericType(pType)?'number':'text'; inp.value=singleVal;
-          if(uniqVals.length>1) inp.placeholder=`(${uniqVals.length} valeurs)`;
+          if(uniqVals.length>1) inp.placeholder=t('valCountPh',uniqVals.length);
           inp.addEventListener('input',()=>{ inp.classList.toggle('changed',inp.value!==singleVal);
             grooms.forEach(r=>{ const orig=String((r.Parameters||{})[k]??''); trackEdit(r.RevitId,k,inp.value,orig); }); });
           td.appendChild(inp);
         }
       } else {
-        td.textContent=uniqVals.length===1?singleVal:uniqVals.length>1?`(${uniqVals.length} valeurs)`:'';
+        td.textContent=uniqVals.length===1?singleVal:uniqVals.length>1?t('valCount',uniqVals.length):'';
         td.title=uniqVals.join(', ');
         if(isRO&&firstHas) td.className='ro-cell';
       }
@@ -1227,7 +1303,7 @@ function renderMatrix(){
         const orig=P[k]??'', pType=T[k]||'text', isRO=RO[k]===true, opts=CH[k]||[];
         const hasChoice=opts.length>=2||pType==='boolean'||pType==='choice';
         if(!editMode||isRO){
-          td.textContent=orig; if(isRO){ td.className='ro-cell'; td.title='Lecture seule'; }
+          td.textContent=orig; if(isRO){ td.className='ro-cell'; td.title=t('readOnly'); }
         } else if(hasChoice){
           const sel=document.createElement('select'); sel.className='pv-select';
           (opts.length>=2?opts:['Yes','No']).forEach(o=>{ const op=document.createElement('option'); op.value=o; op.textContent=o; if(o===orig)op.selected=true; sel.appendChild(op); });
@@ -1247,7 +1323,7 @@ function renderMatrix(){
   applyEditMode(); updateSendBtn(); buildColChooser(cols); applyColVisibility(); updateMatrixWidth();
 }
 function applyEditMode(){
-  const btn=$('editToggle'); btn.textContent=editMode?'✓ Terminé':'✏ Éditer'; btn.classList.toggle('on',editMode);
+  const btn=$('editToggle'); btn.textContent=editMode?t('editOn'):t('editOff'); btn.classList.toggle('on',editMode);
 }
 function trackEdit(id,key,val,orig){
   if(!pendingEdits[id]) pendingEdits[id]={};
@@ -1291,7 +1367,7 @@ function applyColVisibility(){
   $('matrixBody').querySelectorAll('td[data-pname]').forEach(td=>{ td.style.display=colHidden.has(td.getAttribute('data-pname'))?'none':''; });
   updateMatrixWidth();
 }
-function updateColBtn(cols){ const shown=cols.filter(c=>!colHidden.has(c)).length; $('colSelBtn').textContent=`▦ Colonnes (${shown}/${cols.length}) ▾`; }
+function updateColBtn(cols){ const shown=cols.filter(c=>!colHidden.has(c)).length; $('colSelBtn').textContent=t('colBtn',shown,cols.length); }
 function buildColChooser(cols){
   const list=$('colSelList'); list.innerHTML='';
   cols.forEach(k=>{
@@ -1350,18 +1426,18 @@ function lsSetSafe(key,val){
 }
 function saveColPresetsObj(p){ lsSetSafe('bimflow_colpresets',JSON.stringify(p)); }
 function refreshPresetSelect(){ const sel=$('colPreset'); if(!sel) return; const p=loadColPresets();
-  sel.innerHTML='<option value="">★ Favoris…</option>'+Object.keys(p).map(n=>`<option value="${escAttr(n)}">${esc(n)}</option>`).join(''); }
+  sel.innerHTML=`<option value="">${t('presetDefault')}</option>`+Object.keys(p).map(n=>`<option value="${escAttr(n)}">${esc(n)}</option>`).join(''); }
 $('colPresetSave').addEventListener('click',()=>{
   const all=curCols();
-  if(!all.length){ alert('Ouvrez un plan (avec un tableau de paramètres) avant d\'enregistrer un favori de colonnes.'); return; }
+  if(!all.length){ alert(t('noPresetData')); return; }
   const name=(prompt('Nom du favori de colonnes :')||'').trim(); if(!name) return;
   const visible=all.filter(c=>!colHidden.has(c));
   try{
     const p=loadColPresets(); p[name]=visible; saveColPresetsObj(p); refreshPresetSelect(); $('colPreset').value=name;
-    alert('Favori « '+name+' » enregistré ('+visible.length+' colonne(s)).');
-  }catch(e){ alert('Impossible d\'enregistrer le favori : '+e.message); }
+    alert(t('presetSaved',name,visible.length));
+  }catch(e){ alert(t('loadErr')+e.message); }
 });
-$('colPresetDel').addEventListener('click',()=>{ const name=$('colPreset').value; if(!name){ alert('Choisissez un favori à supprimer.'); return; }
+$('colPresetDel').addEventListener('click',()=>{ const name=$('colPreset').value; if(!name){ alert(t('noPresetSel')); return; }
   const p=loadColPresets(); delete p[name]; saveColPresetsObj(p); refreshPresetSelect(); });
 $('colPreset').addEventListener('change',()=>{ const name=$('colPreset').value; if(!name) return;
   const visible=loadColPresets()[name]||[];
@@ -1375,7 +1451,7 @@ function updateSendBtn(){
   if(hasPending){
     let code=(currentPlanKey||'').split('__')[0]||'';
     if(!code){const c=(window.BFProject&&window.BFProject.current&&window.BFProject.current.code)||'';if(c&&c!=='__legacy__')code=c;}
-    tag.textContent='Code: '+(code||'?');
+    tag.textContent=t('codeTag',code);
     tag.style.display='';
     tag.title='Code projet utilisé pour Recevoir depuis BIMFlow dans Revit';
   } else { tag.style.display='none'; }
@@ -1412,11 +1488,11 @@ async function sendToRevit(){
     (plan&&plan.Rooms||[]).forEach(r=>{ const e=edits[String(r.RevitId)]; if(e){ r.Parameters=Object.assign(r.Parameters||{},e); } });
     (allLevelsRooms||[]).forEach(r=>{ const e=edits[String(r.RevitId)]; if(e){ r.Parameters=Object.assign(r.Parameters||{},e); } });
     if(currentPlanKey) planCache[currentPlanKey]=plan;
-    const btn=$('btnSendRevit'); btn.textContent='✓ Envoyé !';
-    setTimeout(()=>{btn.textContent='↑ Envoyer vers Revit';},3000);
+    const btn=$('btnSendRevit'); btn.textContent=t('sentBtn');
+    setTimeout(()=>{btn.textContent=t('sendBtn');},3000);
     pendingEdits={}; renderMatrix();
-    alert('Envoyé !\nDans Revit : cliquez "Recevoir depuis BIMFlow".');
-  }catch(e){ alert('Erreur: '+e.message); }
+    alert(t('sendOk'));
+  }catch(e){ alert(t('loadErr')+e.message); }
 }
 
 /* ═══ EXCEL (ExcelJS) — lazy-loaded; supports dropdowns, autofilter, formatting ═══ */
@@ -1452,7 +1528,7 @@ async function exportParamsXLSX(){
   let rooms = matrixRooms();
   if(mfPar && mfVal) rooms = rooms.filter(r=>String((r.Parameters||{})[mfPar]||'')===mfVal);
   if(mfPar && mfTxt) rooms = rooms.filter(r=>String((r.Parameters||{})[mfPar]||'').toLowerCase().includes(mfTxt));
-  if(!rooms.length){ alert('Aucune pièce.'); return; }
+  if(!rooms.length){ alert(t('noRoom')); return; }
   const isFiltered = !!(mfPar && (mfVal||mfTxt));
   const isSel = selIds.size > 0;
   const isAllLevels = allLevelsMode || selectedLevelKeys.size > 1;
@@ -1514,7 +1590,7 @@ async function importParamsUpdate(file){
       if(any) nRooms++;
     }
     renderMatrix();
-    alert(nEdits?`${nEdits} valeur(s) sur ${nRooms} pièce(s) prêtes à envoyer. Cliquez « ↑ Envoyer vers Revit ».`:'Aucune différence détectée par rapport au plan chargé.');
+    alert(nEdits?t('saveOk',nEdits,nRooms):t('saveNone'));
   }catch(e){ alert('Erreur import: '+e.message); }
 }
 
@@ -1613,7 +1689,7 @@ $('btnSelectAllList').addEventListener('click',()=>{
     const id=el.getAttribute('data-id'); if(id) selIds.add(id);
   });
   lastSel=[...selIds][0]||null;
-  $('selCount').textContent=selIds.size?`${selIds.size} sélection(s)`:'';
+  $('selCount').textContent=selIds.size?t('selCount',selIds.size):'';
   renderList(); renderMatrix(); paintRooms(); if(typeof R3!=='undefined'&&R3.ready) recolor3D();
   updateActiveThumbSel(); updateMinimap();
 });
@@ -2085,6 +2161,9 @@ function applyLang(l){
   langBtn.textContent=(l==='en')?'FR':'EN';
   document.title=l==='en'?'BIMFlow — Plan Viewer':'BIMFlow — Visionneuse de Plans';
   try{ localStorage.setItem('bimflow_lang',l); }catch(e){}
+  // Refresh dynamic content
+  if(plan){ populateSearchKey(); renderList(); renderMatrix(); }
+  const sc=selIds.size; $('selCount').textContent=sc?t('selCount',sc):'';
 }
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme',t);
