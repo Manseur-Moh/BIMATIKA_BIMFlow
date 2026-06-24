@@ -94,6 +94,17 @@
     .mini-btn{flex:1;background:#1f2937;border:1px solid #374151;color:#cbd5e1;border-radius:5px;padding:4px;font-size:10px;font-weight:600;cursor:pointer}
     .mini-btn:hover{background:#374151;color:#fff}
     .rooms-list{flex:1;overflow-y:auto;padding:3px}
+    .room-grp-hd{display:flex;align-items:center;gap:6px;padding:4px 8px;background:#0b1422;border-top:1px solid #1f2937;font-size:11px;font-weight:700;color:#94a3b8;user-select:none;position:sticky;top:0;z-index:2}
+    .room-grp-hd:first-child{border-top:none}
+    .room-grp-sw{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+    .room-grp-lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+    .room-grp-lbl:hover{color:#e2e8f0}
+    .room-grp-btn{background:transparent;border:1px solid #374151;color:#64748b;border-radius:3px;font-size:10px;padding:1px 6px;cursor:pointer;flex-shrink:0;line-height:1.5}
+    .room-grp-btn:hover{background:#1f2937;color:#e2e8f0;border-color:#64748b}
+    [data-theme=light] .room-grp-hd{background:#edf0f7;border-top-color:#dde2ec;color:#475569}
+    [data-theme=light] .room-grp-lbl:hover{color:#1e2733}
+    [data-theme=light] .room-grp-btn{border-color:#cbd5e1;color:#64748b}
+    [data-theme=light] .room-grp-btn:hover{background:#dde2ec;color:#1e2733}
     .room-item{display:flex;align-items:flex-start;gap:6px;padding:5px 8px;border-radius:5px;cursor:pointer;margin-bottom:1px;border-left:3px solid transparent;user-select:none}
     .room-item:hover{background:#1f2937}
     .room-item.active{background:rgba(59,130,246,.18);border-left-color:#3b82f6}
@@ -845,38 +856,67 @@ function activeRooms(){
   if(selectedLevelKeys.size>1 && allLevelsRooms.length) return allLevelsRooms.filter(r=>selectedLevelKeys.has(r._planKey));
   return plan?.Rooms||[];
 }
+function makeRoomItem(room){
+  const div=document.createElement('div'); div.className='room-item'; div.setAttribute('data-id',room.RevitId);
+  const lvl=room._levelName||room.LevelName||'';
+  let extra=lvl?`<div class="r-lvl">${esc(lvl)}</div>`:'';
+  const sk=$('searchKey').value;
+  if(sk && sk!=='__name' && sk!=='__number'){ const v=roomColorValue(room,sk); if(v) extra=`<div class="r-lvl">${colorByLabel(sk)}: ${esc(v)}</div>`; }
+  div.innerHTML=`<div class="ri-txt"><div class="r-num">${esc(room.Number||'')}</div>`+
+    `<div class="r-name">${esc(room.Name||'—')}</div>${extra}</div>`;
+  const pk=room._planKey||null;
+  div.addEventListener('click',e=>{
+    if(e.shiftKey && lastSel){
+      const items=[...$('roomsList').querySelectorAll('.room-item[data-id]')];
+      const ids=items.map(el=>el.getAttribute('data-id'));
+      const a=ids.indexOf(lastSel), b=ids.indexOf(room.RevitId);
+      const [from,to]=a<b?[a,b]:[b,a];
+      ids.slice(from,to+1).forEach(id=>selIds.add(id));
+      lastSel=room.RevitId;
+      markRoomSelection(); renderMatrix(); paintRooms();
+      if(typeof R3!=='undefined'&&R3.ready) recolor3D();
+      updateActiveThumbSel(); updateMinimap();
+      $('selCount').textContent=selIds.size?`${selIds.size} sélection(s)`:'';
+    } else {
+      roomClicked(room.RevitId, e.ctrlKey||e.metaKey, pk);
+    }
+  });
+  return div;
+}
 function renderList(){
   const list=$('roomsList'); list.innerHTML='';
   const rooms=activeRooms();
   if(!rooms.length){ list.innerHTML='<div class="empty-hint">Aucune pièce</div>'; return; }
-  const sk=$('searchKey').value;
-  [...rooms].sort((a,b)=>(a.Number||'').localeCompare(b.Number||'',undefined,{numeric:true})).forEach(room=>{
-    const div=document.createElement('div'); div.className='room-item'; div.setAttribute('data-id',room.RevitId);
-    const lvl=room._levelName||room.LevelName||'';
-    let extra=lvl?`<div class="r-lvl">${esc(lvl)}</div>`:'';
-    if(sk && sk!=='__name' && sk!=='__number'){ const v=roomColorValue(room,sk); if(v) extra=`<div class="r-lvl">${colorByLabel(sk)}: ${esc(v)}</div>`; }
-    div.innerHTML=`<div class="ri-txt"><div class="r-num">${esc(room.Number||'')}</div>`+
-      `<div class="r-name">${esc(room.Name||'—')}</div>${extra}</div>`;
-    const pk=room._planKey||null;
-    div.addEventListener('click',e=>{
-      if(e.shiftKey && lastSel){
-        const items=[...$('roomsList').querySelectorAll('.room-item[data-id]')];
-        const ids=items.map(el=>el.getAttribute('data-id'));
-        const a=ids.indexOf(lastSel), b=ids.indexOf(room.RevitId);
-        const [from,to]=a<b?[a,b]:[b,a];
-        ids.slice(from,to+1).forEach(id=>selIds.add(id));
-        lastSel=room.RevitId;
-        markRoomSelection(); renderMatrix(); paintRooms();
-        if(typeof R3!=='undefined'&&R3.ready) recolor3D();
-        updateActiveThumbSel(); updateMinimap();
+  const sorted=[...rooms].sort((a,b)=>(a.Number||'').localeCompare(b.Number||'',undefined,{numeric:true}));
+  if(colorKey){
+    // Group by color-parameter value, keeping colorMap order
+    const groups={}; // val → [rooms]
+    sorted.forEach(r=>{ const v=roomColorValue(r,colorKey)||'(vide)'; (groups[v]=groups[v]||[]).push(r); });
+    const order=Object.keys(colorMap); // preserves palette assignment order
+    order.forEach(val=>{
+      const grpRooms=groups[val]; if(!grpRooms||!grpRooms.length) return;
+      const hex=colorMap[val]||'#64748b';
+      // Group header
+      const hd=document.createElement('div'); hd.className='room-grp-hd';
+      const sw=document.createElement('span'); sw.className='room-grp-sw'; sw.style.background=hex;
+      const lbl=document.createElement('span'); lbl.className='room-grp-lbl';
+      lbl.textContent=val+' ('+grpRooms.length+')';
+      const btn=document.createElement('button'); btn.className='room-grp-btn'; btn.textContent='Sélect.';
+      btn.addEventListener('click',e=>{ e.stopPropagation();
+        grpRooms.forEach(r=>selIds.add(r.RevitId)); lastSel=grpRooms[0]?.RevitId||null;
         $('selCount').textContent=selIds.size?`${selIds.size} sélection(s)`:'';
-      } else {
-        roomClicked(room.RevitId, e.ctrlKey||e.metaKey, pk);
-      }
+        markRoomSelection(); renderMatrix(); paintRooms();
+        if(typeof R3!=='undefined'&&R3.ready) recolor3D(); updateActiveThumbSel(); updateMinimap();
+      });
+      lbl.addEventListener('click',()=>btn.click());
+      hd.appendChild(sw); hd.appendChild(lbl); hd.appendChild(btn);
+      list.appendChild(hd);
+      grpRooms.forEach(r=>list.appendChild(makeRoomItem(r)));
     });
-    list.appendChild(div);
-  });
-  markRoomSelection(); applyRoomSearch();
+  } else {
+    sorted.forEach(r=>list.appendChild(makeRoomItem(r)));
+  }
+  markRoomSelection(); applyRoomSearch(); paintRooms();
 }
 function markRoomSelection(){
   document.querySelectorAll('.room-item').forEach(el=>el.classList.toggle('active',selIds.has(el.getAttribute('data-id'))));
@@ -1489,11 +1529,11 @@ function positionTip(x,y){
 function hideTip(){ $('roomTip').style.display='none'; }
 function applyColorBy(key){
   colorKey=key; const legend=$('legend');
-  if(!key){ colorMap={}; paintRooms(); legend.style.display='none'; if(typeof R3!=='undefined'&&R3.ready) recolor3D(); return; }
-  const counts={}; (plan?.Rooms||[]).forEach(r=>{ const v=roomColorValue(r,key)||'(vide)'; counts[v]=(counts[v]||0)+1; });
+  if(!key){ colorMap={}; renderList(); legend.style.display='none'; if(typeof R3!=='undefined'&&R3.ready) recolor3D(); return; }
+  const counts={}; activeRooms().forEach(r=>{ const v=roomColorValue(r,key)||'(vide)'; counts[v]=(counts[v]||0)+1; });
   const values=Object.keys(counts).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
   colorMap={}; let ci=0; values.forEach(v=>{ colorMap[v]= v==='(vide)'?'#64748b':PALETTE[ci++%PALETTE.length]; });
-  paintRooms();
+  renderList();
   legend.innerHTML='<div class="legend-hd">'+colorByLabel(key)+'</div>'+
     values.map(v=>`<div class="legend-row"><span class="legend-sw" style="background:${colorMap[v]}"></span><span class="legend-tx" title="${v}">${v}</span><span class="legend-cnt">${counts[v]}</span></div>`).join('');
   legend.style.display='';
