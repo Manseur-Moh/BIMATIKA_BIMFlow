@@ -631,7 +631,7 @@ async function loadPlan(key){
     renderPlan(); populateColorBy(); populateSearchKey(); renderList();
     document.querySelectorAll('.thumb-sel').forEach(g=>g.innerHTML='');
     renderMatrix(); setActivePlan(key); update3D();
-    setStatus(`${plan.LevelName} — ${plan.ProjectName} (${plan.Rooms.length} pièces)`,'ok');
+    setStatus(`${plan.Rooms.length} pièce(s) · ${plan.LevelName}`,'ok');
   }catch(e){ setStatus('Erreur: '+e.message,'err'); }
 }
 
@@ -1028,7 +1028,7 @@ async function loadAllLevels(){
     const results=await Promise.all(list.map(p=>getPlanData(p.key)));
     allLevelsRooms=[];
     results.forEach((p,i)=>{ (p.Rooms||[]).forEach(r=>allLevelsRooms.push({...r,_levelName:p.LevelName,_planKey:list[i].key})); });
-    setStatus(`${allLevelsRooms.length} pièces — tous niveaux`,'ok');
+    setStatus(`${allLevelsRooms.length} pièce(s) · tous niveaux`,'ok');
   }catch(e){ setStatus('Erreur: '+e.message,'err'); allLevelsMode=false; updateAllLevelsBtn(); }
 }
 function updateAllLevelsBtn(){
@@ -1858,7 +1858,7 @@ function init3D(){
       if(isolateMode && selectedLevelKeys.size===0){
         isolateMode=false; rooms3D().forEach(r=>{ const m=R3.meshes[r.RevitId]; if(m) m.visible=true; }); $('btn3dIsolate').classList.remove('active');
       }
-      onSelectionChanged(false); renderList(); renderMatrix();
+      onSelectionChanged(false); renderList(); renderMatrix(); refitPlan();
     }
   });
 }
