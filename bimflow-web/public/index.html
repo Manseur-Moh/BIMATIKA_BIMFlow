@@ -190,6 +190,7 @@
     .ptable-scroll{flex:1;overflow:auto}
     table.pt{width:100%;border-collapse:collapse;font-size:12px}
     table.pt th{position:sticky;top:0;background:#111c33;color:#64748b;font-weight:600;text-align:left;padding:5px 9px;border-bottom:1px solid #1e2b45;white-space:nowrap;font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+    table.pt.matrix th{white-space:normal;word-break:break-word;vertical-align:bottom;height:auto}
     table.pt td{padding:3px 9px;border-bottom:1px solid #16233f;vertical-align:middle}
     table.pt td.k{color:#94a3b8;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
     table.pt td.t{color:#475569;font-size:10px;white-space:nowrap}
@@ -1062,37 +1063,11 @@ function trackEdit(id,key,val,orig){
   else pendingEdits[id][key]=val;
   updateSendBtn();
 }
-/* ═══ COLUMN WIDTH (resizable, fixed default, wrapping) ═══ */
-const DEF_COLW=120;
+/* ═══ COLUMN WIDTH (resizable, ≈10-char default) ═══ */
+const DEF_COLW=90; // ~10 uppercase chars at 10px — header text wraps beyond this
 let colW={};
-const _ctx=document.createElement('canvas').getContext('2d');
-function autoFitCol(th, col){
-  const lbl=th.querySelector('.col-lbl');
-  const text=(lbl?lbl.textContent:th.textContent).trim();
-  if(!text) return;
-  // measure with the actual rendered font of the label
-  const cs=window.getComputedStyle(lbl||th);
-  _ctx.font=`${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
-  const ls=parseFloat(cs.letterSpacing)||0;
-  const measure=s=>Math.ceil(_ctx.measureText(s).width + ls*s.length);
-  // padding: left + right + 8px for resizer handle
-  const ths=window.getComputedStyle(th);
-  const pad=parseFloat(ths.paddingLeft)+parseFloat(ths.paddingRight)+8;
-  let w;
-  if(text.length<=10){
-    w=measure(text)+pad;
-  } else {
-    // first word boundary at or after char 10 — never break mid-word
-    let brk=text.length;
-    for(let i=10;i<text.length;i++){ if(text[i]===' '){ brk=i; break; } }
-    w=Math.max(50, measure(text.slice(0,brk).trim())+pad);
-  }
-  const clamped=Math.max(40,w);
-  th.style.width=clamped+'px'; colW[col]=clamped;
-}
 function attachResizers(){
   $('matrixHead').querySelectorAll('.col-resizer').forEach(rz=>{
-    // drag to resize — use stored colW so there is no jump on start
     rz.addEventListener('mousedown',e=>{
       e.preventDefault(); e.stopPropagation();
       const th=rz.parentElement, col=rz.getAttribute('data-col');
@@ -1101,11 +1076,6 @@ function attachResizers(){
       const mv=ev=>{ ev.preventDefault(); const w=Math.max(40,startW+(ev.clientX-startX)); th.style.width=w+'px'; colW[col]=w; };
       const up=()=>{ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); };
       document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
-    });
-    // double-click the resizer line → auto-fit to title text
-    rz.addEventListener('dblclick',e=>{
-      e.preventDefault(); e.stopPropagation();
-      autoFitCol(rz.parentElement, rz.getAttribute('data-col'));
     });
   });
 }
