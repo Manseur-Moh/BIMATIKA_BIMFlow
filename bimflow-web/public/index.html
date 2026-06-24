@@ -190,6 +190,7 @@
     .ptable-scroll{flex:1;overflow:auto}
     table.pt{width:100%;border-collapse:collapse;font-size:12px}
     table.pt th{position:sticky;top:0;background:#111c33;color:#64748b;font-weight:600;text-align:left;padding:5px 9px;border-bottom:1px solid #1e2b45;white-space:nowrap;font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+    table.pt.matrix{width:auto;min-width:100%}
     table.pt.matrix th{white-space:normal;word-break:break-word;vertical-align:bottom;height:auto}
     table.pt td{padding:3px 9px;border-bottom:1px solid #16233f;vertical-align:middle}
     table.pt td.k{color:#94a3b8;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
@@ -1065,14 +1066,14 @@ function trackEdit(id,key,val,orig){
 }
 /* ═══ COLUMN WIDTH (resizable, ≈10-char default) ═══ */
 const DEF_COLW=90; // ~10 uppercase chars at 10px — header text wraps beyond this
-let colW={};
+let colW={};       // only stores user-explicitly-dragged widths
 function attachResizers(){
   $('matrixHead').querySelectorAll('.col-resizer').forEach(rz=>{
     rz.addEventListener('mousedown',e=>{
       e.preventDefault(); e.stopPropagation();
       const th=rz.parentElement, col=rz.getAttribute('data-col');
       const startX=e.clientX;
-      const startW=colW[col]||parseInt(th.style.width,10)||DEF_COLW;
+      const startW=colW[col]||DEF_COLW;
       const mv=ev=>{ ev.preventDefault(); const w=Math.max(40,startW+(ev.clientX-startX)); th.style.width=w+'px'; colW[col]=w; };
       const up=()=>{ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); };
       document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
