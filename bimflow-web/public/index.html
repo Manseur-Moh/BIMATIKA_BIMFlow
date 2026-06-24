@@ -339,6 +339,7 @@
     [data-theme=light] .pfbtn:hover{background:#dde2ec;color:#0f172a}
     [data-theme=light] .pfbtn.on{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
     [data-theme=light] select#pfPar,[data-theme=light] select#pfVal{background:#fff;color:#1e2733;border-color:#d4dae6}
+    [data-theme=light] #pfTxt{background:#fff;color:#1e2733;border-color:#d4dae6}
     /* light: Colonnes button */
     [data-theme=light] #colSelBtn{background:#eef2f8;border-color:#d4dae6;color:#334155}
     [data-theme=light] #colSelBtn:hover{background:#dde2ec;color:#0f172a}
@@ -571,7 +572,8 @@
           </div>
           <div class="pfilter-bar">
             <select id="pfPar" title="Filtrer par paramètre"><option value="">— Paramètre —</option></select>
-            <select id="pfVal" title="Filtrer par valeur" style="display:none"><option value="">— Toutes valeurs —</option></select>
+            <select id="pfVal" title="Filtrer par valeur fixe" style="display:none"><option value="">— Toutes valeurs —</option></select>
+            <input id="pfTxt" type="text" placeholder="Rechercher…" style="display:none;flex:1;min-width:60px;max-width:160px;background:#0f172a;border:1px solid #374151;color:#e2e8f0;border-radius:4px;padding:3px 7px;font-size:11px"/>
             <button class="pfbtn" id="pfClr" style="display:none" title="Effacer le filtre">✕ Effacer</button>
             <div style="flex:1"></div>
             <button class="pfbtn" id="pfGrp" title="Regrouper les pièces par valeur du paramètre sélectionné">⊞ Regrouper</button>
@@ -1083,7 +1085,7 @@ function numericType(t){ return t==='number'||t==='integer'||t==='length'||t==='
 function matrixRooms(){ const s=selectedRooms(); return s.length?s:activeRooms(); }
 
 /* ─ Parameter filter state ─ */
-let mfPar='', mfVal='', mfGrp=false;
+let mfPar='', mfVal='', mfTxt='', mfGrp=false;
 
 function buildMatrixFilter(cols, rooms){
   const sel=$('pfPar'), prev=sel.value;
@@ -1094,9 +1096,9 @@ function buildMatrixFilter(cols, rooms){
   $('pfGrp').classList.toggle('on', mfGrp);
 }
 function buildMatrixValFilter(rooms){
-  const valSel=$('pfVal'), clrBtn=$('pfClr');
-  if(!mfPar){valSel.style.display='none';clrBtn.style.display='none';return;}
-  valSel.style.display=''; clrBtn.style.display='';
+  const valSel=$('pfVal'), txtInp=$('pfTxt'), clrBtn=$('pfClr');
+  if(!mfPar){ valSel.style.display='none'; txtInp.style.display='none'; clrBtn.style.display='none'; return; }
+  valSel.style.display=''; txtInp.style.display=''; clrBtn.style.display='';
   const vals=new Set();
   rooms.forEach(r=>{const v=String((r.Parameters||{})[mfPar]||'');if(v)vals.add(v);});
   const prev=valSel.value;
@@ -1104,20 +1106,23 @@ function buildMatrixValFilter(rooms){
   [...vals].sort().forEach(v=>valSel.appendChild(new Option(v,v)));
   if(prev&&[...vals].includes(prev)) valSel.value=prev; else mfVal='';
 }
-$('pfPar').addEventListener('change',function(){mfPar=this.value;mfVal='';buildMatrixValFilter(matrixRooms());renderMatrix();});
+$('pfPar').addEventListener('change',function(){mfPar=this.value;mfVal='';mfTxt='';$('pfTxt').value='';buildMatrixValFilter(matrixRooms());renderMatrix();});
 $('pfVal').addEventListener('change',function(){mfVal=this.value;renderMatrix();});
-$('pfClr').addEventListener('click',()=>{mfPar='';mfVal='';$('pfPar').value='';$('pfVal').style.display='none';$('pfClr').style.display='none';renderMatrix();});
+$('pfTxt').addEventListener('input',function(){mfTxt=this.value.toLowerCase();renderMatrix();});
+$('pfClr').addEventListener('click',()=>{mfPar='';mfVal='';mfTxt='';$('pfPar').value='';$('pfTxt').value='';$('pfVal').style.display='none';$('pfTxt').style.display='none';$('pfClr').style.display='none';renderMatrix();});
 $('pfGrp').addEventListener('click',function(){mfGrp=!mfGrp;this.classList.toggle('on',mfGrp);renderMatrix();});
 
 function renderMatrix(){
   if(compareDiff){ compareDiff=null; document.querySelectorAll('.changed').forEach(p=>p.classList.remove('changed')); $('bpSub').textContent=''; }
   let rooms=matrixRooms();
-  // Apply parameter filter
+  // Apply parameter filter (dropdown exact + text contains — combined AND)
   if(mfPar&&mfVal) rooms=rooms.filter(r=>String((r.Parameters||{})[mfPar]||'')===mfVal);
+  if(mfPar&&mfTxt) rooms=rooms.filter(r=>String((r.Parameters||{})[mfPar]||'').toLowerCase().includes(mfTxt));
   const totalShown=rooms.length;
+  const filterDesc=mfPar?(mfVal?` · = "${mfVal}"`:'')+(mfTxt?` · "${mfTxt}"`:''):'';
   $('paramScope').textContent = selIds.size
-    ? `${selIds.size} pièce(s) sélectionnée(s)${mfPar&&mfVal?' · filtre: '+mfVal:''}`
-    : `Toutes les pièces (${totalShown}${mfPar&&mfVal?' filtrées':''})`  ;
+    ? `${selIds.size} pièce(s) sélectionnée(s)${filterDesc}`
+    : `Toutes les pièces (${totalShown}${filterDesc})`;
   const head=$('matrixHead'), body=$('matrixBody'), empty=$('matrixEmpty');
   if(!rooms.length){ head.innerHTML=''; body.innerHTML=''; empty.style.display=''; applyEditMode(); updateSendBtn(); return; }
   empty.style.display='none';
@@ -1433,8 +1438,9 @@ async function exportParamsXLSX(){
   // Mirrors renderMatrix(): respect level selection, room selection, and parameter filter
   let rooms = matrixRooms();
   if(mfPar && mfVal) rooms = rooms.filter(r=>String((r.Parameters||{})[mfPar]||'')===mfVal);
+  if(mfPar && mfTxt) rooms = rooms.filter(r=>String((r.Parameters||{})[mfPar]||'').toLowerCase().includes(mfTxt));
   if(!rooms.length){ alert('Aucune pièce.'); return; }
-  const isFiltered = !!(mfPar && mfVal);
+  const isFiltered = !!(mfPar && (mfVal||mfTxt));
   const isSel = selIds.size > 0;
   const isAllLevels = allLevelsMode || selectedLevelKeys.size > 1;
   let exportName = isSel ? 'Selection'
