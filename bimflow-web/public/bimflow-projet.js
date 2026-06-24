@@ -80,6 +80,7 @@
   function _esc(s) {
     return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
+  function L(fr, en) { return document.documentElement.lang === 'en' ? en : fr; }
 
   // ── Handle ?bfauth= callback from email confirmation ──
   (function handleAuthCallback() {
@@ -181,12 +182,12 @@
 
     const path = window.location.pathname;
     const items = [
-      { href: '/',                icon: '🗺', label: 'Plans' },
-      { href: '/fiches.html',     icon: '📋', label: 'Fiches de Locaux' },
-      { href: '/analyse.html',    icon: '📊', label: 'Analyse' },
-      { href: '/parametres.html', icon: '🔧', label: 'Paramètres' },
-      { href: '/projets.html',    icon: '📁', label: 'Projets' },
-      { href: '/profil.html',     icon: '👤', label: 'Profil' },
+      { href: '/',                icon: '🗺', label: 'Plans',            labelEn: 'Plans' },
+      { href: '/fiches.html',     icon: '📋', label: 'Fiches de Locaux', labelEn: 'Data Sheets' },
+      { href: '/analyse.html',    icon: '📊', label: 'Analyse',          labelEn: 'Analysis' },
+      { href: '/parametres.html', icon: '🔧', label: 'Paramètres',       labelEn: 'Parameters' },
+      { href: '/projets.html',    icon: '📁', label: 'Projets',          labelEn: 'Projects' },
+      { href: '/profil.html',     icon: '👤', label: 'Profil',           labelEn: 'Profile' },
     ];
     const cur = items.find(i => i.href === path)
              || items.find(i => i.href !== '/' && path.startsWith(i.href));
@@ -199,9 +200,11 @@
     const btn = document.createElement('button');
     btn.className = 'bfp-tb-btn';
     btn.style.borderRight = 'none';
+    const curLabel = cur ? L(cur.label, cur.labelEn) : 'Menu';
+    const curLabelEn = cur ? cur.labelEn : 'Menu';
     btn.innerHTML =
       `<span style="font-size:17px;line-height:1">☰</span>` +
-      `<span>${cur ? _esc(cur.label) : 'Menu'}</span>` +
+      `<span data-en="${_esc(curLabelEn)}">${_esc(curLabel)}</span>` +
       `<span style="font-size:10px;opacity:.5">▾</span>`;
 
     const drop = document.createElement('div');
@@ -220,7 +223,7 @@
       link.className = 'bfp-item' + (item === cur ? ' active' : '');
       link.innerHTML =
         `<span class="bfp-item-icon">${item.icon}</span>` +
-        `<span class="bfp-item-body"><span class="bfp-item-label">${item.label}</span></span>` +
+        `<span class="bfp-item-body"><span class="bfp-item-label" data-en="${_esc(item.labelEn)}">${L(item.label, item.labelEn)}</span></span>` +
         (item === cur ? `<span style="color:var(--bfp-acc);font-size:12px">●</span>` : '');
       drop.appendChild(link);
     });
@@ -246,7 +249,7 @@
     btn.className = 'bfp-proj-pill' + (name ? ' has-proj' : '');
     btn.innerHTML =
       `<span>📁</span>` +
-      `<span style="overflow:hidden;text-overflow:ellipsis;max-width:120px">${name ? _esc(name) : 'Tous les projets'}</span>` +
+      `<span data-en="${name ? _esc(name) : 'All projects'}" style="overflow:hidden;text-overflow:ellipsis;max-width:120px">${name ? _esc(name) : L('Tous les projets','All projects')}</span>` +
       `<span style="font-size:10px;opacity:.5">▾</span>`;
 
     const drop = document.createElement('div');
@@ -261,7 +264,7 @@
       if (drop.style.display !== 'none') { drop.style.display = 'none'; return; }
       drop.style.display = 'block';
       if (loaded) return;
-      drop.innerHTML = '<div style="padding:10px 12px;font-size:12px;color:var(--bfp-sub)">Chargement…</div>';
+      drop.innerHTML = `<div style="padding:10px 12px;font-size:12px;color:var(--bfp-sub)">${L('Chargement…','Loading…')}</div>`;
       try {
         const session = (window.BFUser.current || {}).session || '';
         const r = await fetch('/api/projets', {
@@ -276,12 +279,12 @@
           btn.className = 'bfp-proj-pill';
           btn.innerHTML =
             `<span>📁</span>` +
-            `<span style="overflow:hidden;text-overflow:ellipsis;max-width:120px">Mes projets</span>` +
+            `<span style="overflow:hidden;text-overflow:ellipsis;max-width:120px">${L('Mes projets','My projects')}</span>` +
             `<span style="font-size:10px;opacity:.5">▾</span>`;
         }
         renderProjDrop(drop, projects, cur);
       } catch (err) {
-        drop.innerHTML = `<div style="padding:10px 12px;font-size:12px;color:#f87171">Erreur : ${_esc(err.message)}</div>`;
+        drop.innerHTML = `<div style="padding:10px 12px;font-size:12px;color:#f87171">${L('Erreur : ','Error: ')}${_esc(err.message)}</div>`;
       }
     });
 
@@ -299,7 +302,7 @@
     const valid = (projects || []).filter(p => p.code !== '__legacy__');
 
     // "Tous les projets"
-    const allBtn = bfpItem('🌐', 'Tous les projets', !cur, 'Voir tous les projets sans filtre');
+    const allBtn = bfpItem('🌐', L('Tous les projets','All projects'), !cur, L('Voir tous les projets sans filtre','View all projects'));
     allBtn.addEventListener('click', () => {
       localStorage.removeItem('bimflow_project');
       window.location.reload();
@@ -310,13 +313,13 @@
     if (!valid.length) {
       const empty = document.createElement('div');
       empty.style.cssText = 'padding:8px 12px;font-size:12px;color:var(--bfp-sub)';
-      empty.textContent = 'Aucun projet — envoyez des plans depuis Revit';
+      empty.textContent = L('Aucun projet — envoyez des plans depuis Revit','No projects — send plans from Revit');
       drop.appendChild(empty);
     } else {
       valid.forEach(p => {
         const pName = p.displayName || p.projectName || p.code;
         const sel = !!(cur && cur.code === p.code);
-        const sub = `${p.code} · ${p.plans || 0} niv. · ${p.rooms || 0} pièces`;
+        const sub = `${p.code} · ${p.plans || 0} ${L('niv.','lvl.')} · ${p.rooms || 0} ${L('pièces','rooms')}`;
         const item = bfpItem('📁', pName, sel, sub);
         item.addEventListener('click', () => {
           localStorage.setItem('bimflow_project', JSON.stringify({
@@ -334,7 +337,7 @@
     const manage = document.createElement('a');
     manage.href = '/projets.html';
     manage.className = 'bfp-item';
-    manage.innerHTML = `<span class="bfp-item-icon">⚙</span><span class="bfp-item-body"><span class="bfp-item-label">Gérer les projets</span></span>`;
+    manage.innerHTML = `<span class="bfp-item-icon">⚙</span><span class="bfp-item-body"><span class="bfp-item-label" data-en="Manage projects">${L('Gérer les projets','Manage projects')}</span></span>`;
     drop.appendChild(manage);
   }
 
@@ -346,7 +349,7 @@
       const btn = document.createElement('a');
       btn.href = '/accueil.html';
       btn.className = 'bfp-gear-btn';
-      btn.innerHTML = '🔐 Connexion';
+      btn.innerHTML = `🔐 <span data-en="Sign in">${L('Connexion','Sign in')}</span>`;
       tbr.appendChild(btn);
       return;
     }
@@ -372,7 +375,7 @@
 
     const planBadge = user.plan === 'pro'
       ? '<span style="background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.35);color:#a78bfa;border-radius:10px;padding:2px 8px;font-size:9px;font-weight:800">PRO</span>'
-      : '<span style="background:rgba(29,78,216,.15);border:1px solid rgba(29,78,216,.25);color:#60a5fa;border-radius:10px;padding:2px 8px;font-size:9px;font-weight:800">GRATUIT</span>';
+      : `<span style="background:rgba(29,78,216,.15);border:1px solid rgba(29,78,216,.25);color:#60a5fa;border-radius:10px;padding:2px 8px;font-size:9px;font-weight:800" data-en="FREE">${L('GRATUIT','FREE')}</span>`;
 
     const header = document.createElement('div');
     header.style.cssText = 'padding:10px 12px;border-bottom:1px solid var(--bfp-tbd);margin-bottom:6px';
@@ -383,16 +386,16 @@
     drop.appendChild(header);
 
     [
-      ['/profil.html',  '👤', 'Mon profil',  'Paramètres du compte'],
-      ['/projets.html', '📁', 'Mes projets', 'Gérer et créer des projets'],
-    ].forEach(([href, icon, label, sub]) => {
+      ['/profil.html',  '👤', 'Mon profil',  'Paramètres du compte',         'My profile',  'Account settings'],
+      ['/projets.html', '📁', 'Mes projets', 'Gérer et créer des projets',    'My projects', 'Manage and create projects'],
+    ].forEach(([href, icon, label, sub, labelEn, subEn]) => {
       const a = document.createElement('a');
       a.href = href;
       a.className = 'bfp-item';
       a.innerHTML =
         `<span class="bfp-item-icon">${icon}</span>` +
-        `<span class="bfp-item-body"><span class="bfp-item-label">${label}</span>` +
-        `<span class="bfp-item-sub">${sub}</span></span>`;
+        `<span class="bfp-item-body"><span class="bfp-item-label" data-en="${_esc(labelEn)}">${L(label,labelEn)}</span>` +
+        `<span class="bfp-item-sub" data-en="${_esc(subEn)}">${L(sub,subEn)}</span></span>`;
       drop.appendChild(a);
     });
 
@@ -403,9 +406,9 @@
     delBtn.style.color = '#f87171';
     delBtn.innerHTML =
       `<span class="bfp-item-icon">🗑</span>` +
-      `<span class="bfp-item-body"><span class="bfp-item-label">Supprimer mon compte</span><span class="bfp-item-sub">Action irréversible</span></span>`;
+      `<span class="bfp-item-body"><span class="bfp-item-label" data-en="Delete my account">${L('Supprimer mon compte','Delete my account')}</span><span class="bfp-item-sub" data-en="Irreversible action">${L('Action irréversible','Irreversible action')}</span></span>`;
     delBtn.addEventListener('click', async () => {
-      if (!confirm('Supprimer définitivement votre compte ?\n\nVos projets seront transférés à l\'administrateur. Cette action est irréversible.')) return;
+      if (!confirm(L('Supprimer définitivement votre compte ?\n\nVos projets seront transférés à l\'administrateur. Cette action est irréversible.','Permanently delete your account?\n\nYour projects will be transferred to the administrator. This action is irreversible.'))) return;
       try {
         const session = (window.BFUser.current || {}).session || '';
         const r = await fetch('/api/auth/account', {
@@ -413,11 +416,11 @@
           headers: session ? { 'Authorization': 'Bearer ' + session } : {},
         });
         const d = await r.json();
-        if (!r.ok) { alert('Erreur : ' + (d.error || r.status)); return; }
+        if (!r.ok) { alert(L('Erreur : ','Error: ') + (d.error || r.status)); return; }
         localStorage.removeItem('bimflow_user');
         localStorage.removeItem('bimflow_project');
         window.location.href = '/accueil.html';
-      } catch (e) { alert('Erreur réseau : ' + e.message); }
+      } catch (e) { alert(L('Erreur réseau : ','Network error: ') + e.message); }
     });
     drop.appendChild(delBtn);
 
@@ -428,7 +431,7 @@
     logoutBtn.style.color = '#f87171';
     logoutBtn.innerHTML =
       `<span class="bfp-item-icon">🚪</span>` +
-      `<span class="bfp-item-body"><span class="bfp-item-label">Déconnexion</span></span>`;
+      `<span class="bfp-item-body"><span class="bfp-item-label" data-en="Sign out">${L('Déconnexion','Sign out')}</span></span>`;
     logoutBtn.addEventListener('click', () => {
       localStorage.removeItem('bimflow_user');
       localStorage.removeItem('bimflow_project');

@@ -349,6 +349,15 @@
     /* light: split handle bars */
     [data-theme=light] .split-v,[data-theme=light] .split-h{background:#dde2ec}
     [data-theme=light] .split-v::after,[data-theme=light] .split-h::after{background:#b0bcc8}
+    /* light: cmpPop versions popup */
+    [data-theme=light] #cmpPop{background:#fff;border-color:#dde2ec;color:#1e293b}
+    [data-theme=light] #cmpPop label{color:#64748b}
+    [data-theme=light] #cmpSavedLbl,[data-theme=light] #cmpSnapshotLbl{color:#64748b}
+    [data-theme=light] #cmpStatus{color:#64748b}
+    [data-theme=light] #cmpManage,[data-theme=light] #cmpBatchManage{color:#334155}
+    [data-theme=light] #cmpPop select{background:#fff;color:#1e293b;border-color:#d4dae6}
+    [data-theme=light] #cmpTabAll{background:#f1f5f9;border-color:#dde2ec;color:#475569}
+    [data-theme=light] #cmpClose{background:#f1f5f9;border-color:#dde2ec;color:#64748b}
 
     /* ===== LAYOUT FIXE ===== */
     #appMain{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
@@ -766,7 +775,7 @@ function renderLevels(list){
     item.innerHTML=`<div class="level-thumb"><span class="ph">⏳</span>`+
       `<svg class="thumb-svg" preserveAspectRatio="xMidYMid meet" style="display:none"><image/><g class="thumb-sel"></g></svg></div>`+
       `<div class="level-meta"><div class="level-name" title="${p.level}">${p.level||'—'}</div>`+
-      `<div class="level-sub">${p.rooms||0} pièce${(p.rooms>1)?'s':''}</div></div>`;
+      `<div class="level-sub" data-rooms="${p.rooms||0}">${p.rooms||0} ${t('pieceUnit',p.rooms||0)}</div></div>`;
     item.addEventListener('click',e=>levelClicked(p.key,e));
     box.appendChild(item); levelObserver.observe(item);
   });
@@ -2164,6 +2173,10 @@ function applyLang(l){
   // Refresh dynamic content
   if(plan){ populateSearchKey(); renderList(); renderMatrix(); }
   const sc=selIds.size; $('selCount').textContent=sc?t('selCount',sc):'';
+  document.querySelectorAll('.level-sub[data-rooms]').forEach(el=>{
+    const n=parseInt(el.getAttribute('data-rooms')||0);
+    el.textContent=n+' '+t('pieceUnit',n);
+  });
 }
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme',t);
