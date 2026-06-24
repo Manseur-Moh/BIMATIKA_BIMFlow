@@ -162,6 +162,9 @@
     .col-resizer{position:absolute;top:0;right:0;width:6px;height:100%;cursor:col-resize;user-select:none}
     .col-resizer:hover{background:#3b82f6}
     .col-lbl{display:block;padding-right:6px}
+    table.matrix th{cursor:default;position:relative}
+    table.matrix th:hover .col-lbl{color:#e2e8f0}
+    .grp-row td input,.grp-row td select{background:#071426;border-color:#1d4ed8}
     /* compare-mode diff highlighting */
     table.matrix td.diff{background:#3b0d12;color:#fca5a5;font-weight:700}
     table.matrix td.diff .old{color:#64748b;font-weight:400;text-decoration:line-through;margin-right:4px}
@@ -975,13 +978,39 @@ function renderMatrix(){
       tdN.textContent=`${val}  (${grooms.length} pièce${grooms.length>1?'s':''})`;
       tdN.title=`Cliquer pour sélectionner les ${grooms.length} pièce(s)`;
       tr.appendChild(tdN);
-      // For each column: show unique values or count
+      // For each column: show unique values, or editable field in edit mode
       cols.forEach(k=>{
         const td=document.createElement('td'); td.setAttribute('data-pname',k);
         if(k===grpKey){ td.textContent=''; tr.appendChild(td); return; }
-        const vals=[...new Set(grooms.map(r=>String((r.Parameters||{})[k]||'')).filter(Boolean))];
-        td.textContent=vals.length===1?vals[0]:vals.length>1?`(${vals.length} valeurs)`:'';
-        td.title=vals.join(', ');
+        const allVals=grooms.map(r=>String((r.Parameters||{})[k]??''));
+        const uniqVals=[...new Set(allVals.filter(v=>v!==''))];
+        const singleVal=uniqVals.length===1?uniqVals[0]:'';
+        const firstHas=k in (grooms[0]?.Parameters||{});
+        const pType=(grooms[0]?.ParameterTypes||{})[k]||'text';
+        const isRO=grooms.every(r=>(r.ParameterReadOnly||{})[k]===true);
+        const opts=(grooms[0]?.ParameterChoices||{})[k]||[];
+        const hasChoice=opts.length>=2||pType==='boolean'||pType==='choice';
+        if(editMode&&firstHas&&!isRO){
+          if(hasChoice){
+            const sel=document.createElement('select'); sel.className='pv-select';
+            if(uniqVals.length!==1){ const ph=new Option(uniqVals.length>0?`— ${uniqVals.length} val. —`:'—',''); sel.appendChild(ph); }
+            (opts.length>=2?opts:['Yes','No']).forEach(o=>{ const op=new Option(o,o); if(o===singleVal)op.selected=true; sel.appendChild(op); });
+            sel.addEventListener('change',()=>{ if(!sel.value)return; sel.classList.add('changed');
+              grooms.forEach(r=>{ const orig=String((r.Parameters||{})[k]??''); trackEdit(r.RevitId,k,sel.value,orig); }); });
+            td.appendChild(sel);
+          } else {
+            const inp=document.createElement('input'); inp.className='pv-input';
+            inp.type=numericType(pType)?'number':'text'; inp.value=singleVal;
+            if(uniqVals.length>1) inp.placeholder=`(${uniqVals.length} valeurs)`;
+            inp.addEventListener('input',()=>{ inp.classList.toggle('changed',inp.value!==singleVal);
+              grooms.forEach(r=>{ const orig=String((r.Parameters||{})[k]??''); trackEdit(r.RevitId,k,inp.value,orig); }); });
+            td.appendChild(inp);
+          }
+        } else {
+          td.textContent=uniqVals.length===1?singleVal:uniqVals.length>1?`(${uniqVals.length} valeurs)`:'';
+          td.title=uniqVals.join(', ');
+          if(isRO&&firstHas) td.className='ro-cell';
+        }
         tr.appendChild(td);
       });
       body.appendChild(tr);
@@ -1037,6 +1066,27 @@ function trackEdit(id,key,val,orig){
 /* ═══ COLUMN WIDTH (resizable, fixed default, wrapping) ═══ */
 const DEF_COLW=120;
 let colW={};
+const _ctx=document.createElement('canvas').getContext('2d');
+function autoFitCol(th, col){
+  const lbl=th.querySelector('.col-lbl');
+  const text=(lbl?lbl.textContent:th.textContent).trim();
+  if(!text) return;
+  _ctx.font='600 10px system-ui,sans-serif';
+  const fullW=Math.ceil(_ctx.measureText(text).width);
+  let w;
+  if(text.length<=10){
+    w=fullW+24;
+  } else {
+    // wrap near the midpoint — find a space close to the middle
+    const mid=Math.ceil(text.length/2);
+    let brk=mid;
+    for(let i=mid;i<Math.min(text.length,mid+8);i++) if(text[i]===' '){brk=i;break;}
+    if(brk===mid) for(let i=mid;i>Math.max(0,mid-8);i--) if(text[i]===' '){brk=i;break;}
+    w=Math.max(60,Math.ceil(_ctx.measureText(text.slice(0,brk).trim()).width)+24);
+  }
+  const clamped=Math.max(40,w);
+  th.style.width=clamped+'px'; colW[col]=clamped;
+}
 function attachResizers(){
   $('matrixHead').querySelectorAll('.col-resizer').forEach(rz=>{
     rz.addEventListener('mousedown',e=>{
@@ -1046,6 +1096,14 @@ function attachResizers(){
       const mv=ev=>{ const w=Math.max(40,startW+(ev.clientX-startX)); th.style.width=w+'px'; colW[col]=w; };
       const up=()=>{ document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up); };
       document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+    });
+  });
+  // double-click header → auto-fit column to title text
+  $('matrixHead').querySelectorAll('th').forEach(th=>{
+    th.addEventListener('dblclick',e=>{
+      if(e.target.classList.contains('col-resizer')) return;
+      const rz=th.querySelector('.col-resizer'); if(!rz) return;
+      autoFitCol(th, rz.getAttribute('data-col'));
     });
   });
 }
