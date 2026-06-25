@@ -143,14 +143,14 @@ export async function onRequestPost({ request, env }) {
 
     const { error } = await sb
       .from('versions')
-      .upsert({
+      .insert({
         plan_key: key,
         project_code: projCode,
         snapshot_ts: ts,
         label: label,
         rooms_data: rooms,
         is_batch: false
-      }, { onConflict: 'plan_key,snapshot_ts' });
+      });
 
     if (error) throw error;
 

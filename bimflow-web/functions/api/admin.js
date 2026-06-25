@@ -3,8 +3,8 @@
 // GET    /api/admin              → list all users + project counts
 // DELETE /api/admin?email=xxx   → delete a user account (cannot delete admin)
 //
-// Storage: user accounts remain in KV (bfuser:). Project ownership/membership
-// live in Supabase (projects.owner_email, project_members.member_email).
+// Users are in Supabase public.users (migrated from KV).
+// Sessions remain in KV. Project data in Supabase.
 
 import { getSupabase } from './_supabase.js';
 
@@ -37,13 +37,20 @@ export async function onRequestGet({ request, env }) {
   const session = await getSession(request, kv);
   if (!session?.isAdmin) return respErr("Non autorisé", 403);
 
-  // All users (still in KV)
-  const userList = await kv.list({ prefix: "bfuser:" });
-  const users    = (await Promise.all(
-    userList.keys.map(k => kv.get(k.name, { type: "json" }).catch(() => null))
+  // Users from Supabase
+  const { data: sbUsers } = await sb.from('users').select('email, name, plan, confirmed, created_at').order('created_at', { ascending: false });
+
+  // Legacy users still in KV (not yet migrated)
+  const kvList = await kv.list({ prefix: "bfuser:" });
+  const kvUsers = (await Promise.all(
+    kvList.keys.map(k => kv.get(k.name, { type: "json" }).catch(() => null))
   )).filter(Boolean);
 
-  // Count projects per owner (Supabase)
+  // Merge: Supabase takes priority, KV fills in unmigrated users
+  const emailsSb = new Set((sbUsers || []).map(u => u.email));
+  const kvOnly   = kvUsers.filter(u => u.email && !emailsSb.has(u.email.toLowerCase()));
+
+  // Project counts per owner (Supabase)
   const projCount = {};
   const { data: projs } = await sb.from('projects').select('owner_email');
   (projs || []).forEach(p => {
@@ -51,17 +58,26 @@ export async function onRequestGet({ request, env }) {
     projCount[owner] = (projCount[owner] || 0) + 1;
   });
 
-  return resp({
-    users: users.map(u => ({
+  const users = [
+    ...(sbUsers || []).map(u => ({
+      name:         u.name,
+      email:        u.email,
+      plan:         u.plan || "free",
+      confirmed:    u.confirmed,
+      createdAt:    u.created_at || "",
+      projectCount: projCount[u.email] || 0,
+    })),
+    ...kvOnly.map(u => ({
       name:         u.name,
       email:        u.email,
       plan:         u.plan || "free",
       confirmed:    !!u.confirmed,
       createdAt:    u.createdAt || "",
       projectCount: projCount[u.email?.toLowerCase()] || 0,
-    })).sort((a, b) => a.createdAt < b.createdAt ? 1 : -1),
-    adminEmail: ADMIN,
-  });
+    })),
+  ].sort((a, b) => a.createdAt < b.createdAt ? 1 : -1);
+
+  return resp({ users, adminEmail: ADMIN });
 }
 
 export async function onRequestDelete({ request, env }) {
@@ -75,17 +91,14 @@ export async function onRequestDelete({ request, env }) {
     if (!target)           return respErr("email required", 400);
     if (target === ADMIN)  return respErr("Impossible de supprimer le compte administrateur.", 400);
 
-    // 1. Delete user record (KV)
-    await kv.delete("bfuser:" + target);
-
-    // 2. Delete any pending confirmation token for this user
-    //    (we can't easily enumerate bfconfirm: tokens by email, so skip)
-
-    // 3. Remove from all project member lists (Supabase)
+    // Delete from Supabase
+    await sb.from('column_presets').delete().eq('user_email', target);
+    await sb.from('users').delete().eq('email', target);
     await sb.from('project_members').delete().eq('member_email', target);
-
-    // 4. Transfer project ownership to admin (Supabase)
     await sb.from('projects').update({ owner_email: ADMIN }).eq('owner_email', target);
+
+    // Delete KV legacy record
+    await kv.delete("bfuser:" + target);
 
     return resp({ ok: true, deleted: target });
   } catch (err) {

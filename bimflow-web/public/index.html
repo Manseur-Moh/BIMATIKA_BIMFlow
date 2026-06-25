@@ -10,8 +10,10 @@
 
     /* TOP BAR */
     .topbar{display:flex;align-items:center;background:#111827;border-bottom:1px solid #1f2937;flex-shrink:0;height:48px}
-    .logo{padding:0 16px;font-size:16px;font-weight:800;color:#38bdf8;letter-spacing:-.5px;white-space:nowrap;border-right:1px solid #1f2937;height:100%;display:flex;align-items:center}
+    .logo{padding:0 16px;font-size:16px;font-weight:800;color:#38bdf8;letter-spacing:-.5px;white-space:nowrap;border-right:1px solid #1f2937;height:100%;display:flex;flex-direction:column;align-items:flex-start;justify-content:center}
     .logo span{color:#7dd3fc}
+    .logo-sub{font-size:8px;font-weight:700;color:#4b97c2;letter-spacing:.12em;text-transform:uppercase;line-height:1;margin-top:2px;opacity:.8}
+    .topbar-meta{display:flex;align-items:center;gap:6px;padding:0 12px;border-right:1px solid #1f2937;height:100%}
     .nav{display:flex;height:100%}
     .nav a{display:flex;align-items:center;padding:0 16px;font-size:13px;font-weight:600;color:#64748b;text-decoration:none;border-right:1px solid #1f2937}
     .nav a:hover{background:#1f2937;color:#e2e8f0}
@@ -71,6 +73,11 @@
     .level-item.level-sel{border-color:#7c3aed;box-shadow:0 0 0 1px #7c3aed}
     .level-item.level-sel .level-name{color:#c4b5fd}
     #btn3dShade.active,#btn3dIsolate.active{background:rgba(29,78,216,.9)!important;border-color:#3b82f6!important;color:#e0f2fe!important}
+    .btn3d{background:rgba(15,23,42,.82);border:1px solid #334155;color:#94a3b8;border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;transition:background .15s,color .15s}
+    .btn3d:hover{background:rgba(15,23,42,.96);color:#e2e8f0}
+    [data-theme=light] .btn3d{background:rgba(255,255,255,.88);border:1px solid #cbd5e1;color:#475569}
+    [data-theme=light] .btn3d:hover{background:#fff;color:#1e2733}
+    [data-theme=light] #btn3dShade.active,[data-theme=light] #btn3dIsolate.active{background:rgba(29,78,216,.9)!important;border-color:#3b82f6!important;color:#e0f2fe!important}
     .level-thumb{width:100%;height:84px;background:#0f172a;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
     .level-thumb .thumb-svg{filter:invert(1) brightness(.85)}
     .level-thumb img{width:100%;height:100%;object-fit:contain}
@@ -129,7 +136,7 @@
     #mainSvg{position:absolute;will-change:transform}
     .bimflow-room{cursor:pointer;fill:rgba(56,189,248,.04);stroke:rgba(56,189,248,.5);stroke-width:1.5;stroke-linejoin:round;transition:fill .12s,stroke .12s}
     .bimflow-room:hover{fill:rgba(56,189,248,.18);stroke:#38bdf8;stroke-width:2.5}
-    .bimflow-room.selected{fill:rgba(239,68,68,.42)!important;stroke:#ef4444!important;stroke-width:3}
+    .bimflow-room.selected{fill:rgba(239,68,68,.85);stroke:#ef4444!important;stroke-width:3}
     .zoom-wrap{position:absolute;bottom:12px;left:12px;display:flex;flex-direction:column;gap:3px;z-index:10}
     .zbtn{width:28px;height:28px;background:#1f2937;border:1px solid #374151;color:#d1d5db;border-radius:5px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center}
     .zbtn:hover{background:#374151}
@@ -264,6 +271,8 @@
     [data-theme=light] body{background:#eef1f6;color:#1e2733}
     [data-theme=light] .topbar{background:#fff;border-bottom-color:#dde2ec}
     [data-theme=light] .logo{border-right-color:#dde2ec}
+    [data-theme=light] .logo-sub{color:#0284c7;opacity:.7}
+    [data-theme=light] .topbar-meta{border-right-color:#dde2ec}
     [data-theme=light] .nav a{color:#64748b;border-right-color:#dde2ec}
     [data-theme=light] .nav a:hover{background:#eef2f8;color:#111}
     [data-theme=light] .nav a.active{background:#e7f3fc;color:#0284c7}
@@ -321,7 +330,9 @@
     [data-theme=light] .ptable-hd{border-bottom-color:#dde2ec}
     [data-theme=light] .ptable-hd .htools button,[data-theme=light] .ptable-hd .htools .filebtn{background:#eef2f8;border:1px solid #d4dae6;color:#334155}
     [data-theme=light] table.matrix th:first-child,[data-theme=light] table.matrix td:first-child{background:#f6f8fb}
-    [data-theme=light] table.matrix thead th:first-child,[data-theme=light] table.pt th{background:#eef2f8;color:#475569}
+    [data-theme=light] table.matrix thead th:first-child,[data-theme=light] table.pt th{background:#dde4f0;color:#2d3a55}
+    [data-theme=light] table.matrix th{background:#dde4f0;color:#2d3a55}
+    [data-theme=light] table.matrix th:hover{background:#c5d0e6;color:#1a2540}
     [data-theme=light] #matrixBody tr:hover td:first-child{background:#e8edf5!important}
     [data-theme=light] #matrixBody tr.row-sel td:first-child{background:#c7d9f7!important}
     [data-theme=light] table.pt td{border-bottom-color:#e6e9f0}
@@ -349,7 +360,8 @@
     /* light: split handle bars */
     [data-theme=light] .split-v,[data-theme=light] .split-h{background:#dde2ec}
     [data-theme=light] .split-v::after,[data-theme=light] .split-h::after{background:#b0bcc8}
-    /* light: cmpPop versions popup */
+    /* cmpPop versions popup — dark default, light override */
+    #cmpPop{background:#1f2937;border:1px solid #374151;color:#e2e8f0}
     [data-theme=light] #cmpPop{background:#fff;border-color:#dde2ec;color:#1e293b}
     [data-theme=light] #cmpPop label{color:#64748b}
     [data-theme=light] #cmpSavedLbl,[data-theme=light] #cmpSnapshotLbl{color:#64748b}
@@ -395,7 +407,11 @@
 <body>
 
 <div class="topbar">
-  <div class="logo">BIM<span>Flow</span></div>
+  <div class="logo"><div class="logo-main">BIM<span>Flow</span></div><small class="logo-sub">by Bimatika</small></div>
+  <div class="topbar-meta">
+    <button class="refresh-btn" id="langBtn" title="Language / Langue">EN</button>
+    <button class="refresh-btn" id="themeBtn" title="Thème clair / sombre">☾</button>
+  </div>
   <div class="nav">
     <a href="/" class="active">🗺 Plans</a>
     <a href="/fiches.html" data-en="📋 Data Sheets">📋 Fiches de Locaux</a>
@@ -404,8 +420,6 @@
     <a href="/projets.html" data-en="📁 Projects">📁 Projets</a>
   </div>
   <div class="topbar-right">
-    <button class="refresh-btn" id="langBtn" title="Language / Langue">EN</button>
-    <button class="refresh-btn" id="themeBtn" title="Thème clair / sombre">☾</button>
     <button class="refresh-btn" id="toggleLevels" data-en="🏢 Levels" title="Afficher / masquer les niveaux">🏢 Niveaux</button>
     <button class="refresh-btn" id="toggleRooms" data-en="👥 Rooms" title="Afficher / masquer le panneau des pièces">👥 Pièces</button>
     <button class="refresh-btn" id="togglePlan" data-en="🗺 Plan" title="Afficher / masquer le plan">🗺 Plan</button>
@@ -418,7 +432,7 @@
 </div>
 
 <!-- Compare picker -->
-<div id="cmpPop" style="display:none;position:fixed;top:52px;right:12px;z-index:1200;background:#1f2937;border:1px solid #374151;border-radius:8px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.7);width:320px;font-size:12px">
+<div id="cmpPop" style="display:none;position:fixed;top:52px;right:12px;z-index:1200;border-radius:8px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.7);width:320px;font-size:12px">
   <!-- mode tabs -->
   <div style="display:flex;gap:4px;margin-bottom:10px">
     <button id="cmpTabLevel" data-en="📄 This level" style="flex:1;padding:5px;border-radius:5px;border:1px solid #3b82f6;background:#1d4ed8;color:#e0f2fe;font-weight:700;cursor:pointer;font-size:11px">📄 Ce niveau</button>
@@ -514,10 +528,10 @@
         <div class="pane3d-hint" id="pane3dHint" data-en="Drag to rotate · Scroll to zoom · Click a room">Glissez pour pivoter · Molette pour zoomer · Cliquez une pièce</div>
         <div class="zoom-wrap"><button class="zbtn" id="fit3d" title="Recadrer la vue 3D">⌖</button></div>
         <div style="position:absolute;top:8px;left:8px;display:flex;gap:4px;z-index:10">
-          <button id="btn3dShade" title="Shade — afficher tout en mode normal" style="background:rgba(15,23,42,.82);border:1px solid #334155;color:#94a3b8;border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer">Shade</button>
+          <button id="btn3dShade" class="btn3d" title="Ombré — afficher toutes les pièces en couleur opaque" data-en="Shade">Ombré</button>
         </div>
         <div style="position:absolute;top:8px;right:8px;display:flex;gap:4px;z-index:10">
-          <button id="btn3dIsolate" title="Isolate — isoler la sélection et zoomer dessus" style="background:rgba(15,23,42,.82);border:1px solid #334155;color:#94a3b8;border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer">Isolate</button>
+          <button id="btn3dIsolate" class="btn3d" title="Isoler — cacher les pièces non sélectionnées" data-en="Isolate">Isoler</button>
         </div>
       </div>
       <!-- ROOMS -->
@@ -577,7 +591,7 @@
                 </div>
               </div>
               <button id="btnExportParams" data-en="⬇ Excel" title="Exporter le tableau (Excel)">⬇ Excel</button>
-              <label class="filebtn" id="importLabel" data-en="⬆ Import" title="Importer un Excel exporté">⬆ MAJ<input type="file" id="paramImport" accept=".xlsx,.xls,.csv" hidden/></label>
+              <label class="filebtn" id="importLabel" title="Importer un Excel exporté"><span data-en="⬆ Import">⬆ MAJ</span><input type="file" id="paramImport" accept=".xlsx,.xls,.csv" hidden/></label>
             </div>
           </div>
           <div class="pfilter-bar">
@@ -731,7 +745,8 @@ async function loadPlan(key){
   try{
     plan=await getPlanData(key); currentPlanKey=key;
     W=plan.ImageWidth; H=plan.ImageHeight;
-    pendingEdits={}; colorKey=''; selIds.clear(); lastSel=null; compareDiff=null;
+    pendingEdits={}; colorKey=''; selIds.clear(); lastSel=null; compareDiff=null; shadeMode=false; isolateMode=false;
+    $('btn3dShade').classList.remove('active'); $('btn3dIsolate').classList.remove('active');
     renderPlan(); populateColorBy(); populateSearchKey(); renderList();
     document.querySelectorAll('.thumb-sel').forEach(g=>g.innerHTML='');
     renderMatrix(); setActivePlan(key); update3D();
@@ -1009,10 +1024,8 @@ function renderList(){
       lbl.textContent=val+' ('+grpRooms.length+')';
       const btn=document.createElement('button'); btn.className='room-grp-btn'; btn.textContent=t('selBtn');
       btn.addEventListener('click',e=>{ e.stopPropagation();
-        grpRooms.forEach(r=>selIds.add(r.RevitId)); lastSel=grpRooms[0]?.RevitId||null;
-        $('selCount').textContent=selIds.size?t('selCount',selIds.size):'';
-        markRoomSelection(); renderMatrix(); paintRooms();
-        if(typeof R3!=='undefined'&&R3.ready) recolor3D(); updateActiveThumbSel(); updateMinimap();
+        selIds.clear(); grpRooms.forEach(r=>selIds.add(r.RevitId)); lastSel=grpRooms[0]?.RevitId||null;
+        onSelectionChanged(true);
       });
       lbl.addEventListener('click',()=>btn.click());
       hd.appendChild(sw); hd.appendChild(lbl); hd.appendChild(btn);
@@ -1131,6 +1144,7 @@ $('svClearAll').addEventListener('click',()=>{
 let allLevelsMode=false, allLevelsRooms=[];
 let selectedLevelKeys=new Set(); // multi-level selection (Ctrl/Shift on level thumbnails)
 let isolateMode=false;           // 3D isolate — hide non-selected rooms completely
+let shadeMode=false;             // 3D shade — all rooms at full opacity with color-by colors
 async function loadAllLevels(){
   setStatus(t('allLevels'),'loading');
   try{
@@ -1176,8 +1190,9 @@ function numericType(t){ return t==='number'||t==='integer'||t==='length'||t==='
 // Rows = selected rooms, or ALL rooms when nothing is selected.
 function matrixRooms(){ const s=selectedRooms(); return s.length?s:activeRooms(); }
 
-/* ─ Parameter filter state ─ */
+/* ─ Parameter filter + sort state ─ */
 let mfPar='', mfVal='', mfTxt='', mfGrp=false;
+let sortCol=null, sortDir=1; // 1=asc -1=desc
 
 function buildMatrixFilter(cols, rooms){
   const sel=$('pfPar'), prev=sel.value;
@@ -1210,6 +1225,7 @@ function renderMatrix(){
   // Apply parameter filter (dropdown exact + text contains — combined AND)
   if(mfPar&&mfVal) rooms=rooms.filter(r=>String((r.Parameters||{})[mfPar]||'')===mfVal);
   if(mfPar&&mfTxt) rooms=rooms.filter(r=>String((r.Parameters||{})[mfPar]||'').toLowerCase().includes(mfTxt));
+  if(sortCol){ rooms=[...rooms].sort((a,b)=>{ const va=String((a.Parameters||{})[sortCol]??''), vb=String((b.Parameters||{})[sortCol]??''); const na=parseFloat(va),nb=parseFloat(vb); return(!isNaN(na)&&!isNaN(nb)?(na-nb):va.localeCompare(vb,undefined,{numeric:true}))*sortDir; }); }
   const totalShown=rooms.length;
   const filterDesc=mfPar?(mfVal?t('filterEq',mfVal):'')+(mfTxt?t('filterTxt',mfTxt):''):'';
   $('paramScope').textContent = selIds.size
@@ -1226,9 +1242,11 @@ function renderMatrix(){
   const wP=colW['__piece']||DEF_COLW;
   let th='<tr><th style="width:'+wP+'px"><span class="col-lbl">'+t('roomCol')+'</span><span class="col-resizer" data-col="__piece"></span></th>';
   cols.forEach(k=>{ const w=colW[k]||DEF_COLW;
-    th+=`<th data-pname="${escAttr(k)}" title="${escAttr(k)}" style="width:${w}px"><span class="col-lbl">${k}</span><span class="col-resizer" data-col="${escAttr(k)}"></span></th>`; });
+    const sortInd=sortCol===k?(sortDir===1?' ▲':' ▼'):'';
+    th+=`<th data-pname="${escAttr(k)}" title="${escAttr(k)}" style="width:${w}px;cursor:pointer"><span class="col-lbl">${k}${sortInd}</span><span class="col-resizer" data-col="${escAttr(k)}"></span></th>`; });
   th+='</tr>'; head.innerHTML=th;
   attachResizers();
+  head.querySelectorAll('th[data-pname]').forEach(el=>{ el.addEventListener('click',e=>{ if(e.target.closest('.col-resizer')) return; const k=el.getAttribute('data-pname'); if(sortCol===k){ sortDir=sortDir===1?-1:1; }else{ sortCol=k; sortDir=1; } renderMatrix(); }); });
 
   body.innerHTML='';
   buildMatrixFilter(cols, rooms);
@@ -1295,6 +1313,7 @@ function renderMatrix(){
   } else {
     // NORMAL MODE — one row per room
     rooms.forEach(room=>{
+      const rid=String(room.RevitId);
       const tr=document.createElement('tr');
       tr.classList.toggle('row-sel',selIds.has(room.RevitId));
       tr.style.cursor='pointer';
@@ -1303,7 +1322,8 @@ function renderMatrix(){
         roomClicked(room.RevitId,toggle,room._planKey||currentPlanKey);
       });
       const tdR=document.createElement('td'); tdR.className='k';
-      tdR.textContent=(room.Number?room.Number+' · ':'')+(room.Name||room.RevitId); tdR.title=tdR.textContent;
+      const pe_=pendingEdits[rid]||{}; const dispNum=pe_.__number!==undefined?pe_.__number:(room.Number||''); const dispName=pe_.__name!==undefined?pe_.__name:(room.Name||room.RevitId);
+      tdR.textContent=(dispNum?dispNum+' · ':'')+dispName; tdR.title=tdR.textContent; if(pe_.__name!==undefined||pe_.__number!==undefined) tdR.classList.add('changed');
       tr.appendChild(tdR);
       const P=room.Parameters||{}, T=room.ParameterTypes||{}, RO=room.ParameterReadOnly||{}, CH=room.ParameterChoices||{};
       cols.forEach(k=>{
@@ -1418,40 +1438,64 @@ $('colSearch').addEventListener('input',filterColChooser);
 $('colAll').addEventListener('click',()=>{ colHidden.clear(); saveColHidden(); renderMatrix(); });
 $('colNone').addEventListener('click',()=>{ $('matrixHead').querySelectorAll('th[data-pname]').forEach(th=>colHidden.add(th.getAttribute('data-pname'))); saveColHidden(); renderMatrix(); });
 
-/* ── favorite column presets (saved selections of which params to show) ── */
+/* ── favorite column presets — stored in Supabase via /api/presets ── */
 function curCols(){ return [...$('matrixHead').querySelectorAll('th[data-pname]')].map(th=>th.getAttribute('data-pname')); }
-function loadColPresets(){ try{ return JSON.parse(localStorage.getItem('bimflow_colpresets'))||{}; }catch(e){ return {}; } }
-// Écrit dans localStorage en récupérant de l'espace si le quota est dépassé :
-// purge les grosses entrées orphelines (vestiges d'anciennes versions qui stockaient
-// des images/plans). Aucune clé légitime ne dépasse quelques Ko, donc >50Ko = à purger.
+
+let _presetsCache = {};  // in-memory cache; loaded from API on startup and after each save/delete
+
+function loadColPresets(){ return _presetsCache; }
+
 function lsSetSafe(key,val){
   try{ localStorage.setItem(key,val); return; }
   catch(e){
     const big=[];
     for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k===key) continue; const v=localStorage.getItem(k)||''; if(v.length>50000) big.push([k,v.length]); }
     big.sort((a,b)=>b[1]-a[1]).forEach(([k])=>{ try{ localStorage.removeItem(k); }catch(_){} });
-    localStorage.setItem(key,val); // relance ; propage l'erreur s'il n'y a rien à purger
+    localStorage.setItem(key,val);
   }
 }
-function saveColPresetsObj(p){ lsSetSafe('bimflow_colpresets',JSON.stringify(p)); }
-function refreshPresetSelect(){ const sel=$('colPreset'); if(!sel) return; const p=loadColPresets();
+
+function refreshPresetSelect(){ const sel=$('colPreset'); if(!sel) return; const p=_presetsCache;
   sel.innerHTML=`<option value="">${t('presetDefault')}</option>`+Object.keys(p).map(n=>`<option value="${escAttr(n)}">${esc(n)}</option>`).join(''); }
-$('colPresetSave').addEventListener('click',()=>{
+
+async function fetchPresetsFromAPI(){
+  try{
+    const data=await api('/api/presets');
+    if(data && typeof data==='object' && !data.error){ _presetsCache=data; }
+    else {
+      // Fallback: import from localStorage if API returns nothing
+      try{ const ls=JSON.parse(localStorage.getItem('bimflow_colpresets')||'{}'); _presetsCache=ls||{}; }catch(_){}
+    }
+  }catch(_){
+    try{ _presetsCache=JSON.parse(localStorage.getItem('bimflow_colpresets')||'{}')||{}; }catch(e2){ _presetsCache={}; }
+  }
+  refreshPresetSelect();
+}
+
+$('colPresetSave').addEventListener('click',async()=>{
   const all=curCols();
   if(!all.length){ alert(t('noPresetData')); return; }
   const name=(prompt('Nom du favori de colonnes :')||'').trim(); if(!name) return;
   const visible=all.filter(c=>!colHidden.has(c));
   try{
-    const p=loadColPresets(); p[name]=visible; saveColPresetsObj(p); refreshPresetSelect(); $('colPreset').value=name;
+    await api('/api/presets',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,columns:visible})});
+    _presetsCache[name]=visible; refreshPresetSelect(); $('colPreset').value=name;
     alert(t('presetSaved',name,visible.length));
   }catch(e){ alert(t('loadErr')+e.message); }
 });
-$('colPresetDel').addEventListener('click',()=>{ const name=$('colPreset').value; if(!name){ alert(t('noPresetSel')); return; }
-  const p=loadColPresets(); delete p[name]; saveColPresetsObj(p); refreshPresetSelect(); });
+
+$('colPresetDel').addEventListener('click',async()=>{ const name=$('colPreset').value; if(!name){ alert(t('noPresetSel')); return; }
+  try{
+    await api('/api/presets?name='+encodeURIComponent(name),{method:'DELETE'});
+    delete _presetsCache[name]; refreshPresetSelect();
+  }catch(e){ alert(t('loadErr')+e.message); }
+});
+
 $('colPreset').addEventListener('change',()=>{ const name=$('colPreset').value; if(!name) return;
-  const visible=loadColPresets()[name]||[];
+  const visible=(_presetsCache[name])||[];
   colHidden=new Set(curCols().filter(c=>!visible.includes(c))); saveColHidden(); renderMatrix(); });
-refreshPresetSelect();
+
+fetchPresetsFromAPI();
 
 function updateSendBtn(){
   const hasPending=Object.keys(pendingEdits).length>0;
@@ -1470,7 +1514,13 @@ function updateSendBtn(){
 async function sendToRevit(){
   if($('btnSendRevit').disabled) return;
   const payload={ PlanKey:currentPlanKey,
-    Updates:Object.entries(pendingEdits).map(([id,p])=>({RevitId:id,Parameters:p})),
+    Updates:Object.entries(pendingEdits).map(([id,p])=>{
+      const {__name,__number,...params}=p;
+      const upd={RevitId:id,Parameters:params};
+      if(__name!==undefined) upd.Name=__name;
+      if(__number!==undefined) upd.Number=__number;
+      return upd;
+    }),
     NewParameters:[] };
   // La file d'attente Revit est indexée par code projet (pending_updates.project_code → FK projects).
   // On utilise le code DU PLAN chargé (préfixe de la clé) — c'est celui que Revit interroge
@@ -1487,15 +1537,22 @@ async function sendToRevit(){
     //    couvrir plusieurs niveaux via l'import Excel projet). On groupe par clé de plan.
     const ridToKey={}; (allLevelsRooms||[]).forEach(r=>{ if(r._planKey) ridToKey[String(r.RevitId)]=r._planKey; });
     const patchByKey={};
-    Object.entries(edits).forEach(([id,p])=>{ const k=ridToKey[id]||currentPlanKey; (patchByKey[k]=patchByKey[k]||{})[id]={Parameters:p}; });
+    Object.entries(edits).forEach(([id,p])=>{
+      const k=ridToKey[id]||currentPlanKey;
+      const {__name,__number,...params}=p;
+      const entry={Parameters:params};
+      if(__name!==undefined) entry.Name=__name;
+      if(__number!==undefined) entry.Number=__number;
+      (patchByKey[k]=patchByKey[k]||{})[id]=entry;
+    });
     for(const k of Object.keys(patchByKey)){
       if(!k||!Object.keys(patchByKey[k]).length) continue;
       await api('/api/plans?key='+encodeURIComponent(k),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({rooms:patchByKey[k]})});
       delete planCache[k];
     }
     // Refléter localement (plan courant + cache all-levels) pour un affichage immédiat
-    (plan&&plan.Rooms||[]).forEach(r=>{ const e=edits[String(r.RevitId)]; if(e){ r.Parameters=Object.assign(r.Parameters||{},e); } });
-    (allLevelsRooms||[]).forEach(r=>{ const e=edits[String(r.RevitId)]; if(e){ r.Parameters=Object.assign(r.Parameters||{},e); } });
+    (plan&&plan.Rooms||[]).forEach(r=>{ const e=edits[String(r.RevitId)]; if(e){ const {__name:n,__number:nu,...params}=e; r.Parameters=Object.assign(r.Parameters||{},params); if(n!==undefined)r.Name=n; if(nu!==undefined)r.Number=nu; } });
+    (allLevelsRooms||[]).forEach(r=>{ const e=edits[String(r.RevitId)]; if(e){ const {__name:n,__number:nu,...params}=e; r.Parameters=Object.assign(r.Parameters||{},params); if(n!==undefined)r.Name=n; if(nu!==undefined)r.Number=nu; } });
     if(currentPlanKey) planCache[currentPlanKey]=plan;
     const btn=$('btnSendRevit'); btn.textContent=t('sentBtn');
     setTimeout(()=>{btn.textContent=t('sendBtn');},3000);
@@ -1596,6 +1653,11 @@ async function importParamsUpdate(file){
         const val=row[ci]==null?'':String(row[ci]);
         if(String(val)!==String(orig??'')){ trackEdit(rid,h,val,orig??''); any=true; nEdits++; }
       });
+      // Détecter les changements de nom/numéro (colonnes identité)
+      const hl=header.map(c=>c.toLowerCase());
+      const nomIdx=hl.findIndex(c=>c==='nom'||c==='name'); const numIdx=hl.findIndex(c=>c==='numéro'||c==='numero'||c==='number');
+      if(nomIdx>=0){ const v=String(row[nomIdx]==null?'':row[nomIdx]).trim(); if(v&&v!==String(room.Name||'')){ trackEdit(rid,'__name',v,room.Name||''); any=true; nEdits++; } }
+      if(numIdx>=0){ const v=String(row[numIdx]==null?'':row[numIdx]).trim(); if(v&&v!==String(room.Number||'')){ trackEdit(rid,'__number',v,room.Number||''); any=true; nEdits++; } }
       if(any) nRooms++;
     }
     renderMatrix();
@@ -1665,22 +1727,29 @@ function applyColorBy(key){
   if(typeof R3!=='undefined'&&R3.ready) recolor3D();
 }
 function paintRooms(){
-  // SVG polygons (single plan)
+  const hasSel=selIds.size>0;
   (plan?.Rooms||[]).forEach(r=>{
     const sel=selIds.has(r.RevitId);
-    let fill='';
-    if(colorKey){ const v=roomColorValue(r,colorKey)||'(vide)'; fill=hexA(colorMap[v]||'#64748b',0.55); }
-    [$('poly-'+r.RevitId),$('mp-'+r.RevitId)].forEach(p=>{ if(!p)return; p.classList.toggle('selected',sel); p.style.fill=sel?'':fill; });
+    [$('poly-'+r.RevitId),$('mp-'+r.RevitId)].forEach(p=>{ if(!p)return;
+      p.style.filter='';
+      p.classList.toggle('selected',sel); // red stroke + red fill from CSS when selected
+      if(colorKey){
+        const hex=colorMap[roomColorValue(r,colorKey)||'(vide)']||'#64748b';
+        // selected → CSS .selected handles red fill; non-selected → dim or opaque
+        p.style.fill=sel?'':(hasSel?hexA(hex,0.15):hex);
+      } else {
+        p.style.fill=''; // CSS handles everything
+      }
+    });
   });
-  // Room list items — inline background beats CSS hover so color persists
   const allR=activeRooms(); const byId={};
   allR.forEach(r=>{ byId[String(r.RevitId)]=r; });
   document.querySelectorAll('.room-item[data-id]').forEach(li=>{
     const rid=li.getAttribute('data-id'), sel=selIds.has(rid);
     let hex='';
     if(colorKey){ const room=byId[rid]; if(room){ const v=roomColorValue(room,colorKey)||'(vide)'; hex=colorMap[v]||'#64748b'; } }
-    if(sel||!hex){ li.style.backgroundColor=''; li.style.borderLeftColor=''; }
-    else { li.style.backgroundColor=hexA(hex,0.22); li.style.borderLeftColor=hex; }
+    if(!hex){ li.style.backgroundColor=''; li.style.borderLeftColor=''; }
+    else { li.style.backgroundColor=hexA(hex,sel?0.50:0.22); li.style.borderLeftColor=hex; }
   });
 }
 $('colorBy').addEventListener('change',function(){ applyColorBy(this.value); populateFiltVal(); });
@@ -2032,10 +2101,10 @@ function fitToIsolated(){
   resize3D(); R3.controls.update();
 }
 $('btn3dShade').addEventListener('click',()=>{
-  isolateMode=false;
+  shadeMode=!shadeMode; isolateMode=false;
   rooms3D().forEach(r=>{ const m=R3.meshes[r.RevitId]; if(m) m.visible=true; });
   recolor3D();
-  $('btn3dShade').classList.remove('active'); $('btn3dIsolate').classList.remove('active');
+  $('btn3dShade').classList.toggle('active',shadeMode); $('btn3dIsolate').classList.remove('active');
 });
 $('btn3dIsolate').addEventListener('click',()=>{
   isolateMode=true; recolor3D(); fitToIsolated();
@@ -2050,17 +2119,15 @@ function recolor3D(){
     const onSelLevel = allLevelsMode
       || (selectedLevelKeys.size>1 ? selectedLevelKeys.has(r._planKey) : (!curLevel||rLevel===curLevel));
 
-    /* ── isolate mode ── */
+    /* ── isolate mode — visible rooms show colorKey color (no red) ── */
     if(isolateMode){
-      const rKey = r._planKey || currentPlanKey;
-      const inScope = selIds.size>0 ? selIds.has(r.RevitId) : selectedLevelKeys.has(rKey);
-      mesh.visible = inScope;
+      const rKey=r._planKey||currentPlanKey;
+      const inScope=selIds.size>0?selIds.has(r.RevitId):selectedLevelKeys.has(rKey);
+      mesh.visible=inScope;
       if(inScope){
-        /* same color logic as normal mode */
         let col=0x3b82f6;
-        if(selIds.has(r.RevitId)) col=0xef4444;
-        else if(colorKey){ const v=roomColorValue(r,colorKey)||'(vide)'; const hex=colorMap[v]; if(hex) col=parseInt(hex.slice(1),16); }
-        mesh.material.color.setHex(col); mesh.material.opacity=.92;
+        if(colorKey){ const v=roomColorValue(r,colorKey)||'(vide)'; const h=colorMap[v]; if(h) col=parseInt(h.slice(1),16); }
+        mesh.material.color.setHex(col); mesh.material.opacity=1.0;
       }
       return;
     }
@@ -2069,19 +2136,26 @@ function recolor3D(){
     /* ── comparison mode ── */
     if(compareDiff){
       const changed=compareDiff.changedIds.has(r.RevitId);
-      mesh.material.color.setHex(changed ? 0xf59e0b : 0x3b82f6);
-      mesh.material.opacity = changed ? .92 : (onSelLevel ? .12 : .04);
+      mesh.material.color.setHex(changed?0xf59e0b:0x3b82f6);
+      mesh.material.opacity=changed?.92:(onSelLevel?.12:.04);
       return;
     }
-    /* ── normal mode ── */
-    let col=0x3b82f6;
-    if(selIds.has(r.RevitId)) col=0xef4444;
-    else if(colorKey){ const v=roomColorValue(r,colorKey)||'(vide)'; const hex=colorMap[v]; if(hex) col=parseInt(hex.slice(1),16); }
-    mesh.material.color.setHex(col);
-    if(selIds.size){
-      mesh.material.opacity = selIds.has(r.RevitId) ? .90 : .06;
+    /* ── normal / shade mode ── */
+    const isSel=selIds.has(r.RevitId);
+    let col;
+    if(shadeMode){
+      // Shade: all rooms show colorKey color at full opacity
+      if(colorKey){ const v=roomColorValue(r,colorKey)||'(vide)'; const h=colorMap[v]; col=h?parseInt(h.slice(1),16):0x64748b; }
+      else { col=isSel?0xef4444:0x3b82f6; }
+      mesh.material.color.setHex(col); mesh.material.opacity=1.0;
     } else {
-      mesh.material.opacity = onSelLevel ? .82 : .10;
+      // Normal: selected=red, non-selected=colorKey color or blue (dimmed when selection exists)
+      if(isSel){ col=0xef4444; }
+      else if(colorKey){ const v=roomColorValue(r,colorKey)||'(vide)'; const h=colorMap[v]; col=h?parseInt(h.slice(1),16):0x64748b; }
+      else { col=0x3b82f6; }
+      mesh.material.color.setHex(col);
+      if(selIds.size){ mesh.material.opacity=isSel?.90:(colorKey?.25:.06); }
+      else { mesh.material.opacity=onSelLevel?(colorKey?1.0:.82):.10; }
     }
   });
 }

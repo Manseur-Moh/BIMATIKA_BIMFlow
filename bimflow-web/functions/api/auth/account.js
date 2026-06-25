@@ -1,5 +1,6 @@
 // DELETE /api/auth/account   Authorization: Bearer {session}
-// Deletes the caller's own account (cannot delete admin).
+// Deletes the caller's own account from Supabase + KV.
+import { getSupabase } from '../_supabase.js';
 
 const ADMIN = "archi_moh@live.fr";
 
@@ -28,38 +29,22 @@ export async function onRequestDelete({ request, env }) {
     if (email === ADMIN) return json({ error: "Impossible de supprimer le compte administrateur." }, 403);
 
     const kv = env.BIMFLOW;
+    const sb = getSupabase(env);
 
-    // Remove the user record
+    // Delete from Supabase (column_presets first, then user)
+    await sb.from('column_presets').delete().eq('user_email', email);
+    await sb.from('users').delete().eq('email', email);
+
+    // Remove from project members + transfer owned projects to admin
+    await sb.from('project_members').delete().eq('member_email', email);
+    await sb.from('projects').update({ owner_email: ADMIN }).eq('owner_email', email);
+
+    // Clean up KV legacy user record
     await kv.delete("bfuser:" + email);
 
-    // Delete all sessions for this user (list all bfsession: keys — expensive but rare)
+    // Delete all sessions for this user
     const sessions = await kv.list({ prefix: "bfsession:" });
     for (const { name } of sessions.keys) {
-      const v = await kv.get(name);
-      if (v === email) await kv.delete(name);
-    }
-
-    // Remove from all project member lists
-    const members = await kv.list({ prefix: "projmembers:" });
-    for (const { name } of members.keys) {
-      const raw = await kv.get(name);
-      if (!raw) continue;
-      try {
-        const arr = JSON.parse(raw).filter(e => e !== email);
-        await kv.put(name, JSON.stringify(arr));
-      } catch { }
-    }
-
-    // Transfer owned projects to admin
-    const projects = await kv.list({ prefix: "projowner:" });
-    for (const { name } of projects.keys) {
-      const owner = await kv.get(name);
-      if (owner === email) await kv.put(name, ADMIN);
-    }
-
-    // Delete any pending confirmation tokens
-    const confirms = await kv.list({ prefix: "bfconfirm:" });
-    for (const { name } of confirms.keys) {
       const v = await kv.get(name);
       if (v === email) await kv.delete(name);
     }

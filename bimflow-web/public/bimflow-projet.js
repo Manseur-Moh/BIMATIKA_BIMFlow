@@ -153,10 +153,11 @@
   // ══════════════════════════════════════════════
   function inject() {
     injectNavMenu();
-    const tbr = document.querySelector('.tbr, .topbar-right');
+    const tbr  = document.querySelector('.tbr, .topbar-right');
     if (!tbr) return;
+    const meta = document.querySelector('.topbar-meta') || tbr;
     injectReloadButton(tbr);
-    injectProjectSwitcher(tbr);
+    injectProjectSwitcher(meta);
     injectUserMenu(tbr);
   }
 
